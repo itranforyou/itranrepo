@@ -34,6 +34,15 @@ export default function ProductPage({ params }) {
   const fallbackImg = 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000';
   const mainImage = product.images?.[imageIndex] || product.image || fallbackImg;
 
+  let discountPercentage = null;
+  if (product.costPrice) {
+    const cPrice = parseFloat(product.costPrice.toString().replace(/[^0-9.]/g, ''));
+    const sPrice = parseFloat((product.price || '').toString().replace(/[^0-9.]/g, ''));
+    if (!isNaN(cPrice) && !isNaN(sPrice) && cPrice > sPrice) {
+      discountPercentage = Math.round(((cPrice - sPrice) / cPrice) * 100);
+    }
+  }
+
   return (
     <div style={{ paddingTop: '100px', background: 'var(--background)' }}>
       <div className="container" style={{ maxWidth: '1200px', padding: '4rem 2rem' }}>
@@ -107,8 +116,20 @@ export default function ProductPage({ params }) {
                 {product.name}
               </h1>
               
-              <div style={{ fontSize: '1.75rem', marginBottom: '2.5rem', color: 'var(--muted-foreground)', fontWeight: 300 }}>
-                {product.price}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
+                <div style={{ fontSize: '1.75rem', color: product.costPrice ? '#991b1b' : 'var(--muted-foreground)', fontWeight: product.costPrice ? 600 : 300 }}>
+                  {product.price}
+                </div>
+                {product.costPrice && (
+                  <div style={{ fontSize: '1.25rem', color: 'var(--muted-foreground)', textDecoration: 'line-through', fontWeight: 300 }}>
+                    {product.costPrice}
+                  </div>
+                )}
+                {discountPercentage && (
+                  <div style={{ background: '#991b1b', color: '#ffffff', fontSize: '0.8rem', letterSpacing: '0.15em', padding: '0.4rem 0.8rem', textTransform: 'uppercase' }}>
+                    {discountPercentage}% OFF
+                  </div>
+                )}
               </div>
 
               <p style={{ lineHeight: 1.9, marginBottom: '3rem', color: 'var(--muted-foreground)', fontSize: '1.1rem' }}>
@@ -215,7 +236,10 @@ export default function ProductPage({ params }) {
                     <img src={p.images?.[0] || p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }} />
                   </div>
                   <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', marginBottom: '0.5rem' }}>{p.name}</h4>
-                  <div style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem' }}>{p.price}</div>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.9rem' }}>
+                    <span style={{ color: p.costPrice ? '#991b1b' : 'var(--muted-foreground)', fontWeight: p.costPrice ? 600 : 300 }}>{p.price}</span>
+                    {p.costPrice && <span style={{ color: 'var(--muted-foreground)', textDecoration: 'line-through', fontSize: '0.8rem' }}>{p.costPrice}</span>}
+                  </div>
                 </Link>
               </Reveal>
             ))}

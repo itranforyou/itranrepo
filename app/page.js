@@ -33,7 +33,7 @@ export default function Home() {
             zIndex: 0 
           }}
         >
-          <source src="https://assets.mixkit.co/videos/preview/mixkit-perfume-bottle-and-rose-petals-40134-large.mp4" type="video/mp4" />
+          <source src="/videos/homePage.mp4" type="video/mp4" />
         </video>
 
         {/* Code-based Animated Mist Background */}

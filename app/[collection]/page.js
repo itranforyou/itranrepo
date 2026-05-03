@@ -21,6 +21,13 @@ const COLLECTION_MAP = {
     category: 'Her Collection',
     label: 'Curated Realm'
   },
+  'unisex': {
+    title: 'Unisex',
+    subtitle: 'Harmonious blends designed to transcend boundaries. A shared olfactory language combining crisp freshness with warm depths.',
+    image: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=2000',
+    category: 'Unisex Collection',
+    label: 'Curated Realm'
+  },
   'spiritual': {
     title: 'Spiritual',
     subtitle: 'Sacred resins and ancient woods. Scents designed to anchor the soul and create a bridge between the physical and the infinite.',
@@ -28,11 +35,11 @@ const COLLECTION_MAP = {
     category: 'Spiritual Collection',
     label: 'Curated Realm'
   },
-  'home-fragrance': {
-    title: 'Home',
-    subtitle: 'Transform your atmosphere. Ambient notes of cedar, sage, and Palo Santo designed to ground your living space in quietude.',
-    image: 'https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&q=80&w=2000',
-    category: 'Home Collection',
+  'car-diffusers': {
+    title: 'Car Diffusers',
+    subtitle: 'Elevate your daily commute. Sophisticated aromas designed specifically for your vehicle, turning every drive into a tranquil journey.',
+    image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2000',
+    category: 'Car Diffusers',
     label: 'Curated Realm'
   }
 };

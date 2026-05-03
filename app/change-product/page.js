@@ -13,6 +13,8 @@ export default function ChangeProductPage() {
   const [formData, setFormData] = useState({
     name: '',
     price: '',
+    costPrice: '',
+    isOffer: false,
     category: 'Him Collection',
     description: '',
     isBestSeller: false
@@ -30,7 +32,7 @@ export default function ChangeProductPage() {
   const [message, setMessage] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('Checking...');
 
-  const categories = ['Him Collection', 'Her Collection', 'Spiritual Collection', 'Home Collection'];
+  const categories = ['Him Collection', 'Her Collection', 'Unisex Collection', 'Spiritual Collection', 'Car Diffusers'];
 
   const addUrlField = () => setUrlInputs([...urlInputs, '']);
   const removeUrlField = (index) => setUrlInputs(urlInputs.filter((_, i) => i !== index));
@@ -69,6 +71,8 @@ export default function ChangeProductPage() {
     setFormData({
       name: '',
       price: '',
+      costPrice: '',
+      isOffer: false,
       category: 'Him Collection',
       description: '',
       isBestSeller: false
@@ -89,6 +93,7 @@ export default function ChangeProductPage() {
       const productData = {
         ...formData,
         price: formData.price.toString().startsWith('Rs.') ? formData.price : `Rs. ${formData.price}`,
+        costPrice: formData.isOffer && formData.costPrice ? (formData.costPrice.toString().startsWith('Rs.') ? formData.costPrice : `Rs. ${formData.costPrice}`) : null,
         images: uploadMethod === 'url' ? urlInputs.filter(url => url.trim() !== '') : (formData.images || [])
       };
       
@@ -118,6 +123,8 @@ export default function ChangeProductPage() {
     setFormData({
       name: product.name || '',
       price: product.price?.toString().replace('Rs.', '').replace('Rs. ', '').replace('$', '').trim() || '',
+      costPrice: product.costPrice?.toString().replace('Rs.', '').replace('Rs. ', '').replace('$', '').trim() || '',
+      isOffer: !!product.costPrice,
       category: product.category || 'Him Collection',
       description: product.description || product.desc || '',
       isBestSeller: product.isBestSeller || false,
@@ -216,11 +223,34 @@ export default function ChangeProductPage() {
                   <input type="text" required value={formData.name || ''} onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
                 </div>
 
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  <div style={{ flex: 1 }}>
-                    <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Price (without Rs.)</label>
-                    <input type="text" required value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} placeholder="2199" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                <div style={{ background: '#fcfcfc', padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                  <div style={{ display: 'flex', gap: '2rem', marginBottom: '1rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }} className="label-caps">
+                      <input type="radio" name="pricingType" checked={!formData.isOffer} onChange={() => setFormData({...formData, isOffer: false, costPrice: ''})} />
+                      Normal Price
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }} className="label-caps">
+                      <input type="radio" name="pricingType" checked={formData.isOffer} onChange={() => setFormData({...formData, isOffer: true})} />
+                      With Offer
+                    </label>
                   </div>
+
+                  <div style={{ display: 'flex', gap: '1rem' }}>
+                    {formData.isOffer && (
+                      <div style={{ flex: 1 }}>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Cost Price (Original)</label>
+                        <input type="number" required={formData.isOffer} value={formData.costPrice || ''} onChange={(e) => setFormData({...formData, costPrice: e.target.value})} placeholder="e.g. 2999" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                      </div>
+                    )}
+                    <div style={{ flex: 1 }}>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>{formData.isOffer ? 'Sell Price (Discounted)' : 'Price (without Rs.)'}</label>
+                      <input type="number" required value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} placeholder="e.g. 2199" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '1rem' }}>
+
                   <div style={{ flex: 1 }}>
                     <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Category</label>
                     <select value={formData.category || 'Him Collection'} onChange={(e) => setFormData({...formData, category: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff' }}>
@@ -319,7 +349,12 @@ export default function ChangeProductPage() {
                     <div>
                       <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--muted-foreground)', marginBottom: '0.25rem' }}>{product.category}</div>
                       <div style={{ fontWeight: 600, fontSize: '1rem', marginBottom: '0.25rem' }}>{product.name}</div>
-                      <div style={{ fontSize: '0.85rem' }}>{product.price}</div>
+                      <div style={{ fontSize: '0.85rem' }}>
+                        {product.costPrice && (
+                          <span style={{ textDecoration: 'line-through', color: '#999', marginRight: '0.5rem' }}>{product.costPrice}</span>
+                        )}
+                        <span style={{ color: product.costPrice ? '#991b1b' : '#111', fontWeight: product.costPrice ? 600 : 400 }}>{product.price}</span>
+                      </div>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
                       <button onClick={() => handleEdit(product)} style={{ background: 'none', border: 'none', borderBottom: '1px solid #000', padding: 0, cursor: 'pointer', fontSize: '0.65rem' }} className="label-caps">EDIT</button>

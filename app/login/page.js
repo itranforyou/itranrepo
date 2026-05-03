@@ -24,20 +24,7 @@ export default function Login() {
     { name: 'Luna', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Luna' },
   ];
 
-  const handleGoogleSignIn = async () => {
-    setLoading(true);
-    try {
-      const { auth, googleProvider } = await import('@/lib/firebase');
-      const { signInWithPopup } = await import('firebase/auth');
-      const result = await signInWithPopup(auth, googleProvider);
-      if (result.user) {
-        setIsLoggedIn(true);
-        window.location.href = '/';
-      }
-    } catch (error) {
-      alert("Failed to sign in with Google: " + error.message);
-    } finally { setLoading(false); }
-  };
+
 
   const handleEmailAuth = async (e) => {
     e.preventDefault();
@@ -123,16 +110,7 @@ export default function Login() {
 
               {step === 1 && (
                 <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', margin: '1rem 0' }}>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border)', opacity: 0.5 }}></div>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)' }}>Or</span>
-                    <div style={{ flex: 1, height: '1px', background: 'var(--border)', opacity: 0.5 }}></div>
-                  </div>
 
-                  <button type="button" onClick={handleGoogleSignIn} style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', cursor: 'pointer', fontSize: '0.8rem' }}>
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" style={{ width: '18px', height: '18px' }} />
-                    CONTINUE WITH GOOGLE
-                  </button>
                 </>
               )}
             </form>

@@ -28,8 +28,9 @@ export default function Header() {
   const shopCollections = [
     { name: 'HIM', slug: 'him' },
     { name: 'HER', slug: 'her' },
+    { name: 'UNISEX', slug: 'unisex' },
     { name: 'SPIRITUAL', slug: 'spiritual' },
-    { name: 'HOME FRAGRANCE', slug: 'home-fragrance' },
+    { name: 'CAR DIFFUSERS', slug: 'car-diffusers' },
     { name: 'SHOP ALL', slug: 'all-products' }
   ];
 

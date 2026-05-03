@@ -40,6 +40,15 @@ export default function ProductCard({ product, delay = 0 }) {
     toggleWishlist(product);
   };
 
+  let discountPercentage = null;
+  if (product.costPrice) {
+    const cPrice = parseFloat(product.costPrice.toString().replace(/[^0-9.]/g, ''));
+    const sPrice = parseFloat((product.price || '').toString().replace(/[^0-9.]/g, ''));
+    if (!isNaN(cPrice) && !isNaN(sPrice) && cPrice > sPrice) {
+      discountPercentage = Math.round(((cPrice - sPrice) / cPrice) * 100);
+    }
+  }
+
   return (
     <div style={{ position: 'relative', width: '100%' }}>
       <Link 
@@ -60,6 +69,11 @@ export default function ProductCard({ product, delay = 0 }) {
             {product.isBestSeller && (
               <div style={{ background: 'var(--foreground)', color: 'var(--background)', fontSize: '0.6rem', letterSpacing: '0.15em', padding: '0.35rem 0.75rem', textTransform: 'uppercase' }}>
                 #1 Best Seller
+              </div>
+            )}
+            {discountPercentage && (
+              <div style={{ background: '#991b1b', color: '#ffffff', fontSize: '0.6rem', letterSpacing: '0.15em', padding: '0.35rem 0.75rem', textTransform: 'uppercase' }}>
+                {discountPercentage}% OFF
               </div>
             )}
           </div>
@@ -117,7 +131,16 @@ export default function ProductCard({ product, delay = 0 }) {
             </div>
             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{product.name}</h3>
           </div>
-          <span style={{ color: 'var(--muted-foreground)', fontWeight: 300 }}>{product.price}</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.15rem' }}>
+            {product.costPrice ? (
+              <>
+                <span style={{ color: '#991b1b', fontWeight: 600 }}>{product.price}</span>
+                <span style={{ color: 'var(--muted-foreground)', fontWeight: 300, textDecoration: 'line-through', fontSize: '0.8rem' }}>{product.costPrice}</span>
+              </>
+            ) : (
+              <span style={{ color: 'var(--muted-foreground)', fontWeight: 300 }}>{product.price}</span>
+            )}
+          </div>
         </div>
       </Link>
     </div>

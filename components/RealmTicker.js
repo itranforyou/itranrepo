@@ -11,8 +11,9 @@ export default function RealmTicker() {
   const realms = [
     { name: 'Him', href: '/him', img: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800' },
     { name: 'Her', href: '/her', img: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Unisex', href: '/unisex', img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=800' },
     { name: 'Spiritual', href: '/spiritual', img: 'https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Home', href: '/home-fragrance', img: 'https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Car Diffusers', href: '/car-diffusers', img: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=800' },
   ];
 
   // Duplicate for seamless loop
