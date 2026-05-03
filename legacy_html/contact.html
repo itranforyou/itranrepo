@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Contact Us | Scented Silence</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .contact-container {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .contact-info {
+      margin-bottom: 4rem;
+    }
+
+    .contact-info a {
+      display: block;
+      margin: 0.5rem 0;
+      color: var(--foreground);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s ease;
+    }
+
+    .contact-info a:hover {
+      color: var(--primary);
+    }
+
+    .contact-form {
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(10px);
+      padding: 3rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      text-align: left;
+    }
+
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+      color: var(--muted-foreground);
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 1rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--foreground);
+      font-family: var(--font-sans);
+      transition: border-color 0.3s ease;
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    .form-group textarea {
+      height: 150px;
+      resize: vertical;
+    }
+
+    @media (max-width: 768px) {
+      .contact-form {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">
+      Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html"><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger"><span class="material-icons">shopping_bag</span>Shop <span
+            class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href='all-products.html'><span class='material-icons'>grid_view</span>Shop All</a>
+      <a href='bulk-enquiry.html'><span class='material-icons'>business</span>Bulk Queries</a>
+      <a href="contact.html" ><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href='blog.html'><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+      <a href='login.html' class='action-btn auth-link-placeholder' id='auth-trigger' aria-label='Account'><span class='material-icons'>account_circle</span></a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal Overlay -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results">
+        <!-- Live results appear here -->
+      </div>
+    </div>
+  </div>
+
+  <main style="padding-top: 140px; padding-bottom: var(--spacing-section);">
+    <div class="container">
+      <div class="contact-container">
+        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem;" class="reveal-up">
+          <a href="javascript:history.back()" class="back-btn" aria-label="Go Back">
+            <span class="material-icons">arrow_back_ios_new</span>
+          </a>
+          <h1 style="margin: 0;">Contact Us</h1>
+        </div>
+
+        <div class="contact-info reveal-up">
+          <p class="label-caps" style="color: var(--primary); margin-bottom: 1rem;">Get in touch</p>
+          <a href="mailto:hello@scentedsilence.com">hello@scentedsilence.com</a>
+          <a href="https://wa.me/911234567890" target="_blank">WhatsApp: +91 12345 67890</a>
+          <p style="margin-top: 1.5rem; color: var(--muted-foreground);">123 Artisan Lane, Kannauj,<br>Uttar Pradesh, India</p>
+        </div>
+
+        <form class="contact-form reveal-up" id="contact-form">
+          <div class="form-group">
+            <label for="name">Your Name</label>
+            <input type="text" id="name" name="name" required placeholder="Enter your full name">
+          </div>
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" required placeholder="Enter your email address">
+          </div>
+          <div class="form-group">
+            <label for="subject">Subject</label>
+            <input type="text" id="subject" name="subject" required placeholder="What are you writing about?">
+          </div>
+          <div class="form-group">
+            <label for="message">Your Message</label>
+            <textarea id="message" name="message" required placeholder="How can we help you?"></textarea>
+          </div>
+          <button type="submit" class="btn-primary label-caps" style="width: 100%;">Send Message</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="our-story.html">Our Story</a>
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,385 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Scented Silence | Luxe Fragrance Showcase</title>
+  <meta name="description" content="Discover fragrances crafted in silence, designed to speak volumes.">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html" ><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger"><span class="material-icons">shopping_bag</span>Shop <span class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href="all-products.html"><span class="material-icons">grid_view</span>Shop All</a>
+      <a href="bulk-enquiry.html"><span class="material-icons">business</span>Bulk Queries</a>
+      <a href="contact.html"><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href='blog.html'><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+      <a href='login.html' class='action-btn auth-link-placeholder' id='auth-trigger' aria-label='Account'>
+        <span class='material-icons'>account_circle</span>
+      </a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal Overlay -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results">
+        <!-- Live results appear here -->
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <!-- HERO SECTION -->
+    <section
+      style="height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; position: relative; overflow: hidden; background-color: #000;">
+
+      <!-- Glass Bottles Background Image -->
+      <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=2000"
+        alt="Perfume Bottles"
+        style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.6; z-index: 0;">
+
+      <!-- Code-based Animated Mist Background (Foolproof) -->
+      <div class="smoke-video-placeholder" style="z-index: 1;">
+        <div class="smoke-layer"></div>
+        <div class="smoke-layer"></div>
+      </div>
+
+      <div style="z-index: 10; max-width: 800px; padding: 0 2rem; position: relative;">
+        <h1 class="reveal-up"
+          style="font-size: clamp(3rem, 8vw, 5.5rem); margin-bottom: 1.5rem; transition-delay: 0.2s; color: #ffffff; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+          Crafted in Quiet<br>Devotion
+        </h1>
+        <p class="reveal-up"
+          style="font-size: 1.125rem; color: rgba(255,255,255,0.85); margin-bottom: 3rem; transition-delay: 0.4s; font-family: var(--font-sans); text-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+          Scented Silence was born from a desire to escape the noise. Every drop of our fragrance is composed slowly,
+          honoring ancient distillation methods and sourcing only the rarest, most emotive botanicals.
+        </p>
+        <div class="reveal-up" style="transition-delay: 0.6s;">
+          <a href="#collection" class="btn-primary label-caps"
+            style="background-color: #ffffff; color: #1a1a1a;">Explore Collection</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CURATED REALMS SECTION -->
+    <section id="collection" style="padding: var(--spacing-section) 0; background-color: #ffffff;">
+      <div class="container" style="max-width: 100%; padding: 0;">
+        <h2 class="reveal-up" style="text-align: center; font-size: 3rem; margin-bottom: 4rem;">Curated Realms</h2>
+
+        <div style="position: relative;">
+          <!-- Left Arrow -->
+          <button class="realm-arrow realm-arrow-left" id="realm-prev" aria-label="Scroll left">
+            <span class="material-icons">chevron_left</span>
+          </button>
+          <!-- Right Arrow -->
+          <button class="realm-arrow realm-arrow-right" id="realm-next" aria-label="Scroll right">
+            <span class="material-icons">chevron_right</span>
+          </button>
+
+          <div class="realm-ticker" id="realm-ticker">
+          <div class="realm-ticker-track" id="realm-track">
+            <!-- Set 1 -->
+            <a href="him.html" class="realm-item">
+              <div class="img-reveal-wrapper" style="height: 500px; margin-bottom: 1.5rem;">
+                <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800" alt="Him Collection" class="img-reveal">
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 style="font-size: 1.5rem;">Him</h3>
+                <span class="material-icons" style="color: var(--muted-foreground);">arrow_forward</span>
+              </div>
+            </a>
+
+            <a href="her.html" class="realm-item">
+              <div class="img-reveal-wrapper" style="height: 500px; margin-bottom: 1.5rem;">
+                <img src="https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&q=80&w=800" alt="Her Collection" class="img-reveal">
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 style="font-size: 1.5rem;">Her</h3>
+                <span class="material-icons" style="color: var(--muted-foreground);">arrow_forward</span>
+              </div>
+            </a>
+
+            <a href="spiritual.html" class="realm-item">
+              <div class="img-reveal-wrapper" style="height: 500px; margin-bottom: 1.5rem;">
+                <img src="https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=800" alt="Spiritual Collection" class="img-reveal">
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 style="font-size: 1.5rem;">Spiritual</h3>
+                <span class="material-icons" style="color: var(--muted-foreground);">arrow_forward</span>
+              </div>
+            </a>
+
+            <a href="home-fragrance.html" class="realm-item">
+              <div class="img-reveal-wrapper" style="height: 500px; margin-bottom: 1.5rem;">
+                <img src="https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&q=80&w=800" alt="Home Collection" class="img-reveal">
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 style="font-size: 1.5rem;">Home</h3>
+                <span class="material-icons" style="color: var(--muted-foreground);">arrow_forward</span>
+              </div>
+            </a>
+
+            <!-- Set 2 (Duplicate for loop) -->
+            <a href="him.html" class="realm-item">
+              <div class="img-reveal-wrapper" style="height: 500px; margin-bottom: 1.5rem;">
+                <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800" alt="Him Collection" class="img-reveal">
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 style="font-size: 1.5rem;">Him</h3>
+                <span class="material-icons" style="color: var(--muted-foreground);">arrow_forward</span>
+              </div>
+            </a>
+
+            <a href="her.html" class="realm-item">
+              <div class="img-reveal-wrapper" style="height: 500px; margin-bottom: 1.5rem;">
+                <img src="https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&q=80&w=800" alt="Her Collection" class="img-reveal">
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 style="font-size: 1.5rem;">Her</h3>
+                <span class="material-icons" style="color: var(--muted-foreground);">arrow_forward</span>
+              </div>
+            </a>
+
+            <a href="spiritual.html" class="realm-item">
+              <div class="img-reveal-wrapper" style="height: 500px; margin-bottom: 1.5rem;">
+                <img src="https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=800" alt="Spiritual Collection" class="img-reveal">
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 style="font-size: 1.5rem;">Spiritual</h3>
+                <span class="material-icons" style="color: var(--muted-foreground);">arrow_forward</span>
+              </div>
+            </a>
+
+            <a href="home-fragrance.html" class="realm-item">
+              <div class="img-reveal-wrapper" style="height: 500px; margin-bottom: 1.5rem;">
+                <img src="https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&q=80&w=800" alt="Home Collection" class="img-reveal">
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 1rem;">
+                <h3 style="font-size: 1.5rem;">Home</h3>
+                <span class="material-icons" style="color: var(--muted-foreground);">arrow_forward</span>
+              </div>
+            </a>
+          </div>
+          </div><!-- /.realm-ticker -->
+        </div><!-- /.relative wrapper -->
+      </div>
+    </section>
+
+    <!-- BEST SELLERS SECTION -->
+    <section id="best-sellers" style="padding: var(--spacing-section) 0; background: #faf9f7;">
+      <div class="container">
+        <div class="reveal-up" style="margin-bottom: 4rem;">
+          <div class="label-caps" style="color: var(--primary); margin-bottom: 0.75rem; letter-spacing: 0.2em; font-size: 0.7rem;">Most Loved</div>
+          <h2 style="font-size: clamp(2rem, 5vw, 3rem);">Best Sellers</h2>
+        </div>
+
+        <div class="best-sellers-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 2.5rem;">
+
+          <!-- Best Seller 1 -->
+          <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit; transition-delay: 0s;">
+            <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.25rem; position: relative;">
+              <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=800" alt="Midnight Vetiver" class="img-reveal">
+              <div style="position: absolute; top: 1rem; left: 1rem; background: var(--foreground); color: var(--background); font-size: 0.65rem; letter-spacing: 0.15em; padding: 0.35rem 0.75rem; text-transform: uppercase;">#1 Best Seller</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <div style="font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 0.4rem;">Him Collection</div>
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Midnight Vetiver</h3>
+              </div>
+              <span style="color: var(--muted-foreground); font-weight: 300;">$185</span>
+            </div>
+          </a>
+
+          <!-- Best Seller 2 -->
+          <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit; transition-delay: 0.1s;">
+            <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.25rem; position: relative;">
+              <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800" alt="Velvet Peony" class="img-reveal">
+              <div style="position: absolute; top: 1rem; left: 1rem; background: #c8a882; color: #fff; font-size: 0.65rem; letter-spacing: 0.15em; padding: 0.35rem 0.75rem; text-transform: uppercase;">Fan Favourite</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <div style="font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 0.4rem;">Her Collection</div>
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Velvet Peony</h3>
+              </div>
+              <span style="color: var(--muted-foreground); font-weight: 300;">$160</span>
+            </div>
+          </a>
+
+          <!-- Best Seller 3 -->
+          <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit; transition-delay: 0.2s;">
+            <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.25rem; position: relative;">
+              <img src="https://images.unsplash.com/photo-1615484477778-ca3b77940c25?auto=format&fit=crop&q=80&w=800" alt="Sandalwood Attar" class="img-reveal">
+              <div style="position: absolute; top: 1rem; left: 1rem; background: #7d6e5e; color: #fff; font-size: 0.65rem; letter-spacing: 0.15em; padding: 0.35rem 0.75rem; text-transform: uppercase;">Staff Pick</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <div style="font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 0.4rem;">Spiritual Collection</div>
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Sandalwood Attar</h3>
+              </div>
+              <span style="color: var(--muted-foreground); font-weight: 300;">$220</span>
+            </div>
+          </a>
+
+          <!-- Best Seller 4 -->
+          <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit; transition-delay: 0.3s;">
+            <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.25rem; position: relative;">
+              <img src="https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&q=80&w=800" alt="Palo Santo Incense" class="img-reveal">
+              <div style="position: absolute; top: 1rem; left: 1rem; background: #4a7c59; color: #fff; font-size: 0.65rem; letter-spacing: 0.15em; padding: 0.35rem 0.75rem; text-transform: uppercase;">Top Rated</div>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <div style="font-size: 0.65rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--muted-foreground); margin-bottom: 0.4rem;">Home Collection</div>
+                <h3 style="font-size: 1.1rem; margin-bottom: 0.25rem;">Palo Santo Incense</h3>
+              </div>
+              <span style="color: var(--muted-foreground); font-weight: 300;">$45</span>
+            </div>
+          </a>
+
+        </div>
+
+        <!-- View More Button (bottom) -->
+        <div class="reveal-up" style="text-align: center; margin-top: 4rem;">
+          <a href="all-products.html" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1.125rem 3rem; background: var(--foreground); color: var(--background); text-decoration: none; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; font-family: var(--font-sans); transition: all 0.3s ease;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">
+            Explore Full Collection <span class="material-icons" style="font-size: 1rem;">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- OUR STORY SECTION -->
+    <section id="our-story" style="padding: var(--spacing-section) 0; background-color: var(--background);">
+      <div class="container">
+
+        <!-- Section Heading -->
+        <div class="reveal-up" style="text-align: center; max-width: 700px; margin: 0 auto 6rem;">
+          <div class="label-caps" style="color: var(--primary); margin-bottom: 1rem; letter-spacing: 0.25em; font-size: 0.7rem;">Since 1887</div>
+          <h2 style="font-size: clamp(2.5rem, 6vw, 4rem); margin-bottom: 2rem;">Our Story</h2>
+          <p style="color: var(--muted-foreground); line-height: 1.9; font-size: 1.05rem;">
+            Born in the ancient city of Kannauj — the perfume capital of India — Scented Silence carries five generations of distillation wisdom. We believe fragrance is not worn. It is remembered.
+          </p>
+        </div>
+
+        <!-- Two Column: Image + Text -->
+        <div class="reveal-up" style="display: flex; flex-wrap: wrap; align-items: center; gap: 5rem; margin-bottom: 7rem;">
+          <div style="flex: 1 1 420px; max-width: 100%;">
+            <div class="img-reveal-wrapper" style="height: 600px; max-height: 70vh;">
+              <img src="https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=1000" alt="Traditional Distillation" class="img-reveal">
+            </div>
+          </div>
+          <div style="flex: 1 1 380px; max-width: 100%;">
+            <div class="label-caps" style="color: var(--primary); margin-bottom: 1rem; font-size: 0.7rem; letter-spacing: 0.2em;">The Foundation</div>
+            <h3 style="font-size: 2rem; margin-bottom: 1.5rem; font-family: var(--font-serif);">Makhulal Ayodhya Prasad & Co.</h3>
+            <p style="color: var(--muted-foreground); line-height: 1.9; margin-bottom: 1.5rem;">
+              Established in 1887 in the heart of Kannauj, our house — Makhulal Ayodhya Prasad and Co. — began as a small workshop near the banks of the Ganga. Our founders mastered the ancient art of <em>deg-bhapka</em>, a hydro-distillation process that coaxes pure attar from flowers at dawn, capturing the soul of each bloom before the morning sun evaporates it.
+            </p>
+            <p style="color: var(--muted-foreground); line-height: 1.9; margin-bottom: 2rem;">
+              What began as a trade of sacred oils for temples and maharajahs evolved, over five generations, into a pursuit of olfactory poetry. Today we curate attars and fragrances for those who seek quiet luxury — scents that do not announce, but linger in memory.
+            </p>
+            <div style="display: flex; gap: 3rem; flex-wrap: wrap;">
+              <div>
+                <div style="font-size: 2.5rem; font-family: var(--font-serif); margin-bottom: 0.25rem;">137+</div>
+                <div style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground);">Years of Craft</div>
+              </div>
+              <div>
+                <div style="font-size: 2.5rem; font-family: var(--font-serif); margin-bottom: 0.25rem;">5</div>
+                <div style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground);">Generations</div>
+              </div>
+              <div>
+                <div style="font-size: 2.5rem; font-family: var(--font-serif); margin-bottom: 0.25rem;">100%</div>
+                <div style="font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted-foreground);">Natural Ingredients</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Philosophy Strip -->
+        <div class="reveal-up" style="background: #faf9f7; padding: 5rem; display: flex; flex-wrap: wrap; gap: 4rem; margin-bottom: 7rem;">
+          <div style="flex: 1 1 220px; text-align: center;">
+            <span class="material-icons" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1.25rem; display: block;">eco</span>
+            <h4 style="font-family: var(--font-serif); font-size: 1.25rem; margin-bottom: 0.75rem;">Ethically Sourced</h4>
+            <p style="color: var(--muted-foreground); font-size: 0.9rem; line-height: 1.8;">Every botanical is hand-selected from its native habitat — rose petals from Taif, vetiver roots from Haiti, sandalwood from Mysore.</p>
+          </div>
+          <div style="flex: 1 1 220px; text-align: center;">
+            <span class="material-icons" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1.25rem; display: block;">science</span>
+            <h4 style="font-family: var(--font-serif); font-size: 1.25rem; margin-bottom: 0.75rem;">Ancient Craft</h4>
+            <p style="color: var(--muted-foreground); font-size: 0.9rem; line-height: 1.8;">We use traditional copper <em>degs</em> and bhapka vessels — unchanged for centuries — because patience and heat coax what machines cannot.</p>
+          </div>
+          <div style="flex: 1 1 220px; text-align: center;">
+            <span class="material-icons" style="font-size: 2.5rem; color: var(--primary); margin-bottom: 1.25rem; display: block;">favorite</span>
+            <h4 style="font-family: var(--font-serif); font-size: 1.25rem; margin-bottom: 0.75rem;">No Compromise</h4>
+            <p style="color: var(--muted-foreground); font-size: 0.9rem; line-height: 1.8;">No synthetic shortcuts. No mass production. Each bottle is numbered, filled by hand, and sealed with intention in Kannauj, India.</p>
+          </div>
+        </div>
+
+        <!-- CTA -->
+        <div class="reveal-up" style="text-align: center;">
+          <a href="our-story.html" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1.125rem 3rem; background: var(--foreground); color: var(--background); text-decoration: none; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; font-family: var(--font-sans); transition: all 0.3s ease;" onmouseover="this.style.opacity='0.85';" onmouseout="this.style.opacity='1';">
+            Read The Full Story <span class="material-icons" style="font-size: 1rem;">arrow_forward</span>
+          </a>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="our-story.html">Our Story</a>
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
+
+

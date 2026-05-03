@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Collections | Scented Silence</title>
+  <meta name="description"
+    content="Explore the complete anthology of Scented Silence fragrances. Artisanal attars, fine perfumes, and sacred home scents.">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    :root {
+      --card-bg: #ffffff;
+    }
+
+    .shop-hero {
+      padding: 16rem 0 10rem 0;
+      background-color: #000;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .shop-hero img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.5;
+      z-index: 0;
+    }
+
+    .shop-hero .container {
+      position: relative;
+      z-index: 10;
+    }
+
+    .filter-bar {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      margin-bottom: 4rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+    }
+
+    .filter-item {
+      color: var(--muted-foreground);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+
+    .filter-item:hover,
+    .filter-item.active {
+      color: var(--foreground);
+    }
+
+    .filter-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1.6rem;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--primary);
+    }
+
+    .product-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+    }
+
+    .product-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-8px);
+      box-shadow: 0 20px 40px rgba(141, 75, 0, 0.08);
+    }
+
+    .product-card .img-container {
+      aspect-ratio: 1;
+      overflow: hidden;
+      position: relative;
+      background: #f0f0f0;
+    }
+
+    .product-card .img-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .product-card:hover .img-container img {
+      transform: scale(1.1);
+    }
+
+    .product-card .card-content {
+      padding: 2rem;
+      text-align: center;
+    }
+
+    .product-card .category-tag {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+    }
+
+    .product-card .product-title {
+      font-family: var(--font-serif);
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      color: var(--foreground);
+    }
+
+    .product-card .product-price {
+      color: var(--muted-foreground);
+      font-size: 0.9rem;
+    }
+
+    .shop-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 var(--spacing-gutter);
+    }
+
+    @media (max-width: 768px) {
+      .filter-bar {
+        gap: 1.5rem;
+        justify-content: flex-start;
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: 1rem;
+        margin-bottom: 2.5rem;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none; /* Firefox */
+      }
+      .filter-bar::-webkit-scrollbar {
+        display: none; /* Chrome/Safari */
+      }
+
+      .filter-item {
+        font-size: 0.75rem;
+        flex: 0 0 auto;
+      }
+      .filter-item.active::after {
+        bottom: -1.1rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">
+      Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html"><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger"><span class="material-icons">shopping_bag</span>Shop <span
+            class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href="all-products.html" ><span class="material-icons">grid_view</span>Shop
+        All</a>
+      <a href="bulk-enquiry.html"><span class="material-icons">business</span>Bulk Queries</a>
+      <a href="contact.html"><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href='blog.html'><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+      <a href='login.html' class='action-btn auth-link-placeholder' id='auth-trigger' aria-label='Account'><span
+          class='material-icons'>account_circle</span></a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal Overlay -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
+
+  <main>
+    <section class="shop-hero">
+      <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000"
+        alt="Shop All Hero">
+      <div class="container">
+        <div class="label-caps reveal-up" style="color: #dbc2b0; margin-bottom: 1.5rem; letter-spacing: 0.3em;">The
+          Complete Anthology</div>
+        <h1 class="reveal-up"
+          style="font-size: clamp(3rem, 8vw, 5rem); font-family: var(--font-serif); margin-bottom: 2rem; color: #ffffff; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+          Shop All</h1>
+        <p class="reveal-up"
+          style="max-width: 650px; margin: 0 auto; color: rgba(255,255,255,0.85); line-height: 1.8; font-size: 1.125rem; text-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+          Explore our complete collection of curated scents. From ancient attars to contemporary olfactory silhouettes,
+          every bottle tells a story of quiet devotion.
+        </p>
+      </div>
+    </section>
+
+    <section style="padding: 6rem 0; background: var(--background);">
+      <div class="shop-container">
+        <div class="filter-bar reveal-up">
+          <a href="#" class="filter-item active">ALL SCENTS</a>
+          <a href="him.html" class="filter-item">HIM</a>
+          <a href="her.html" class="filter-item">HER</a>
+          <a href="spiritual.html" class="filter-item">SPIRITUAL</a>
+          <a href="home-fragrance.html" class="filter-item">HOME FRAGRANCE</a>
+        </div>
+
+        <div class="product-grid"
+          style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 3rem;">
+
+          <!-- Product 1 -->
+          <a href="#" class="product-card reveal-up">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000"
+                alt="Midnight Vetiver">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Him Collection</div>
+              <h3 class="product-title">Midnight Vetiver</h3>
+              <div class="product-price">$180.00</div>
+            </div>
+          </a>
+
+          <!-- Product 2 -->
+          <a href="#" class="product-card reveal-up" style="transition-delay: 0.1s;">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=1000"
+                alt="Velvet Peony">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Her Collection</div>
+              <h3 class="product-title">Velvet Peony</h3>
+              <div class="product-price">$160.00</div>
+            </div>
+          </a>
+
+          <!-- Product 3 -->
+          <a href="#" class="product-card reveal-up" style="transition-delay: 0.2s;">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=1000"
+                alt="Sandalwood Attar">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Spiritual Collection</div>
+              <h3 class="product-title">Sandalwood Attar</h3>
+              <div class="product-price">$220.00</div>
+            </div>
+          </a>
+
+          <!-- Product 4 -->
+          <a href="#" class="product-card reveal-up">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1602928321679-560bb453f190?auto=format&fit=crop&q=80&w=1000"
+                alt="Palo Santo Incense">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Home Collection</div>
+              <h3 class="product-title">Palo Santo Incense</h3>
+              <div class="product-price">$45.00</div>
+            </div>
+          </a>
+
+          <!-- Product 5 -->
+          <a href="#" class="product-card reveal-up">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=1000"
+                alt="Desert Rose">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Her Collection</div>
+              <h3 class="product-title">Desert Rose</h3>
+              <div class="product-price">$195.00</div>
+            </div>
+          </a>
+
+          <!-- Product 6 -->
+          <a href="#" class="product-card reveal-up">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1585386959984-a4155224a1ad?auto=format&fit=crop&q=80&w=1000"
+                alt="Amber Oud">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Him Collection</div>
+              <h3 class="product-title">Amber Oud</h3>
+              <div class="product-price">$210.00</div>
+            </div>
+          </a>
+
+          <!-- Product 7 -->
+          <a href="#" class="product-card reveal-up">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1615484477778-ca3b77940c25?auto=format&fit=crop&q=80&w=1000"
+                alt="Sacred Frankincense">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Spiritual Collection</div>
+              <h3 class="product-title">Sacred Frankincense</h3>
+              <div class="product-price">$130.00</div>
+            </div>
+          </a>
+
+          <!-- Product 8 -->
+          <a href="#" class="product-card reveal-up">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1605651202774-94e6ad6500b8?auto=format&fit=crop&q=80&w=1000"
+                alt="Cedar & Sage">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Home Collection</div>
+              <h3 class="product-title">Cedar & Sage</h3>
+              <div class="product-price">$55.00</div>
+            </div>
+          </a>
+
+          <!-- Product 9 -->
+          <a href="#" class="product-card reveal-up">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1590736704728-f4730bb30770?auto=format&fit=crop&q=80&w=1000"
+                alt="Silk Musk">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Her Collection</div>
+              <h3 class="product-title">Silk Musk</h3>
+              <div class="product-price">$175.00</div>
+            </div>
+          </a>
+
+          <!-- Product 10 -->
+          <a href="#" class="product-card reveal-up">
+            <div class="img-container">
+              <img src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=1000"
+                alt="Night Jasmine">
+            </div>
+            <div class="card-content">
+              <div class="category-tag">Her Collection</div>
+              <h3 class="product-title">Night Jasmine</h3>
+              <div class="product-price">$150.00</div>
+            </div>
+          </a>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

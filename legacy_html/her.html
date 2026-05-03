@@ -1,0 +1,205 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Her | Scented Silence</title>
+  <meta name="description" content="Explore our curated fragrances for her. Ethereal, floral, and timeless.">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html"><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger" ><span class="material-icons">shopping_bag</span>Shop <span class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href='all-products.html'><span class='material-icons'>grid_view</span>Shop All</a>
+      <a href='bulk-enquiry.html'><span class='material-icons'>business</span>Bulk Queries</a>
+      <a href="contact.html"><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href='blog.html'><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+    <a href='login.html' class='action-btn auth-link-placeholder' id='auth-trigger' aria-label='Account'><span class='material-icons'>account_circle</span></a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal Overlay -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
+
+  <main>
+    <div class="floating-back">
+      <a href="javascript:history.back()" class="back-btn" aria-label="Go Back">
+        <span class="material-icons">arrow_back_ios_new</span>
+      </a>
+    </div>
+
+    <!-- HERO SECTION -->
+    <section style="position: relative; padding: 16rem 0 10rem 0; text-align: center; overflow: hidden; background-color: #000;">
+      <img src="https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&q=80&w=2000" alt="Women's Fragrance" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.5; z-index: 0;">
+      <div class="container" style="position: relative; z-index: 10;">
+        <div class="label-caps reveal-up" style="color: #dbc2b0; margin-bottom: 1rem; letter-spacing: 0.2em;">Curated Realm</div>
+        <h1 class="reveal-up" style="font-size: clamp(3rem, 8vw, 5.5rem); margin-bottom: 1.5rem; transition-delay: 0.2s; color: #ffffff; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">Her</h1>
+        <p class="reveal-up" style="font-size: 1.125rem; color: rgba(255,255,255,0.85); max-width: 600px; margin: 0 auto; transition-delay: 0.4s; text-shadow: 0 2px 6px rgba(0,0,0,0.5);">
+          Ethereal, complex, and deeply personal. Soft florals grounded by warm resins and delicate spices, designed to be your timeless signature.
+        </p>
+      </div>
+    </section>
+
+    <!-- PRODUCT GRID -->
+    <section style="padding: 6rem 0;">
+      <div class="container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 4rem 2rem;">
+        
+        <!-- Product 1 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=1000" alt="Velvet Peony" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Velvet Peony</h3>
+          <p style="color: var(--muted-foreground);">$185.00</p>
+        </a>
+
+        <!-- Product 2 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit; transition-delay: 0.1s;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800" alt="Desert Rose" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Desert Rose</h3>
+          <p style="color: var(--muted-foreground);">$195.00</p>
+        </a>
+
+        <!-- Product 3 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit; transition-delay: 0.2s;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1590736704728-f4730bb30770?auto=format&fit=crop&q=80&w=800" alt="Silk Musk" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Silk Musk</h3>
+          <p style="color: var(--muted-foreground);">$175.00</p>
+        </a>
+
+        <!-- Product 4 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit; transition-delay: 0.3s;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1523293182086-7651a899d37f?auto=format&fit=crop&q=80&w=800" alt="Night Jasmine" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Night Jasmine</h3>
+          <p style="color: var(--muted-foreground);">$150.00</p>
+        </a>
+
+        <!-- Product 5 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1528740561666-dc2479da08ad?auto=format&fit=crop&q=80&w=800" alt="Ethereal Bloom" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Ethereal Bloom</h3>
+          <p style="color: var(--muted-foreground);">$165.00</p>
+        </a>
+
+        <!-- Product 6 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1543431109-79101f9f60a3?auto=format&fit=crop&q=80&w=800" alt="Blush Tuberose" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Blush Tuberose</h3>
+          <p style="color: var(--muted-foreground);">$180.00</p>
+        </a>
+
+        <!-- Product 7 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=800" alt="Mystic Orchid" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Mystic Orchid</h3>
+          <p style="color: var(--muted-foreground);">$210.00</p>
+        </a>
+
+        <!-- Product 8 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1515377905703-c4788e51af15?auto=format&fit=crop&q=80&w=800" alt="Golden Mimosa" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Golden Mimosa</h3>
+          <p style="color: var(--muted-foreground);">$140.00</p>
+        </a>
+
+        <!-- Product 9 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=800" alt="Satin Vanilla" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">Satin Vanilla</h3>
+          <p style="color: var(--muted-foreground);">$170.00</p>
+        </a>
+
+        <!-- Product 10 -->
+        <a href="#" class="reveal-up product-card" style="display: block; text-decoration: none; color: inherit;">
+          <div class="img-reveal-wrapper" style="aspect-ratio: 4/5; margin-bottom: 1.5rem;">
+            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=800" alt="White Neroli" class="img-reveal">
+          </div>
+          <h3 style="font-size: 1.25rem; margin-bottom: 0.5rem;">White Neroli</h3>
+          <p style="color: var(--muted-foreground);">$155.00</p>
+        </a>
+
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+        
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
+
+

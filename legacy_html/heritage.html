@@ -1,0 +1,170 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Heritage | Scented Silence</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .heritage-hero {
+      height: 70vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .heritage-hero img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.6;
+    }
+
+    .story-section {
+      padding: 10rem 0;
+      background: var(--background);
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6rem;
+      align-items: center;
+    }
+
+    .story-image {
+      aspect-ratio: 4/5;
+      overflow: hidden;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.1);
+    }
+
+    .story-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">
+      Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html"><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger"><span class="material-icons">shopping_bag</span>Shop <span
+            class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href='all-products.html'><span class='material-icons'>grid_view</span>Shop All</a>
+      <a href='bulk-enquiry.html'><span class='material-icons'>business</span>Bulk Queries</a>
+      <a href="contact.html"><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href='blog.html'><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+    <a href='login.html' class='action-btn auth-link-placeholder' id='auth-trigger' aria-label='Account'><span class='material-icons'>account_circle</span></a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal Overlay -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results">
+        <!-- Live results appear here -->
+      </div>
+    </div>
+  </div>
+
+  <main>
+    <section class="heritage-hero">
+      <img src="https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=2000"
+        alt="Heritage">
+      <div class="container" style="position: relative; z-index: 10; text-align: center;">
+        <div class="label-caps reveal-up" style="color: #dbc2b0; margin-bottom: 2rem;">Since 1925</div>
+        <h1 class="reveal-up" style="font-size: clamp(3rem, 10vw, 6rem); font-family: var(--font-serif); color: #fff;">A
+          Legacy of Silence</h1>
+      </div>
+    </section>
+
+    <section class="story-section">
+      <div class="container">
+        <div class="story-grid">
+          <div class="reveal-up">
+            <h2 style="font-family: var(--font-serif); font-size: 3rem; margin-bottom: 2.5rem;">Born in the Heart of
+              Kannauj</h2>
+            <p style="color: var(--muted-foreground); line-height: 2; margin-bottom: 2rem; font-size: 1.125rem;">
+              For nearly a century, Makhulal Ayodhya Prasad & Co has been the custodian of India's olfactory heritage.
+              Nestled in the ancient city of Kannauj, often called the 'Grasse of the East', our family has perfected
+              the art of traditional hydro-distillation.
+            </p>
+            <p style="color: var(--muted-foreground); line-height: 2; font-size: 1.125rem;">
+              Scented Silence is the contemporary evolution of this legacy—a bridge between ancient craftsmanship and
+              the modern minimal silhouette. We believe that true luxury speaks in a whisper, not a shout.
+            </p>
+          </div>
+          <div class="story-image reveal-up">
+            <img src="https://images.unsplash.com/photo-1590736704728-f4730bb30770?auto=format&fit=crop&q=80&w=1000"
+              alt="Distillation">
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
+
+
+

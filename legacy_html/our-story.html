@@ -1,0 +1,466 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Story | Scented Silence</title>
+  <meta name="description" content="The story of Scented Silence — five generations of attar craft rooted in Kannauj, India, since 1887.">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .story-hero {
+      height: 75vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      position: relative;
+      overflow: hidden;
+      text-align: center;
+    }
+    .story-hero img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.5;
+    }
+    .story-hero-content {
+      position: relative;
+      z-index: 10;
+      color: #fff;
+      max-width: 750px;
+      padding: 0 2rem;
+    }
+
+    .timeline {
+      position: relative;
+      padding: 3rem 0;
+    }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: var(--border);
+      transform: translateX(-50%);
+    }
+    .timeline-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 3rem;
+      margin-bottom: 5rem;
+      position: relative;
+    }
+    .timeline-item:nth-child(even) {
+      flex-direction: row-reverse;
+    }
+    .timeline-year {
+      flex: 0 0 calc(50% - 2rem);
+      text-align: right;
+      padding-right: 3rem;
+      font-family: var(--font-serif);
+      font-size: 3rem;
+      color: var(--primary);
+      line-height: 1;
+    }
+    .timeline-item:nth-child(even) .timeline-year {
+      text-align: left;
+      padding-right: 0;
+      padding-left: 3rem;
+    }
+    .timeline-dot {
+      position: absolute;
+      left: 50%;
+      top: 0.5rem;
+      width: 12px;
+      height: 12px;
+      background: var(--primary);
+      border-radius: 50%;
+      transform: translateX(-50%);
+      border: 3px solid var(--background);
+      box-shadow: 0 0 0 1px var(--border);
+    }
+    .timeline-body {
+      flex: 0 0 calc(50% - 2rem);
+      padding-left: 3rem;
+    }
+    .timeline-item:nth-child(even) .timeline-body {
+      padding-left: 0;
+      padding-right: 3rem;
+      text-align: right;
+    }
+    .timeline-body h4 {
+      font-family: var(--font-serif);
+      font-size: 1.35rem;
+      margin-bottom: 0.6rem;
+    }
+    .timeline-body p {
+      color: var(--muted-foreground);
+      line-height: 1.8;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 768px) {
+      .story-hero { height: 55vh; }
+      .story-hero-content h1 { font-size: 2.5rem; }
+
+      /* Stack all two-column sections */
+      section > .container > div[style*="display: flex"] {
+        flex-direction: column !important;
+        gap: 2rem !important;
+      }
+
+      /* Reduce all section padding */
+      section { padding: 4rem 0 !important; }
+
+      /* Image heights */
+      .img-reveal-wrapper[style*="height: 600px"],
+      .img-reveal-wrapper[style*="height: 580px"] {
+        height: 280px !important;
+        max-height: 280px !important;
+      }
+
+      /* Stats banner */
+      section[style*="background: var(--foreground)"] .container > div {
+        gap: 2rem !important;
+        justify-content: center !important;
+      }
+
+      /* Philosophy grid */
+      section div[style*="grid-template-columns: repeat(auto-fill"] {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1.25rem !important;
+      }
+      section div[style*="grid-template-columns: repeat(auto-fill"] > div {
+        padding: 1.5rem !important;
+      }
+
+      /* Timeline mobile */
+      .timeline::before { left: 1rem; }
+      .timeline-item,
+      .timeline-item:nth-child(even) {
+        flex-direction: column !important;
+        gap: 0.5rem !important;
+        margin-bottom: 3rem !important;
+      }
+      .timeline-year,
+      .timeline-item:nth-child(even) .timeline-year {
+        flex: unset !important;
+        text-align: left !important;
+        padding: 0 0 0 2.75rem !important;
+        font-size: 1.75rem !important;
+      }
+      .timeline-dot { left: 1rem !important; top: 0.4rem !important; }
+      .timeline-body,
+      .timeline-item:nth-child(even) .timeline-body {
+        flex: unset !important;
+        padding: 0 0 0 2.75rem !important;
+        text-align: left !important;
+      }
+
+      /* CTA section */
+      section[style*="padding: 8rem"] { padding: 4rem 0 !important; }
+
+      /* Stats row */
+      div[style*="display: flex; flex-wrap: wrap; gap: 3rem; justify-content: space-around"] {
+        gap: 1.5rem 2rem !important;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .story-hero { height: 50vh; }
+      section { padding: 3rem 0 !important; }
+      section div[style*="grid-template-columns: repeat(auto-fill"] {
+        grid-template-columns: 1fr !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html"><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger"><span class="material-icons">shopping_bag</span>Shop <span class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href="all-products.html"><span class="material-icons">grid_view</span>Shop All</a>
+      <a href="bulk-enquiry.html"><span class="material-icons">business</span>Bulk Queries</a>
+      <a href="contact.html"><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href="blog.html"><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+      <a href="login.html" class="action-btn auth-link-placeholder" id="auth-trigger" aria-label="Account">
+        <span class="material-icons">account_circle</span>
+      </a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results"></div>
+    </div>
+  </div>
+
+  <main>
+
+    <!-- HERO -->
+    <section class="story-hero">
+      <img src="https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=2000" alt="Our Story Hero">
+      <div class="story-hero-content">
+        <div class="label-caps reveal-up" style="color: #dbc2b0; margin-bottom: 1.5rem; letter-spacing: 0.3em;">Since 1887</div>
+        <h1 class="reveal-up" style="font-size: clamp(2.5rem, 8vw, 5rem); font-family: var(--font-serif); margin-bottom: 1.5rem; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+          Our Story
+        </h1>
+        <p class="reveal-up" style="color: rgba(255,255,255,0.85); line-height: 1.9; font-size: 1.05rem; text-shadow: 0 2px 6px rgba(0,0,0,0.4);">
+          Five generations. One city. A thousand flowers distilled into silence.
+        </p>
+      </div>
+    </section>
+
+    <!-- ORIGIN -->
+    <section style="padding: var(--spacing-section) 0; background: var(--background);">
+      <div class="container">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 5rem;">
+          <div class="reveal-left" style="flex: 1 1 420px; max-width: 100%;">
+            <div class="img-reveal-wrapper" style="height: 600px; max-height: 70vh;">
+              <img src="https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=1000" alt="Kannauj Distillation" class="img-reveal">
+            </div>
+          </div>
+          <div class="reveal-right" style="flex: 1 1 380px; max-width: 100%;">
+            <div class="label-caps" style="color: var(--primary); margin-bottom: 1rem; font-size: 0.7rem; letter-spacing: 0.25em;">The Beginning</div>
+            <h2 style="font-size: clamp(1.75rem, 4vw, 2.75rem); font-family: var(--font-serif); margin-bottom: 1.75rem;">Born in Kannauj,<br>the Perfume Capital</h2>
+            <p style="color: var(--muted-foreground); line-height: 1.9; margin-bottom: 1.25rem;">
+              Nestled on the banks of the sacred Ganga, the city of Kannauj has produced attars for over a thousand years. It is here, in 1887, that our founder — Seth Makhulal Ayodhya Prasad — set up his first copper <em>deg</em> and began what would become a legacy spanning five generations.
+            </p>
+            <p style="color: var(--muted-foreground); line-height: 1.9; margin-bottom: 1.25rem;">
+              His method was the ancient <em>deg-bhapka</em> process: flower petals loaded into a sealed copper pot, heated over a slow wood fire, steam carried through bamboo pipes into a receiving vessel submerged in cold water. The resulting oil — pure attar — would be collected drop by precious drop.
+            </p>
+            <p style="color: var(--muted-foreground); line-height: 1.9;">
+              A single kilogram of Rose Attar requires over 300 kilograms of Damask rose petals, all harvested before sunrise. This is not manufacturing. This is devotion.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STATS BANNER -->
+    <section style="background: var(--foreground); color: var(--background); padding: 5rem 0;">
+      <div class="container">
+        <div style="display: flex; flex-wrap: wrap; gap: 3rem; justify-content: space-around; text-align: center;">
+          <div class="reveal-up">
+            <div style="font-size: 3.5rem; font-family: var(--font-serif); margin-bottom: 0.5rem;">1887</div>
+            <div style="font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7;">Year Founded</div>
+          </div>
+          <div class="reveal-up" style="transition-delay: 0.1s;">
+            <div style="font-size: 3.5rem; font-family: var(--font-serif); margin-bottom: 0.5rem;">5</div>
+            <div style="font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7;">Generations</div>
+          </div>
+          <div class="reveal-up" style="transition-delay: 0.2s;">
+            <div style="font-size: 3.5rem; font-family: var(--font-serif); margin-bottom: 0.5rem;">137+</div>
+            <div style="font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7;">Years of Craft</div>
+          </div>
+          <div class="reveal-up" style="transition-delay: 0.3s;">
+            <div style="font-size: 3.5rem; font-family: var(--font-serif); margin-bottom: 0.5rem;">40+</div>
+            <div style="font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7;">Rare Botanicals</div>
+          </div>
+          <div class="reveal-up" style="transition-delay: 0.4s;">
+            <div style="font-size: 3.5rem; font-family: var(--font-serif); margin-bottom: 0.5rem;">100%</div>
+            <div style="font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.7;">Natural</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TIMELINE -->
+    <section style="padding: var(--spacing-section) 0; background: #faf9f7;">
+      <div class="container">
+        <div class="reveal-up" style="text-align: center; max-width: 650px; margin: 0 auto 6rem;">
+          <div class="label-caps" style="color: var(--primary); margin-bottom: 1rem; font-size: 0.7rem; letter-spacing: 0.25em;">Through the Decades</div>
+          <h2 style="font-size: clamp(2rem, 5vw, 3rem); font-family: var(--font-serif);">A Legacy Told in Time</h2>
+        </div>
+        <div class="timeline">
+
+          <div class="timeline-item reveal-up">
+            <div class="timeline-year">1887</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-body">
+              <h4>The First Deg</h4>
+              <p>Seth Makhulal Ayodhya Prasad lights the first fire under a copper deg in Kannauj. His first attar — a pure Rose of Taif — is gifted to the Nawab of Lucknow.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item reveal-up">
+            <div class="timeline-year">1920</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-body">
+              <h4>The Sandalwood Era</h4>
+              <p>The second generation introduces Mysore Sandalwood as a base for all their attars, creating a house signature of warmth and depth that endures to this day.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item reveal-up">
+            <div class="timeline-year">1962</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-body">
+              <h4>The Oud Discovery</h4>
+              <p>A trade journey to Assam introduces our family to Agarwood (Oud). The third generation begins distilling the first Indian-Assamese Oud attar, a rarity that becomes the house's most celebrated creation.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item reveal-up">
+            <div class="timeline-year">1995</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-body">
+              <h4>Global Reach</h4>
+              <p>The fourth generation begins exporting to connoisseurs in the Middle East and Europe, introducing the ancient wisdom of Indian attar to a new world audience.</p>
+            </div>
+          </div>
+
+          <div class="timeline-item reveal-up">
+            <div class="timeline-year">2024</div>
+            <div class="timeline-dot"></div>
+            <div class="timeline-body">
+              <h4>Scented Silence is Born</h4>
+              <p>The fifth generation reimagines the legacy for the modern world — launching Scented Silence as a curated digital atelier, bringing 137 years of olfactory mastery to those who seek quiet luxury.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- PHILOSOPHY -->
+    <section style="padding: var(--spacing-section) 0; background: var(--background);">
+      <div class="container">
+        <div class="reveal-up" style="text-align: center; max-width: 650px; margin: 0 auto 5rem;">
+          <div class="label-caps" style="color: var(--primary); margin-bottom: 1rem; font-size: 0.7rem; letter-spacing: 0.25em;">What We Stand For</div>
+          <h2 style="font-size: clamp(2rem, 5vw, 3rem); font-family: var(--font-serif);">Our Philosophy</h2>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 3rem;">
+
+          <div class="reveal-up" style="padding: 2.5rem; border: 1px solid var(--border);">
+            <span class="material-icons" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;">eco</span>
+            <h4 style="font-family: var(--font-serif); font-size: 1.2rem; margin-bottom: 0.75rem;">Ethically Sourced</h4>
+            <p style="color: var(--muted-foreground); font-size: 0.9rem; line-height: 1.8;">Rose petals from Taif, vetiver roots from Haiti, jasmine from Grasse, sandalwood from Mysore. Every ingredient has a story and an address.</p>
+          </div>
+
+          <div class="reveal-up" style="padding: 2.5rem; border: 1px solid var(--border); transition-delay: 0.1s;">
+            <span class="material-icons" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;">handyman</span>
+            <h4 style="font-family: var(--font-serif); font-size: 1.2rem; margin-bottom: 0.75rem;">Handcrafted Always</h4>
+            <p style="color: var(--muted-foreground); font-size: 0.9rem; line-height: 1.8;">Our copper degs have not been replaced since 1920. Every batch is stirred, tested, and approved by a family member before bottling begins.</p>
+          </div>
+
+          <div class="reveal-up" style="padding: 2.5rem; border: 1px solid var(--border); transition-delay: 0.2s;">
+            <span class="material-icons" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;">do_not_disturb_alt</span>
+            <h4 style="font-family: var(--font-serif); font-size: 1.2rem; margin-bottom: 0.75rem;">Zero Synthetics</h4>
+            <p style="color: var(--muted-foreground); font-size: 0.9rem; line-height: 1.8;">We do not use synthetic aroma chemicals, stabilisers, or alcohol fillers. What you smell is what nature made — nothing more, nothing less.</p>
+          </div>
+
+          <div class="reveal-up" style="padding: 2.5rem; border: 1px solid var(--border); transition-delay: 0.3s;">
+            <span class="material-icons" style="font-size: 2.25rem; color: var(--primary); margin-bottom: 1.25rem; display: block;">schedule</span>
+            <h4 style="font-family: var(--font-serif); font-size: 1.2rem; margin-bottom: 0.75rem;">Slow Production</h4>
+            <p style="color: var(--muted-foreground); font-size: 0.9rem; line-height: 1.8;">We produce in small batches, never exceeding what our artisans can personally oversee. Some of our attars take 12 hours per batch. Patience is our ingredient.</p>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ARTISAN NOTE -->
+    <section style="padding: var(--spacing-section) 0; background: #faf9f7;">
+      <div class="container">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 5rem;">
+          <div class="reveal-right" style="flex: 1 1 420px; max-width: 100%; order: 2;">
+            <div class="img-reveal-wrapper" style="height: 580px; max-height: 70vh;">
+              <img src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000" alt="Artisan at work" class="img-reveal">
+            </div>
+          </div>
+          <div class="reveal-left" style="flex: 1 1 380px; max-width: 100%; order: 1;">
+            <div class="label-caps" style="color: var(--primary); margin-bottom: 1rem; font-size: 0.7rem; letter-spacing: 0.25em;">A Note from the Family</div>
+            <h2 style="font-size: clamp(1.75rem, 4vw, 2.5rem); font-family: var(--font-serif); margin-bottom: 1.75rem;">"We distil not just flowers, but memory."</h2>
+            <p style="color: var(--muted-foreground); line-height: 1.9; margin-bottom: 1.5rem;">
+              My great-great-grandfather used to say that a perfumer's greatest tool is not his nose, but his patience. The flowers decide when they are ready. The fire decides its own tempo. Our job is to simply be present and listen.
+            </p>
+            <p style="color: var(--muted-foreground); line-height: 1.9; margin-bottom: 2rem;">
+              Each bottle of Scented Silence carries within it not just a fragrance, but the memory of a dawn harvest, the sound of copper vessels, and the quiet pride of five generations who believed that beauty does not need to announce itself.
+            </p>
+            <div style="font-family: var(--font-serif); font-size: 1.2rem; color: var(--foreground);">— Aryan Prasad,<br><span style="font-size: 0.85rem; font-family: var(--font-sans); color: var(--muted-foreground); letter-spacing: 0.05em;">Fifth Generation, Scented Silence</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section style="padding: 8rem 0; background: var(--foreground); color: var(--background); text-align: center;">
+      <div class="container">
+        <div class="reveal-up" style="max-width: 600px; margin: 0 auto;">
+          <div class="label-caps" style="color: rgba(255,255,255,0.6); margin-bottom: 1rem; font-size: 0.7rem; letter-spacing: 0.25em;">Experience the Legacy</div>
+          <h2 style="font-size: clamp(2rem, 5vw, 3.5rem); font-family: var(--font-serif); margin-bottom: 2rem; color: #fff;">Wear a Piece of History</h2>
+          <p style="color: rgba(255,255,255,0.75); line-height: 1.9; margin-bottom: 3rem;">
+            Every Scented Silence attar is a bridge across five generations. Choose yours.
+          </p>
+          <a href="all-products.html" style="display: inline-flex; align-items: center; gap: 0.75rem; padding: 1.125rem 3rem; background: #fff; color: #1a1a1a; text-decoration: none; font-size: 0.75rem; letter-spacing: 0.2em; text-transform: uppercase; font-family: var(--font-sans); transition: opacity 0.3s ease;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            Explore All Fragrances <span class="material-icons" style="font-size: 1rem;">arrow_forward</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="our-story.html" >Our Story</a>
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+
+</html>

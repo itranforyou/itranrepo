@@ -1,0 +1,121 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shipping & Returns | Scented Silence</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">
+      Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html"><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger"><span class="material-icons">shopping_bag</span>Shop <span
+            class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href='all-products.html'><span class='material-icons'>grid_view</span>Shop All</a>
+      <a href='bulk-enquiry.html'><span class='material-icons'>business</span>Bulk Queries</a>
+      <a href="contact.html"><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href='blog.html'><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+    <a href='login.html' class='action-btn auth-link-placeholder' id='auth-trigger' aria-label='Account'><span class='material-icons'>account_circle</span></a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal Overlay -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results">
+        <!-- Live results appear here -->
+      </div>
+    </div>
+  </div>
+
+  <main style="padding: 12rem 0;">
+    <div class="container" style="max-width: 800px;">
+      <div style="display: flex; align-items: center; justify-content: center; gap: 1.5rem; margin-bottom: 4rem; position: relative;"><a href="javascript:history.back()" class="back-btn" style="position: absolute; left: 0;" aria-label="Go Back"><span class="material-icons">arrow_back_ios_new</span></a><h1 style="font-family: var(--font-serif); font-size: 3rem; margin: 0; text-align: center;">Shipping & Returns</h1></div>
+      
+      <div style="margin-bottom: 4rem;">
+        <h2 style="font-family: var(--font-serif); font-size: 1.75rem; margin-bottom: 1.5rem;">Shipping Policy</h2>
+        <p style="color: var(--muted-foreground); line-height: 1.8; margin-bottom: 1rem;">
+          We offer complimentary standard shipping on all orders over $100. For international shipping, rates are calculated at checkout.
+        </p>
+        <p style="color: var(--muted-foreground); line-height: 1.8;">
+          All orders are processed within 2-3 business days. You will receive a tracking number once your order has been dispatched.
+        </p>
+      </div>
+
+      <div style="margin-bottom: 4rem;">
+        <h2 style="font-family: var(--font-serif); font-size: 1.75rem; margin-bottom: 1.5rem;">Returns & Exchanges</h2>
+        <p style="color: var(--muted-foreground); line-height: 1.8; margin-bottom: 1rem;">
+          Due to the artisanal nature of our fragrances, we can only accept returns on unopened and unused products within 14 days of receipt.
+        </p>
+        <p style="color: var(--muted-foreground); line-height: 1.8;">
+          To initiate a return, please contact our concierge at <a href="mailto:mlapandco@gmail.com" >mlapandco@gmail.com</a>.
+        </p>
+      </div>
+
+      <div>
+        <h2 style="font-family: var(--font-serif); font-size: 1.75rem; margin-bottom: 1.5rem;">Damaged Goods</h2>
+        <p style="color: var(--muted-foreground); line-height: 1.8;">
+          If your order arrives damaged, please notify us immediately with photographs of the packaging and product for a replacement.
+        </p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+

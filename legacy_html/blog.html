@@ -1,0 +1,117 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Journal | Scented Silence</title>
+  <meta name="description" content="The Fragrance Journal.">
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html"><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger"><span class="material-icons">shopping_bag</span>Shop <span class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href='all-products.html'><span class='material-icons'>grid_view</span>Shop All</a>
+      <a href='bulk-enquiry.html'><span class='material-icons'>business</span>Bulk Queries</a>
+      
+      <a href="contact.html"><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href='blog.html' ><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+    <a href='login.html' class='action-btn auth-link-placeholder' id='auth-trigger' aria-label='Account'><span class='material-icons'>account_circle</span></a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal Overlay -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results">
+        <!-- Live results appear here -->
+      </div>
+    </div>
+  </div>
+
+  <main style="padding-top: 100px;">
+    <section style="padding: 4rem 0; text-align: center;">
+      <div class="container">
+        <h1 class="reveal-up" style="font-size: 4rem; margin-bottom: 1.5rem;">The Journal</h1>
+        <p class="reveal-up" style="font-size: 1.125rem; color: var(--muted-foreground); max-width: 600px; margin: 0 auto; transition-delay: 0.2s;">
+          Stories of origin, the art of distillation, and musings on the philosophy of scent.
+        </p>
+      </div>
+    </section>
+
+    <section style="padding: 4rem 0;">
+      <div class="container">
+        <article class="reveal-up" style="display: flex; gap: 4rem; align-items: center; margin-bottom: 6rem; flex-wrap: wrap;">
+          <div class="img-reveal-wrapper" style="flex: 1 1 400px; height: 400px;">
+            <img src="https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=800" alt="Journal entry" class="img-reveal">
+          </div>
+          <div style="flex: 1 1 400px;">
+            <div class="label-caps" style="color: var(--primary); margin-bottom: 1rem;">Process</div>
+            <h2 style="font-size: 2.5rem; margin-bottom: 1.5rem;">The Ancient Art of Distillation</h2>
+            <p style="color: var(--muted-foreground); margin-bottom: 2rem;">Why we reject modern synthetics in favor of the slow, deliberate process of traditional copper still extraction.</p>
+            <a href="#" class="label-caps" style="border-bottom: 1px solid currentColor; padding-bottom: 0.25rem;">Read More</a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+        
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        
+      <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,264 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Cart | Scented Silence</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <style>
+    .cart-item {
+      display: grid;
+      grid-template-columns: 120px 2fr 1fr 1fr auto;
+      align-items: center;
+      gap: 2rem;
+      padding: 2rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    @media (max-width: 768px) {
+      .cart-item {
+        grid-template-columns: 80px 1fr auto;
+        gap: 1rem;
+      }
+      .cart-item .price, .cart-item .quantity {
+        display: none;
+      }
+    }
+    
+    .quantity-controls {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      border: 1px solid var(--border);
+      padding: 0.25rem 0.5rem;
+      border-radius: 2rem;
+      width: fit-content;
+    }
+    
+    .qty-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      color: var(--muted-foreground);
+      transition: all 0.3s ease;
+    }
+    
+    .qty-btn:hover {
+      background-color: var(--border);
+      color: var(--primary);
+    }
+    
+    .qty-val {
+      font-family: var(--font-sans);
+      font-weight: 600;
+      min-width: 24px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .remove-item-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--muted-foreground);
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: color 0.3s ease;
+    }
+
+    .remove-item-btn:hover {
+      color: #ff4444;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html"><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger"><span class="material-icons">shopping_bag</span>Shop <span class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href='all-products.html'><span class='material-icons'>grid_view</span>Shop All</a>
+      <a href='bulk-enquiry.html'><span class='material-icons'>business</span>Bulk Queries</a>
+      <a href="contact.html"><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href='blog.html'><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+    <a href='login.html' class='action-btn auth-link-placeholder' id='auth-trigger' aria-label='Account'><span class='material-icons'>account_circle</span></a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal Overlay -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results">
+        <!-- Live results appear here -->
+      </div>
+    </div>
+  </div>
+
+  <main style="padding-top: 140px; min-height: 70vh;">
+    <div class="container">
+      <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 3rem;">
+        <a href="javascript:history.back()" class="back-btn" aria-label="Go Back">
+          <span class="material-icons">arrow_back_ios_new</span>
+        </a>
+        <h1 class="reveal-up" style="margin: 0;">Your Cart</h1>
+      </div>
+
+      <div id="cart-items-container">
+        <!-- Items will be injected here -->
+      </div>
+
+      <div id="cart-summary" style="margin-top: 4rem; text-align: right; display: none;" class="reveal-up">
+        <div style="font-size: 1.5rem; margin-bottom: 2rem;">Total: <span id="cart-total">$0.00</span></div>
+        <button class="btn-primary label-caps" style="padding: 1.25rem 4rem;">Proceed to Checkout</button>
+      </div>
+
+      <div id="empty-cart" class="empty-state reveal-up" style="display: none;">
+        <span class="material-icons" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;">shopping_bag</span>
+        <h2>Your cart is quiet.</h2>
+        <p style="margin-top: 1rem; margin-bottom: 2rem;">Discover your next signature scent.</p>
+        <a href="index.html" class="btn-outline label-caps">Browse Collection</a>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+        
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const container = document.getElementById('cart-items-container');
+      const summary = document.getElementById('cart-summary');
+      const emptyState = document.getElementById('empty-cart');
+      const totalEl = document.getElementById('cart-total');
+      
+      function renderCart() {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        
+        if (cart.length === 0) {
+          container.innerHTML = '';
+          summary.style.display = 'none';
+          emptyState.style.display = 'block';
+          return;
+        }
+
+        emptyState.style.display = 'none';
+        summary.style.display = 'block';
+        
+        let total = 0;
+        container.innerHTML = cart.map((item, index) => {
+          const itemTotal = parseFloat(item.price.replace('$', '')) * (item.quantity || 1);
+          total += itemTotal;
+          return `
+            <div class="cart-item">
+              <div class="img-reveal-wrapper" style="height: 120px;">
+                <img src="${item.image}" alt="${item.name}" class="img-reveal loaded">
+              </div>
+              <div>
+                <h3 style="margin-bottom: 0.5rem;">${item.name}</h3>
+                <div class="label-caps" style="color: var(--muted-foreground); font-size: 0.7rem;">${item.category || ''}</div>
+              </div>
+              <div class="price-info">
+                <div class="unit-price label-caps" style="font-size: 0.7rem; color: var(--muted-foreground); margin-bottom: 0.25rem;">Unit: ${item.price}</div>
+                <div class="subtotal" style="font-weight: 600;">$${itemTotal.toFixed(2)}</div>
+              </div>
+              <div class="quantity-controls">
+                <button onclick="updateQuantity(${index}, -1)" class="qty-btn" aria-label="Decrease quantity">−</button>
+                <span class="qty-val">${item.quantity || 1}</span>
+                <button onclick="updateQuantity(${index}, 1)" class="qty-btn" aria-label="Increase quantity">+</button>
+              </div>
+              <button onclick="removeFromCart(${index})" class="remove-item-btn" aria-label="Remove item">
+                <span class="material-icons" style="font-size: 1.2rem;">delete_outline</span>
+                <span class="label-caps" style="font-size: 0.65rem;">Remove</span>
+              </button>
+            </div>
+          `;
+        }).join('');
+        
+        totalEl.innerText = `$${total.toFixed(2)}`;
+      }
+
+      window.updateQuantity = (index, delta) => {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const newQty = (cart[index].quantity || 1) + delta;
+        if (newQty >= 1) { // Logic: Minimum quantity is 1
+          cart[index].quantity = newQty;
+          localStorage.setItem('cart', JSON.stringify(cart));
+          renderCart();
+        }
+      };
+
+      window.removeFromCart = (index) => {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        cart.splice(index, 1);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+        if (window.updateHeaderCounts) window.updateHeaderCounts();
+      };
+
+      renderCart();
+    });
+  </script>
+</body>
+</html>
+
+
+
+

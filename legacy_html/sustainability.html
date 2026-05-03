@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sustainability | Scented Silence</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+  <div class="page-transition"></div>
+
+  <header>
+    <a href="index.html" class="logo font-serif" style="text-decoration: none; color: inherit; font-family: var(--font-serif); font-size: 1.25rem; letter-spacing: 0.05em;">
+      Scented Silence</a>
+    <nav class="nav-links label-caps">
+      <a href="index.html"><span class="material-icons">home</span>Home</a>
+      <div class="dropdown">
+        <a href="#" class="dropdown-trigger"><span class="material-icons">shopping_bag</span>Shop <span
+            class="material-icons" style="font-size: 1rem; margin-left: 2px;">expand_more</span></a>
+        <div class="dropdown-menu">
+          <a href="him.html">Him</a>
+          <a href="her.html">Her</a>
+          <a href="spiritual.html">Spiritual</a>
+          <a href="home-fragrance.html">Home Fragrance</a>
+        </div>
+      </div>
+      <a href='all-products.html'><span class='material-icons'>grid_view</span>Shop All</a>
+      <a href='bulk-enquiry.html'><span class='material-icons'>business</span>Bulk Queries</a>
+      <a href="contact.html"><span class="material-icons">mail</span>Contact</a>
+      <a href='our-story.html'><span class='material-icons'>auto_stories</span>Our Story</a>
+      <a href='blog.html'><span class="material-icons">menu_book</span>Journal</a>
+    </nav>
+    <div class="header-actions">
+      <button class="action-btn" id="search-trigger" aria-label="Search">
+        <span class="material-icons">search</span>
+      </button>
+      <a href="cart.html" class="action-btn" aria-label="Cart">
+        <span class="material-icons">shopping_bag</span>
+        <span class="cart-count">0</span>
+      </a>
+    <a href='login.html' class='action-btn auth-link-placeholder' id='auth-trigger' aria-label='Account'><span class='material-icons'>account_circle</span></a>
+    </div>
+    <button class="menu-toggle" aria-label="Toggle Menu">
+      <span class="material-icons">menu</span>
+    </button>
+  </header>
+
+  <!-- Search Modal Overlay -->
+  <div id="search-modal" class="search-modal">
+    <div class="search-modal-content">
+      <div class="search-input-wrapper">
+        <span class="material-icons">search</span>
+        <input type="text" id="search-input" placeholder="Search for products, collections..." autofocus>
+        <button id="close-search" aria-label="Close search">
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+      <div id="search-results" class="search-results">
+        <!-- Live results appear here -->
+      </div>
+    </div>
+  </div>
+
+  <main style="padding: 12rem 0;">
+    <div class="container" style="max-width: 800px; text-align: center;">
+      <div class="label-caps" style="color: var(--primary); margin-bottom: 2rem;">Honoring the Earth</div>
+      <h1 style="font-family: var(--font-serif); font-size: 4rem; margin-bottom: 3rem;">Conscious Creation</h1>
+      
+      <div style="text-align: left; margin-top: 6rem;">
+        <div style="margin-bottom: 5rem;">
+          <h2 style="font-family: var(--font-serif); font-size: 2rem; margin-bottom: 1.5rem;">Pure Ingredients</h2>
+          <p style="color: var(--muted-foreground); line-height: 1.8; font-size: 1.1rem;">
+            We use only the finest natural extracts, sustainably harvested from their native regions. Our commitment to purity means no synthetic fixatives, no parabens, and zero phthalates.
+          </p>
+        </div>
+
+        <div style="margin-bottom: 5rem;">
+          <h2 style="font-family: var(--font-serif); font-size: 2rem; margin-bottom: 1.5rem;">Ethical Sourcing</h2>
+          <p style="color: var(--muted-foreground); line-height: 1.8; font-size: 1.1rem;">
+            By working directly with small-scale farmers in Kannauj and beyond, we ensure fair wages and support traditional agriculture that has thrived for centuries.
+          </p>
+        </div>
+
+        <div style="margin-bottom: 5rem;">
+          <h2 style="font-family: var(--font-serif); font-size: 2rem; margin-bottom: 1.5rem;">Vegan & Cruelty-Free</h2>
+          <p style="color: var(--muted-foreground); line-height: 1.8; font-size: 1.1rem;">
+            All Scented Silence creations are 100% vegan. We never test on animals, nor do we use ingredients derived from them.
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-grid">
+      <div>
+        <div style="font-family: var(--font-serif); font-size: 1.5rem; margin-bottom: 1rem;">Scented Silence</div>
+        <p style="color: var(--muted-foreground); font-size: 0.875rem;">Crafted in quiet devotion.</p>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="heritage.html">Heritage</a>
+        <a href="sustainability.html">Sustainability</a>
+      </div>
+      <div class="footer-links label-caps">
+        <a href="shipping-returns.html">Shipping & Returns</a>
+        <a href="contact.html">Contact</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
