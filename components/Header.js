@@ -66,6 +66,7 @@ export default function Header() {
         <Link 
           href="/" 
           onClick={() => setIsMenuOpen(false)}
+          className={`nav-link ${pathname === '/' ? 'active' : ''}`}
           style={{ color: pathname === '/' ? 'var(--primary)' : '' }}
         >
           Home
@@ -77,7 +78,7 @@ export default function Header() {
           onMouseLeave={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsShopOpen(false); }}
         >
           <div 
-            className="nav-link-item"
+            className={`nav-link-item ${shopCollections.some(col => pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'active' : ''}`}
             style={{ 
               color: shopCollections.some(col => pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'var(--primary)' : '' 
             }}
@@ -102,11 +103,11 @@ export default function Header() {
           </div>
         </div>
 
-        <Link href="/bulk-enquiry" onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/bulk-enquiry' ? 'var(--primary)' : '' }}>Bulk Queries</Link>
-        <Link href="/contact" onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/contact' ? 'var(--primary)' : '' }}>Contact</Link>
-        <Link href="/our-story" onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/our-story' ? 'var(--primary)' : '' }}>Our Story</Link>
-        <Link href="/blog" onClick={() => setIsMenuOpen(false)} style={{ color: pathname?.startsWith('/blog') ? 'var(--primary)' : '' }}>Journal</Link>
-        <Link href="/track-order" onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/track-order' ? 'var(--primary)' : '' }}>Track Your Order</Link>
+        <Link href="/bulk-enquiry" className={`nav-link ${pathname === '/bulk-enquiry' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/bulk-enquiry' ? 'var(--primary)' : '' }}>Bulk Queries</Link>
+        <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/contact' ? 'var(--primary)' : '' }}>Contact</Link>
+        <Link href="/our-story" className={`nav-link ${pathname === '/our-story' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/our-story' ? 'var(--primary)' : '' }}>Our Story</Link>
+        <Link href="/blog" className={`nav-link ${pathname?.startsWith('/blog') ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname?.startsWith('/blog') ? 'var(--primary)' : '' }}>Journal</Link>
+        <Link href="/track-order" className={`nav-link ${pathname === '/track-order' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/track-order' ? 'var(--primary)' : '' }}>Track Your Order</Link>
       </nav>
 
       <div className="header-actions">

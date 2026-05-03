@@ -75,9 +75,14 @@ export default function Home() {
         {/* BEST SELLERS SECTION */}
         <section id="best-sellers" style={{ padding: 'var(--spacing-section) 0', background: '#faf9f7' }}>
           <div className="container">
-            <Reveal style={{ marginBottom: '4rem' }}>
-              <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '0.75rem', letterSpacing: '0.2em', fontSize: '0.7rem' }}>Most Loved</div>
-              <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)' }}>Best Sellers</h2>
+            <Reveal style={{ marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.5rem' }}>
+              <div>
+                <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '0.75rem', letterSpacing: '0.2em', fontSize: '0.7rem' }}>Most Loved</div>
+                <h2 style={{ fontSize: 'clamp(2rem, 5vw, 3rem)', marginBottom: 0 }}>Best Sellers</h2>
+              </div>
+              <Link href="/all-products" className="btn-outline label-caps" style={{ padding: '0.85rem 1.75rem', display: 'inline-block', fontSize: '0.75rem', marginBottom: '0.5rem' }}>
+                View More <span className="material-icons" style={{ fontSize: '1rem', marginLeft: '0.5rem', verticalAlign: 'middle' }}>arrow_forward</span>
+              </Link>
             </Reveal>
 
             <div className="best-sellers-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '2.5rem', marginBottom: '4rem' }}>
@@ -85,12 +90,6 @@ export default function Home() {
                 <ProductCard key={product.id} product={product} delay={index * 0.1} />
               ))}
             </div>
-
-            <Reveal style={{ textAlign: 'center' }}>
-              <Link href="/all-products" className="btn-outline label-caps" style={{ padding: '1.25rem 3rem', display: 'inline-block' }}>
-                View More <span className="material-icons" style={{ fontSize: '1rem', marginLeft: '0.75rem', verticalAlign: 'middle' }}>arrow_forward</span>
-              </Link>
-            </Reveal>
           </div>
         </section>
 

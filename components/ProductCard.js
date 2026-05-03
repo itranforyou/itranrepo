@@ -138,7 +138,7 @@ export default function ProductCard({ product, delay = 0 }) {
                 <span style={{ color: 'var(--muted-foreground)', fontWeight: 300, textDecoration: 'line-through', fontSize: '0.8rem' }}>{product.costPrice}</span>
               </>
             ) : (
-              <span style={{ color: 'var(--muted-foreground)', fontWeight: 300 }}>{product.price}</span>
+              <span style={{ color: '#8B4513', fontWeight: 700, fontSize: '1.15rem' }}>{product.price}</span>
             )}
           </div>
         </div>

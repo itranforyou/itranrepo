@@ -265,6 +265,30 @@ header {
   display: none;
 }
 
+/* Animated Nav Underlines (Desktop) */
+@media (min-width: 1025px) {
+  .nav-link, .nav-link-item {
+    position: relative;
+  }
+  .nav-link::after, .nav-link-item::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 2px;
+    bottom: -4px;
+    left: 0;
+    background-color: var(--primary);
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+  .nav-link:hover::after, .nav-link-item:hover::after,
+  .nav-link.active::after, .nav-link-item.active::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
 @media (max-width: 1024px) {
   .nav-links {
     gap: 1.5rem;
@@ -529,11 +553,13 @@ footer {
   padding: 1rem 2rem;
   border: none;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .btn-primary:hover {
   background-color: var(--primary);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(141, 75, 0, 0.25);
 }
 
 .btn-outline {
@@ -542,12 +568,14 @@ footer {
   border: 1px solid var(--foreground);
   padding: 1rem 2rem;
   cursor: pointer;
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .btn-outline:hover {
   background-color: var(--foreground);
   color: var(--background);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 .back-btn {
@@ -590,6 +618,16 @@ footer {
 }
 
 /* Product Gallery Styles */
+.best-sellers-grid, .product-grid {
+  grid-template-columns: repeat(4, 1fr) !important;
+}
+
+@media (max-width: 1024px) {
+  .best-sellers-grid, .product-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+}
+
 .gallery-nav {
   position: absolute;
   top: 50%;
@@ -690,7 +728,7 @@ footer {
 }
 
 /* =========================================================================
-   Product Hover Effects (Premium Zoom & Lift)
+   Product & Element Hover Effects (Premium Zoom & Lift)
    ========================================================================= */
 a.reveal-up.active:hover {
   transform: translateY(-8px);
@@ -703,6 +741,17 @@ a.reveal-up.active h3 {
 }
 a.reveal-up.active:hover h3 {
   color: var(--primary);
+}
+
+.realm-item {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  display: block;
+}
+.realm-item:hover {
+  transform: translateY(-12px);
+}
+.realm-item:hover .img-reveal.loaded {
+  transform: scale(1.08);
 }
 
 /* =========================================================================
@@ -779,17 +828,17 @@ a.reveal-up.active:hover h3 {
     text-align: center !important;
   }
 
-  /* Best Sellers Grid — always 2 columns on mobile */
-  .best-sellers-grid {
+  /* Grids — always 2 columns on mobile */
+  .best-sellers-grid, .product-grid {
     grid-template-columns: repeat(2, 1fr) !important;
     gap: 1.25rem 1rem !important;
   }
 
-  .best-sellers-grid h3 {
+  .best-sellers-grid h3, .product-grid h3 {
     font-size: 0.9rem !important;
   }
 
-  .best-sellers-grid .img-reveal-wrapper {
+  .best-sellers-grid .img-reveal-wrapper, .product-grid .img-reveal-wrapper {
     margin-bottom: 0.75rem !important;
   }
 }

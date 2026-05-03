@@ -66,79 +66,73 @@ export default function OurStory() {
         </div>
       </section>
 
-      {/* TIMELINE SECTION */}
-      <section style={{ padding: '12rem 0', background: '#faf9f7', position: 'relative', overflow: 'hidden' }}>
+      {/* OUR STORY DETAILS */}
+      <section style={{ padding: 'var(--spacing-section) 0', background: 'var(--background)' }}>
         <div className="container">
-          <Reveal style={{ textAlign: 'center', marginBottom: '10rem' }}>
+          <Reveal style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 6rem' }}>
+            <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1rem', letterSpacing: '0.25em', fontSize: '0.7rem' }}>Since 1887</div>
+            <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', marginBottom: '2rem' }}>Our Story</h2>
+            <p style={{ color: 'var(--muted-foreground)', lineHeight: 1.9, fontSize: '1.05rem' }}>
+              Born in the ancient city of Kannauj — the perfume capital of India — Scented Silence carries five generations of distillation wisdom. We believe fragrance is not worn. It is remembered.
+            </p>
+          </Reveal>
+
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '5rem', marginBottom: '2rem' }}>
+            <Reveal direction="right" className="img-reveal-wrapper" style={{ flex: '1 1 420px', maxWidth: '100%', height: '600px', maxHeight: '70vh' }}>
+              <img src="https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=1000" alt="Traditional Distillation" className="img-reveal loaded" />
+            </Reveal>
+            <Reveal direction="left" style={{ flex: '1 1 380px', maxWidth: '100%' }}>
+              <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1rem', fontSize: '0.7rem', letterSpacing: '0.2em' }}>The Foundation</div>
+              <h3 style={{ fontSize: '2rem', marginBottom: '1.5rem', fontFamily: 'var(--font-serif)' }}>Makhulal Ayodhya Prasad & Co.</h3>
+              <p style={{ color: 'var(--muted-foreground)', lineHeight: 1.9, marginBottom: '1.5rem' }}>
+                Established in 1887 in the heart of Kannauj, our house — Makhulal Ayodhya Prasad and Co. — began as a small workshop near the banks of the Ganga. Our founders mastered the ancient art of <em>deg-bhapka</em>, a hydro-distillation process that coaxes pure attar from flowers at dawn, capturing the soul of each bloom before the morning sun evaporates it.
+              </p>
+              <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
+                <div>
+                  <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', marginBottom: '0.25rem' }}>137+</div>
+                  <div style={{ fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Years of Craft</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', marginBottom: '0.25rem' }}>5</div>
+                  <div style={{ fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Generations</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', marginBottom: '0.25rem' }}>100%</div>
+                  <div style={{ fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Natural Ingredients</div>
+                </div>
+              </div>
+            </Reveal>
+          </div>
+        </div>
+      </section>
+
+      {/* TIMELINE SECTION */}
+      <section className="timeline-section">
+        <div className="container">
+          <Reveal style={{ textAlign: 'center', marginBottom: '6rem' }}>
             <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1.5rem', letterSpacing: '0.2em' }}>Chronicles of Devotion</div>
             <h2 style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)' }}>A Century in Silence</h2>
           </Reveal>
 
-          <div style={{ position: 'relative', maxWidth: '1200px', margin: '0 auto' }}>
-            {/* Center Line - Thicker and more visible */}
-            <div style={{ 
-              position: 'absolute', 
-              left: '50%', 
-              top: '0', 
-              bottom: '0', 
-              width: '2px', 
-              background: 'var(--primary)', 
-              opacity: 0.3,
-              transform: 'translateX(-50%)',
-              zIndex: 1
-            }}></div>
+          <div className="timeline-container">
+            {/* Center Line */}
+            <div className="timeline-line"></div>
 
             {timeline.map((item, index) => (
-              <div key={item.year} style={{ 
-                display: 'flex', 
-                justifyContent: index % 2 === 0 ? 'flex-start' : 'flex-end',
-                alignItems: 'center',
-                marginBottom: '12rem',
-                position: 'relative',
-                zIndex: 2,
-                width: '100%'
-              }}>
-                {/* Year Marker - More prominent */}
-                <div style={{
-                  position: 'absolute',
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '20px',
-                  height: '20px',
-                  borderRadius: '50%',
-                  background: '#fff',
-                  border: '4px solid var(--primary)',
-                  boxShadow: '0 0 15px rgba(141, 75, 0, 0.2)',
-                  zIndex: 10
-                }}></div>
+              <div key={item.year} className={`timeline-item ${index % 2 === 0 ? 'left' : 'right'}`}>
+                {/* Year Marker */}
+                <div className="timeline-marker"></div>
 
                 <Reveal 
                   direction={index % 2 === 0 ? 'right' : 'left'} 
-                  style={{ width: '42%' }}
+                  className="timeline-content-wrapper"
                 >
-                  <div style={{ 
-                    padding: '3.5rem', 
-                    background: '#111111', 
-                    borderRadius: '16px', 
-                    border: '1px solid rgba(141, 75, 0, 0.2)',
-                    textAlign: index % 2 === 0 ? 'right' : 'left',
-                    boxShadow: '0 40px 80px rgba(0,0,0,0.15)',
-                    position: 'relative'
-                  }}>
-                    {/* Floating Year Tag */}
-                    <div style={{ 
-                      fontSize: '4rem', 
-                      fontFamily: 'var(--font-serif)', 
-                      color: 'var(--primary)', 
-                      marginBottom: '1rem',
-                      fontWeight: 700,
-                      lineHeight: 1
-                    }}>{item.year}</div>
+                  <div className="timeline-content">
+                    <div className="timeline-year">{item.year}</div>
+                    <h3 className="timeline-title">{item.title}</h3>
+                    <p className="timeline-desc">{item.description}</p>
                     
-                    <h3 style={{ fontSize: '1.85rem', marginBottom: '1.5rem', fontFamily: 'var(--font-serif)', color: '#ffffff', letterSpacing: '-0.01em' }}>{item.title}</h3>
-                    <p style={{ color: 'rgba(255,255,255,0.6)', lineHeight: 1.9, fontSize: '1.05rem' }}>{item.description}</p>
-                    
-                    <div className="img-reveal-wrapper" style={{ height: '240px', marginTop: '2.5rem', borderRadius: '12px', overflow: 'hidden' }}>
+                    <div className="img-reveal-wrapper timeline-img">
                       <img src={item.image} alt={item.year} className="img-reveal loaded" style={{ objectPosition: 'center', opacity: 0.8 }} />
                     </div>
                   </div>
@@ -193,23 +187,129 @@ export default function OurStory() {
       </section>
 
       <style jsx>{`
+        .timeline-section {
+          padding: 6rem 0;
+          background: #faf9f7;
+          position: relative;
+          overflow: hidden;
+        }
+        .timeline-container {
+          position: relative;
+          max-width: 1200px;
+          margin: 0 auto;
+        }
+        .timeline-line {
+          position: absolute;
+          left: 50%;
+          top: 0;
+          bottom: 0;
+          width: 2px;
+          background: var(--primary);
+          opacity: 0.3;
+          transform: translateX(-50%);
+          z-index: 1;
+        }
+        .timeline-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 2.5rem;
+          position: relative;
+          z-index: 2;
+          width: 100%;
+        }
+        .timeline-item.left {
+          justify-content: flex-start;
+        }
+        .timeline-item.right {
+          justify-content: flex-end;
+        }
+        .timeline-marker {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          width: 14px;
+          height: 14px;
+          border-radius: 50%;
+          background: #fff;
+          border: 3px solid var(--primary);
+          box-shadow: 0 0 10px rgba(141, 75, 0, 0.2);
+          z-index: 10;
+        }
+        .timeline-content-wrapper {
+          width: 40%;
+        }
+        .timeline-content {
+          padding: 1.25rem;
+          background: #111111;
+          border-radius: 12px;
+          border: 1px solid rgba(141, 75, 0, 0.2);
+          box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+          position: relative;
+        }
+        .timeline-item.left .timeline-content {
+          text-align: right;
+        }
+        .timeline-item.right .timeline-content {
+          text-align: left;
+        }
+        .timeline-year {
+          font-size: 1.8rem;
+          font-family: var(--font-serif);
+          color: var(--primary);
+          margin-bottom: 0.25rem;
+          font-weight: 700;
+          line-height: 1;
+        }
+        .timeline-title {
+          font-size: 1.15rem;
+          margin-bottom: 0.5rem;
+          font-family: var(--font-serif);
+          color: #ffffff;
+          letter-spacing: -0.01em;
+        }
+        .timeline-desc {
+          color: rgba(255,255,255,0.7);
+          line-height: 1.5;
+          font-size: 0.85rem;
+        }
+        .timeline-img {
+          height: 100px;
+          margin-top: 1rem;
+          border-radius: 8px;
+          overflow: hidden;
+        }
+
         @media (max-width: 860px) {
-          div[style*="width: 42%"] {
-            width: 85% !important;
-            margin-left: auto !important;
-            margin-right: 0 !important;
+          .timeline-line {
+            left: 20px;
           }
-          div[style*="left: 50%"] {
-            left: 5% !important;
+          .timeline-marker {
+            left: 20px;
           }
-          div[style*="justify-content: flex-start"] {
-            justify-content: flex-end !important;
+          .timeline-item.left, .timeline-item.right {
+            justify-content: flex-end;
           }
-          div[style*="text-align: right"] {
-            text-align: left !important;
+          .timeline-content-wrapper {
+            width: calc(100% - 60px);
           }
-          div[style*="padding: 3.5rem"] {
-            padding: 2rem !important;
+          .timeline-item.left .timeline-content {
+            text-align: left;
+          }
+          .timeline-content {
+            padding: 1.25rem;
+          }
+          .timeline-item {
+            margin-bottom: 2rem;
+          }
+          .timeline-year {
+            font-size: 1.5rem;
+          }
+          .timeline-title {
+            font-size: 1.1rem;
+          }
+          .timeline-img {
+            height: 90px;
+            margin-top: 0.75rem;
           }
         }
       `}</style>
