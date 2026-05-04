@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
 import Reveal from '@/components/Reveal';
 import Link from 'next/link';
 
 export default function ProductPage({ params }) {
   const { id } = use(params);
+  const router = useRouter();
   const { products, addToCart, wishlist, toggleWishlist, loading } = useAppContext();
   const [product, setProduct] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
@@ -44,13 +46,19 @@ export default function ProductPage({ params }) {
   }
 
   return (
-    <div style={{ paddingTop: '100px', background: 'var(--background)' }}>
+    <div style={{ paddingTop: '100px', background: 'var(--background)', position: 'relative' }}>
+      {/* Floating Back Button */}
+      <div className="floating-back">
+        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
+          <span className="material-icons">arrow_back_ios_new</span>
+        </button>
+      </div>
       <div className="container" style={{ maxWidth: '1200px', padding: '4rem 2rem' }}>
         
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '4rem', marginBottom: '6rem' }}>
+        <div className="product-layout-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '4rem', marginBottom: '6rem' }}>
           
           {/* Gallery Section */}
-          <div style={{ position: 'sticky', top: '120px', height: 'fit-content' }}>
+          <div className="product-gallery-sticky" style={{ position: 'sticky', top: '120px', height: 'fit-content' }}>
             <Reveal>
               <div style={{ position: 'relative', aspectRatio: '4/5', background: '#f5f5f5', overflow: 'hidden' }}>
                 <img 
@@ -167,7 +175,7 @@ export default function ProductPage({ params }) {
                 <div className={`accordion-item ${activeAccordion === 0 ? 'active' : ''}`} style={{ borderTop: '1px solid var(--border)' }}>
                   <button className="accordion-header" onClick={() => setActiveAccordion(activeAccordion === 0 ? -1 : 0)} style={{ padding: '1.5rem 0' }}>
                     Product Information
-                    <span className="material-icons">{activeAccordion === 0 ? 'remove' : 'add'}</span>
+                    <span className="material-icons" style={{ transition: 'transform 0.3s ease', transform: activeAccordion === 0 ? 'rotate(45deg)' : 'rotate(0deg)', fontSize: '1.4rem' }}>add</span>
                   </button>
                   <div className="accordion-content">
                     <p>{product.desc}</p>
@@ -181,7 +189,7 @@ export default function ProductPage({ params }) {
                 <div className={`accordion-item ${activeAccordion === 1 ? 'active' : ''}`} style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
                   <button className="accordion-header" onClick={() => setActiveAccordion(activeAccordion === 1 ? -1 : 1)} style={{ padding: '1.5rem 0' }}>
                     How to Wear
-                    <span className="material-icons">{activeAccordion === 1 ? 'remove' : 'add'}</span>
+                    <span className="material-icons" style={{ transition: 'transform 0.3s ease', transform: activeAccordion === 1 ? 'rotate(45deg)' : 'rotate(0deg)', fontSize: '1.4rem' }}>add</span>
                   </button>
                   <div className="accordion-content">
                     <p>Apply to pulse points—wrists, neck, and behind the ears. For a longer-lasting trail, mist over clothing or hair.</p>
@@ -247,6 +255,20 @@ export default function ProductPage({ params }) {
         </section>
 
       </div>
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .product-layout-grid {
+            grid-template-columns: 1fr !important;
+            gap: 2rem !important;
+          }
+          .product-gallery-sticky {
+            position: static !important;
+            top: auto !important;
+            height: auto !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

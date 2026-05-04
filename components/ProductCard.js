@@ -124,21 +124,32 @@ export default function ProductCard({ product, delay = 0 }) {
             <span className="material-icons" style={{ fontSize: '1.2rem', color: '#000' }}>shopping_bag</span>
           </button>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <div>
-            <div style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: '0.4rem' }}>
+        <div className="product-details" style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' }}>
+          <div style={{ width: '100%' }}>
+            <div style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: '0.2rem' }}>
               {product.category}
             </div>
-            <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{product.name}</h3>
+            <h3 style={{ 
+              fontSize: '1rem', 
+              marginBottom: 0,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+              minHeight: '2.5rem',
+              lineHeight: 1.25
+            }}>
+              {product.name}
+            </h3>
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.15rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
             {product.costPrice ? (
               <>
-                <span style={{ color: '#991b1b', fontWeight: 600 }}>{product.price}</span>
-                <span style={{ color: 'var(--muted-foreground)', fontWeight: 300, textDecoration: 'line-through', fontSize: '0.8rem' }}>{product.costPrice}</span>
+                <span style={{ color: '#991b1b', fontWeight: 600, fontSize: '0.95rem' }}>{product.price}</span>
+                <span style={{ color: 'var(--muted-foreground)', fontWeight: 300, textDecoration: 'line-through', fontSize: '0.75rem' }}>{product.costPrice}</span>
               </>
             ) : (
-              <span style={{ color: '#8B4513', fontWeight: 700, fontSize: '1.15rem' }}>{product.price}</span>
+              <span style={{ color: '#8B4513', fontWeight: 600, fontSize: '0.95rem' }}>{product.price}</span>
             )}
           </div>
         </div>

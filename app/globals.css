@@ -728,21 +728,53 @@ footer {
 }
 
 /* =========================================================================
-   Product & Element Hover Effects (Premium Zoom & Lift)
+   Product Card — Uniform Height & Hover Effects
    ========================================================================= */
-a.reveal-up.active:hover {
+
+/* Make the outer wrapper fill the grid cell */
+.best-sellers-grid > div,
+.product-grid > div {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Card link fills its parent and stacks content */
+a.product-card {
+  display: flex !important;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.4s ease;
+}
+
+/* Lift the card on hover */
+a.product-card.active:hover {
   transform: translateY(-8px);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
-a.reveal-up.active:hover .img-reveal.loaded {
-  transform: scale(1.08);
+
+/* Zoom the image on hover */
+a.product-card.active:hover .img-reveal.loaded {
+  transform: scale(1.07);
 }
-a.reveal-up.active h3 {
-  transition: color 0.4s ease;
+
+/* Highlight product name on hover */
+a.product-card.active h3 {
+  transition: color 0.3s ease;
 }
-a.reveal-up.active:hover h3 {
+a.product-card.active:hover h3 {
   color: var(--primary);
 }
 
+/* Product details block pushes to the bottom naturally */
+.product-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 0.25rem;
+}
+
+/* Realm items */
 .realm-item {
   transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   display: block;
@@ -805,6 +837,14 @@ a.reveal-up.active:hover h3 {
     gap: 2.5rem !important;
   }
 
+  /* Best Sellers header row \u2014 stack title & View More on mobile */
+  #best-sellers .reveal-up,
+  #best-sellers [class*="reveal"] {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+
   /* Story section image & content heights */
   .img-reveal-wrapper[style*="height: 600px"],
   .img-reveal-wrapper[style*="height: 500px"],
@@ -831,15 +871,23 @@ a.reveal-up.active:hover h3 {
   /* Grids — always 2 columns on mobile */
   .best-sellers-grid, .product-grid {
     grid-template-columns: repeat(2, 1fr) !important;
-    gap: 1.25rem 1rem !important;
+    gap: 1rem 0.75rem !important;
   }
 
+  /* Keep h3 readable but controlled */
   .best-sellers-grid h3, .product-grid h3 {
-    font-size: 0.9rem !important;
+    font-size: 0.85rem !important;
+    min-height: 2.1rem !important;
   }
 
   .best-sellers-grid .img-reveal-wrapper, .product-grid .img-reveal-wrapper {
-    margin-bottom: 0.75rem !important;
+    margin-bottom: 0.6rem !important;
+  }
+
+  /* Align all product card prices consistently on mobile */
+  .best-sellers-grid .product-details,
+  .product-grid .product-details {
+    gap: 0.2rem !important;
   }
 }
 

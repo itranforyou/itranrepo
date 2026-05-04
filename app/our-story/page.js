@@ -115,19 +115,18 @@ export default function OurStory() {
           </Reveal>
 
           <div className="timeline-container">
-            {/* Center Line */}
-            <div className="timeline-line"></div>
-
             {timeline.map((item, index) => (
               <div key={item.year} className={`timeline-item ${index % 2 === 0 ? 'left' : 'right'}`}>
-                {/* Year Marker */}
-                <div className="timeline-marker"></div>
-
                 <Reveal 
                   direction={index % 2 === 0 ? 'right' : 'left'} 
                   className="timeline-content-wrapper"
                 >
                   <div className="timeline-content">
+                    <div className="timeline-ornament">
+                      <span className="timeline-ornament-line"></span>
+                      <span className="material-icons timeline-ornament-icon">local_florist</span>
+                      <span className="timeline-ornament-line"></span>
+                    </div>
                     <div className="timeline-year">{item.year}</div>
                     <h3 className="timeline-title">{item.title}</h3>
                     <p className="timeline-desc">{item.description}</p>
@@ -239,18 +238,49 @@ export default function OurStory() {
           width: 40%;
         }
         .timeline-content {
-          padding: 1.25rem;
-          background: #111111;
+          padding: 1.5rem;
+          background: #fffdf9;
           border-radius: 12px;
-          border: 1px solid rgba(141, 75, 0, 0.2);
-          box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+          border: 1px solid rgba(141, 75, 0, 0.25);
+          border-left: 4px solid var(--primary);
+          box-shadow: 0 6px 24px rgba(141, 75, 0, 0.08);
           position: relative;
+          overflow: hidden;
         }
         .timeline-item.left .timeline-content {
           text-align: right;
+          border-left: none;
+          border-right: 4px solid var(--primary);
         }
         .timeline-item.right .timeline-content {
           text-align: left;
+        }
+        /* Ornament row inside the card */
+        .timeline-ornament {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          margin-bottom: 0.75rem;
+          justify-content: flex-start;
+        }
+        .timeline-item.left .timeline-content .timeline-ornament {
+          justify-content: flex-end;
+          flex-direction: row-reverse;
+        }
+        .timeline-ornament-line {
+          flex: 1;
+          height: 1px;
+          background: linear-gradient(to right, var(--primary), transparent);
+          opacity: 0.4;
+        }
+        .timeline-item.left .timeline-content .timeline-ornament-line {
+          background: linear-gradient(to left, var(--primary), transparent);
+        }
+        .timeline-ornament-icon {
+          font-size: 0.9rem !important;
+          color: var(--primary);
+          opacity: 0.7;
+          flex-shrink: 0;
         }
         .timeline-year {
           font-size: 1.8rem;
@@ -264,12 +294,12 @@ export default function OurStory() {
           font-size: 1.15rem;
           margin-bottom: 0.5rem;
           font-family: var(--font-serif);
-          color: #ffffff;
+          color: #2c1a0e;
           letter-spacing: -0.01em;
         }
         .timeline-desc {
-          color: rgba(255,255,255,0.7);
-          line-height: 1.5;
+          color: #6b4c2e;
+          line-height: 1.6;
           font-size: 0.85rem;
         }
         .timeline-img {
@@ -277,6 +307,7 @@ export default function OurStory() {
           margin-top: 1rem;
           border-radius: 8px;
           overflow: hidden;
+          opacity: 0.85;
         }
 
         @media (max-width: 860px) {
