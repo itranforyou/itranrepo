@@ -1,10 +1,12 @@
 'use client';
 
 import { useAppContext } from '@/context/AppContext';
+import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import Link from 'next/link';
 
 export default function OrdersPage() {
+  const router = useRouter();
   const { isLoggedIn, loading } = useAppContext();
 
   // Simulated orders for now
@@ -25,7 +27,13 @@ export default function OrdersPage() {
   }
 
   return (
-    <div style={{ paddingTop: '100px', minHeight: '90vh', background: 'var(--background)' }}>
+    <div style={{ paddingTop: '100px', minHeight: '90vh', background: 'var(--background)', position: 'relative' }}>
+      {/* Floating Back Button */}
+      <div className="floating-back">
+        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
+          <span className="material-icons">arrow_back</span>
+        </button>
+      </div>
       <section style={{ padding: '6rem 0' }}>
         <div className="container" style={{ maxWidth: '1000px' }}>
           <Reveal style={{ marginBottom: '5rem' }}>

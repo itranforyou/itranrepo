@@ -1,15 +1,23 @@
 'use client';
 
 import Reveal from '@/components/Reveal';
+import { useRouter } from 'next/navigation';
 
 export default function BulkEnquiry() {
+  const router = useRouter();
   const handleSubmit = (e) => {
     e.preventDefault();
     alert('Enquiry submitted. Our team will contact you shortly.');
   };
 
   return (
-    <div style={{ paddingTop: '80px' }}>
+    <div style={{ paddingTop: '80px', position: 'relative' }}>
+      {/* Floating Back Button */}
+      <div className="floating-back">
+        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
+          <span className="material-icons">arrow_back</span>
+        </button>
+      </div>
       <section style={{ padding: '8rem 0 4rem', backgroundColor: '#faf9f7' }}>
         <div className="container" style={{ textAlign: 'center', maxWidth: '800px' }}>
           <Reveal>

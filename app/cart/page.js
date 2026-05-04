@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import { useAppContext } from '@/context/AppContext';
 
 export default function Cart() {
+  const router = useRouter();
   const { cart, setCart } = useAppContext();
 
   const updateQuantity = (index, delta) => {
@@ -39,15 +41,21 @@ export default function Cart() {
   }
 
   return (
-    <div style={{ paddingTop: '120px', paddingBottom: '8rem' }}>
+    <div style={{ paddingTop: '120px', paddingBottom: '8rem', position: 'relative' }}>
+      {/* Floating Back Button */}
+      <div className="floating-back">
+        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
+          <span className="material-icons">arrow_back</span>
+        </button>
+      </div>
       <div className="container">
         <Reveal>
           <h1 style={{ fontSize: '3rem', marginBottom: '4rem' }}>Your Shopping Bag</h1>
         </Reveal>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '4rem', alignItems: 'start' }}>
+        <div className="cart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '4rem', alignItems: 'start' }}>
           <div>
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 0.5fr', gap: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '2rem' }} className="label-caps">
+            <div className="cart-header-labels label-caps" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 0.5fr', gap: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '2rem' }}>
               <div style={{ fontSize: '0.7rem' }}>Product</div>
               <div style={{ fontSize: '0.7rem' }}>Price</div>
               <div style={{ fontSize: '0.7rem' }}>Quantity</div>
@@ -57,25 +65,27 @@ export default function Cart() {
             {cart.map((item, index) => {
               const itemTotal = parseFloat(String(item.price || '0').replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim()) * (item.quantity || 1);
               return (
-                <div key={index} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 0.5fr', gap: '2rem', alignItems: 'center', paddingBottom: '2rem', marginBottom: '2rem', borderBottom: '1px solid rgba(0,0,0,0.05)' }}>
-                  <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                    <div style={{ width: '80px', height: '100px', flexShrink: 0 }}>
-                      <img src={item.image || item.images?.[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                <div key={index} className="cart-item-row">
+                  <div className="cart-item-info">
+                    <div className="cart-item-image">
+                      <img src={item.image || item.images?.[0]} alt={item.name} />
                     </div>
-                    <div>
-                      <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{item.name}</h3>
-                      <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--muted-foreground)' }}>{item.category}</div>
-                      <button onClick={() => removeItem(index)} style={{ background: 'none', border: 'none', color: 'var(--primary)', fontSize: '0.7rem', marginTop: '0.75rem', cursor: 'pointer', padding: 0 }}>REMOVE</button>
+                    <div className="cart-item-details">
+                      <h3>{item.name}</h3>
+                      <div className="label-caps category">{item.category}</div>
+                      <button onClick={() => removeItem(index)} className="remove-btn">REMOVE</button>
                     </div>
                   </div>
-                  <div style={{ color: 'var(--muted-foreground)' }}>{item.price}</div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                    <button onClick={() => updateQuantity(index, -1)} style={{ width: '24px', height: '24px', border: '1px solid var(--border)', background: 'none', cursor: 'pointer' }}>-</button>
-                    <span>{item.quantity || 1}</span>
-                    <button onClick={() => updateQuantity(index, 1)} style={{ width: '24px', height: '24px', border: '1px solid var(--border)', background: 'none', cursor: 'pointer' }}>+</button>
-                  </div>
-                  <div style={{ fontWeight: 600 }}>
-                    Rs. {itemTotal.toFixed(2)}
+                  <div className="cart-item-meta">
+                    <div className="cart-item-price-unit">{item.price}</div>
+                    <div className="cart-item-qty">
+                      <button onClick={() => updateQuantity(index, -1)}>-</button>
+                      <span>{item.quantity || 1}</span>
+                      <button onClick={() => updateQuantity(index, 1)}>+</button>
+                    </div>
+                    <div className="cart-item-total-price">
+                      Rs. {itemTotal.toFixed(2)}
+                    </div>
                   </div>
                 </div>
               );

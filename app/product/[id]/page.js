@@ -3,16 +3,28 @@
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp } from 'firebase/firestore';
 import Reveal from '@/components/Reveal';
 import Link from 'next/link';
 
 export default function ProductPage({ params }) {
   const { id } = use(params);
   const router = useRouter();
-  const { products, addToCart, wishlist, toggleWishlist, loading } = useAppContext();
+  const { products, addToCart, wishlist, toggleWishlist, loading, isLoggedIn, userAvatar, user } = useAppContext();
   const [product, setProduct] = useState(null);
   const [imageIndex, setImageIndex] = useState(0);
   const [activeAccordion, setActiveAccordion] = useState(0);
+  const [reviews, setReviews] = useState([]);
+  const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, comment: '' });
+
+  useEffect(() => {
+    if (isLoggedIn && user) {
+      setReviewForm(prev => ({ ...prev, name: user.displayName || user.email.split('@')[0] }));
+    }
+  }, [isLoggedIn, user]);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
     if (products.length > 0) {
@@ -20,6 +32,46 @@ export default function ProductPage({ params }) {
       setProduct(p);
     }
   }, [id, products]);
+
+  useEffect(() => {
+    if (!id) return;
+    const q = query(
+      collection(db, 'reviews'),
+      where('productId', '==', id)
+    );
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const reviewsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      // Sort in memory to avoid needing a composite index in Firebase
+      reviewsData.sort((a, b) => (b.createdAt?.toMillis() || 0) - (a.createdAt?.toMillis() || 0));
+      setReviews(reviewsData);
+    });
+    return () => unsubscribe();
+  }, [id]);
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!isLoggedIn) {
+      router.push('/login');
+      return;
+    }
+    if (!reviewForm.name || !reviewForm.comment) return;
+    setIsSubmittingReview(true);
+    try {
+      await addDoc(collection(db, 'reviews'), {
+        productId: id,
+        name: reviewForm.name,
+        rating: reviewForm.rating,
+        comment: reviewForm.comment,
+        createdAt: serverTimestamp(),
+        avatar: isLoggedIn ? userAvatar : null
+      });
+      setReviewForm({ name: '', rating: 5, comment: '' });
+      setShowReviewForm(false);
+    } catch (error) {
+      console.error("Error adding review: ", error);
+    }
+    setIsSubmittingReview(false);
+  };
 
   if (loading || !product) {
     return (
@@ -50,7 +102,7 @@ export default function ProductPage({ params }) {
       {/* Floating Back Button */}
       <div className="floating-back">
         <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back_ios_new</span>
+          <span className="material-icons">arrow_back</span>
         </button>
       </div>
       <div className="container" style={{ maxWidth: '1200px', padding: '4rem 2rem' }}>
@@ -202,32 +254,107 @@ export default function ProductPage({ params }) {
 
         {/* Experience Section */}
         <section style={{ borderTop: '1px solid var(--border)', paddingTop: '6rem', paddingBottom: '6rem' }}>
-          <Reveal style={{ textAlign: 'center', marginBottom: '4rem' }}>
-            <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.5rem' }}>Customer Experience</h2>
-          </Reveal>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4rem', flexWrap: 'wrap', gap: '1rem' }}>
+            <Reveal>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.5rem' }}>Customer Experience</h2>
+            </Reveal>
+            <Reveal>
+              <button 
+                onClick={() => setShowReviewForm(!showReviewForm)}
+                className="btn-outline"
+                style={{ padding: '0.8rem 1.5rem', fontSize: '0.7rem' }}
+              >
+                {showReviewForm ? 'CANCEL REVIEW' : 'SHARE YOUR EXPERIENCE'}
+              </button>
+            </Reveal>
+          </div>
+
+          {showReviewForm && (
+            <Reveal>
+              <form onSubmit={handleReviewSubmit} style={{ maxWidth: '600px', margin: '0 auto 4rem auto', padding: '2rem', background: '#fcfcfc', border: '1px solid var(--border)' }}>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label className="label-caps" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.65rem' }}>Your Name</label>
+                  <input 
+                    type="text" 
+                    value={reviewForm.name}
+                    onChange={(e) => setReviewForm({...reviewForm, name: e.target.value})}
+                    placeholder="Enter your name"
+                    required
+                    style={{ width: '100%', padding: '1rem', border: '1px solid var(--border)', background: 'transparent' }}
+                  />
+                </div>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label className="label-caps" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.65rem' }}>Rating</label>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span 
+                        key={star}
+                        onClick={() => setReviewForm({...reviewForm, rating: star})}
+                        className="material-icons"
+                        style={{ cursor: 'pointer', color: star <= reviewForm.rating ? 'var(--primary)' : '#ddd' }}
+                      >
+                        {star <= reviewForm.rating ? 'star' : 'star_outline'}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ marginBottom: '1.5rem' }}>
+                  <label className="label-caps" style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.65rem' }}>Your Review</label>
+                  <textarea 
+                    value={reviewForm.comment}
+                    onChange={(e) => setReviewForm({...reviewForm, comment: e.target.value})}
+                    placeholder="Describe your experience with this scent..."
+                    required
+                    rows="4"
+                    style={{ width: '100%', padding: '1rem', border: '1px solid var(--border)', background: 'transparent', resize: 'vertical' }}
+                  />
+                </div>
+                <button 
+                  type="submit" 
+                  className="btn-primary" 
+                  disabled={isSubmittingReview}
+                  style={{ width: '100%', padding: '1rem' }}
+                >
+                  {isSubmittingReview ? 'POSTING...' : isLoggedIn ? 'POST REVIEW' : 'SIGN IN TO POST REVIEW'}
+                </button>
+              </form>
+            </Reveal>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '3rem' }}>
-            <Reveal className="review-card" style={{ background: '#fff', padding: '3rem', border: '1px solid var(--border)' }}>
-              <div className="review-stars" style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="material-icons" style={{ fontSize: '1.2rem' }}>star</span>
-                ))}
+            {reviews.length > 0 ? (
+              reviews.map((review, i) => (
+                <Reveal key={review.id} delay={i * 0.1} className="review-card" style={{ background: '#fff', padding: '3rem', border: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                    {review.avatar ? (
+                      <img src={review.avatar} alt="" style={{ width: '40px', height: '40px', borderRadius: '50%' }} />
+                    ) : (
+                      <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: '#f5f5f5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span className="material-icons" style={{ fontSize: '1.2rem', color: '#ccc' }}>person</span>
+                      </div>
+                    )}
+                    <div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>{review.name}</div>
+                      <div className="review-stars" style={{ color: 'var(--primary)' }}>
+                        {[...Array(5)].map((_, idx) => (
+                          <span key={idx} className="material-icons" style={{ fontSize: '0.9rem' }}>
+                            {idx < review.rating ? 'star' : 'star_outline'}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p style={{ fontStyle: 'italic', color: 'var(--foreground)', fontSize: '1.05rem', lineHeight: 1.6 }}>
+                    &quot;{review.comment}&quot;
+                  </p>
+                </Reveal>
+              ))
+            ) : (
+              <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '4rem', color: 'var(--muted-foreground)' }}>
+                <span className="material-icons" style={{ fontSize: '3rem', marginBottom: '1rem', opacity: 0.3 }}>rate_review</span>
+                <p>Be the first to share your experience with this scent.</p>
               </div>
-              <p style={{ fontStyle: 'italic', marginBottom: '1.5rem', color: 'var(--foreground)', fontSize: '1.1rem', lineHeight: 1.6 }}>
-                &quot;The most evocative scent I&apos;ve ever owned. It captures a sense of timelessness.&quot;
-              </p>
-              <div style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Aria R.</div>
-            </Reveal>
-            <Reveal className="review-card" delay={0.1} style={{ background: '#fff', padding: '3rem', border: '1px solid var(--border)' }}>
-              <div className="review-stars" style={{ color: 'var(--primary)', marginBottom: '1.5rem' }}>
-                {[...Array(5)].map((_, i) => (
-                  <span key={i} className="material-icons" style={{ fontSize: '1.2rem' }}>star</span>
-                ))}
-              </div>
-              <p style={{ fontStyle: 'italic', marginBottom: '1.5rem', color: 'var(--foreground)', fontSize: '1.1rem', lineHeight: 1.6 }}>
-                &quot;Beautifully complex. The dry down is incredible and lasts for hours.&quot;
-              </p>
-              <div style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)', textTransform: 'uppercase', letterSpacing: '0.15em' }}>Julian K.</div>
-            </Reveal>
+            )}
           </div>
         </section>
 

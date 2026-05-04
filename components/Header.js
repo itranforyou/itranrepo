@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
@@ -15,6 +15,7 @@ export default function Header() {
   const { cart, isLoggedIn, logout, userAvatar, setUserAvatar } = useAppContext();
   const [user, setUser] = useState(null);
   const pathname = usePathname();
+  const profileRef = useRef(null);
 
   const avatarOptions = [
     'https://api.dicebear.com/7.x/bottts/svg?seed=Felix',
@@ -31,7 +32,6 @@ export default function Header() {
     { name: 'UNISEX', slug: 'unisex' },
     { name: 'SPIRITUAL', slug: 'spiritual' },
     { name: 'CAR DIFFUSERS', slug: 'car-diffusers' },
-    { name: 'SHOP ALL', slug: 'all-products' }
   ];
 
   useEffect(() => {
@@ -48,6 +48,31 @@ export default function Header() {
     
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Handle Outside Click for Profile & Menu State for Back Button
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    };
+
+    if (isProfileOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    // Add class to body to hide floating elements (like back buttons)
+    if (isMenuOpen || isProfileOpen) {
+      document.body.classList.add('menu-active');
+    } else {
+      document.body.classList.remove('menu-active');
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.body.classList.remove('menu-active');
+    };
+  }, [isProfileOpen, isMenuOpen]);
 
   const cartCount = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const iconColor = '#1a1c1c';
@@ -103,6 +128,15 @@ export default function Header() {
           </div>
         </div>
 
+        <Link
+          href="/all-products"
+          className={`nav-link ${pathname === '/all-products' ? 'active' : ''}`}
+          onClick={() => setIsMenuOpen(false)}
+          style={{ color: pathname === '/all-products' ? 'var(--primary)' : '' }}
+        >
+          Shop All
+        </Link>
+
         <Link href="/bulk-enquiry" className={`nav-link ${pathname === '/bulk-enquiry' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/bulk-enquiry' ? 'var(--primary)' : '' }}>Bulk Queries</Link>
         <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/contact' ? 'var(--primary)' : '' }}>Contact</Link>
         <Link href="/our-story" className={`nav-link ${pathname === '/our-story' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/our-story' ? 'var(--primary)' : '' }}>Our Story</Link>
@@ -116,7 +150,7 @@ export default function Header() {
           {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
         </Link>
 
-        <div style={{ position: 'relative' }}>
+        <div style={{ position: 'relative' }} ref={profileRef}>
           <button 
             onClick={() => { setIsProfileOpen(!isProfileOpen); setIsEditingAvatar(false); }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem' }}

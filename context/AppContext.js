@@ -18,6 +18,7 @@ export function AppProvider({ children }) {
   const [notification, setNotification] = useState(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const [userAvatar, setUserAvatar] = useState('https://api.dicebear.com/7.x/bottts/svg?seed=Felix');
+  const [user, setUser] = useState(null);
 
   const syncTimeoutRef = useRef(null);
 
@@ -42,15 +43,17 @@ export function AppProvider({ children }) {
       setLoading(false);
     });
 
-    const authUnsubscribe = onAuthStateChanged(auth, async (user) => {
+    const authUnsubscribe = onAuthStateChanged(auth, async (u) => {
       setIsRestoring(true);
-      if (user) {
+      if (u && u.uid) {
         setIsLoggedIn(true);
+        setUser(u);
         try {
+          const uid = u.uid;
           const [userSnap, cartSnap, wishSnap] = await Promise.all([
-            getDoc(doc(db, "users", user.uid)),
-            getDoc(doc(db, "carts", user.uid)),
-            getDoc(doc(db, "wishlists", user.uid))
+            getDoc(doc(db, "users", uid)),
+            getDoc(doc(db, "carts", uid)),
+            getDoc(doc(db, "wishlists", uid))
           ]);
 
           if (userSnap.exists() && userSnap.data().avatar) setUserAvatar(userSnap.data().avatar);
@@ -61,6 +64,7 @@ export function AppProvider({ children }) {
         }
       } else {
         setIsLoggedIn(false);
+        setUser(null);
         setCart([]);
         setWishlist([]);
         setUserAvatar('https://api.dicebear.com/7.x/bottts/svg?seed=Felix');
@@ -76,18 +80,20 @@ export function AppProvider({ children }) {
 
   // Sync to Cloud with Debounce for Performance
   useEffect(() => {
-    if (!isLoggedIn || isRestoring) return;
+    if (!isLoggedIn || isRestoring || !user?.uid) return;
 
     if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current);
 
+    const currentUid = user.uid;
+    const currentEmail = user.email;
+
     syncTimeoutRef.current = setTimeout(async () => {
       try {
-        if (auth.currentUser) {
-          const uid = auth.currentUser.uid;
+        if (currentUid) {
           await Promise.all([
-            setDoc(doc(db, "users", uid), { avatar: userAvatar, email: auth.currentUser.email, lastSeen: new Date().toISOString() }, { merge: true }),
-            setDoc(doc(db, "carts", uid), { items: cart, updatedAt: new Date().toISOString() }, { merge: true }),
-            setDoc(doc(db, "wishlists", uid), { items: wishlist, updatedAt: new Date().toISOString() }, { merge: true })
+            setDoc(doc(db, "users", currentUid), { avatar: userAvatar, email: currentEmail, lastSeen: new Date().toISOString() }, { merge: true }),
+            setDoc(doc(db, "carts", currentUid), { items: cart, updatedAt: new Date().toISOString() }, { merge: true }),
+            setDoc(doc(db, "wishlists", currentUid), { items: wishlist, updatedAt: new Date().toISOString() }, { merge: true })
           ]);
         }
       } catch (err) {}
@@ -98,7 +104,7 @@ export function AppProvider({ children }) {
     localStorage.setItem('userAvatar', userAvatar);
 
     return () => { if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current); };
-  }, [cart, wishlist, userAvatar, isLoggedIn, isRestoring]);
+  }, [cart, wishlist, userAvatar, isLoggedIn, isRestoring, user]);
 
   const addToCart = (product) => {
     if (!isLoggedIn) { window.location.href = '/login'; return; }
@@ -139,6 +145,7 @@ export function AppProvider({ children }) {
     setWishlist([]);
     setUserAvatar('https://api.dicebear.com/7.x/bottts/svg?seed=Felix');
     setIsLoggedIn(false);
+    setUser(null);
     window.location.href = '/';
   };
 
@@ -147,8 +154,8 @@ export function AppProvider({ children }) {
     isLoggedIn, setIsLoggedIn, logout,
     isSearchOpen, setIsSearchOpen, selectedProduct, setSelectedProduct,
     products, loading, notification, setNotification,
-    userAvatar, setUserAvatar
-  }), [cart, wishlist, isLoggedIn, isSearchOpen, selectedProduct, products, loading, notification, userAvatar]);
+    userAvatar, setUserAvatar, user
+  }), [cart, wishlist, isLoggedIn, isSearchOpen, selectedProduct, products, loading, notification, userAvatar, user]);
 
   return (
     <AppContext.Provider value={contextValue}>

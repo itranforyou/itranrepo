@@ -45,7 +45,7 @@ export default function OurStory() {
       {/* Floating Back Button */}
       <div className="floating-back">
         <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back_ios_new</span>
+          <span className="material-icons">arrow_back</span>
         </button>
       </div>
 

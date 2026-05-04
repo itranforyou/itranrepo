@@ -1,11 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
 import { useAppContext } from '@/context/AppContext';
 
 export default function AllProducts() {
+  const router = useRouter();
   const { products } = useAppContext();
   const [filter, setFilter] = useState('ALL SCENTS');
 
@@ -23,7 +25,13 @@ export default function AllProducts() {
       });
 
   return (
-    <div style={{ paddingTop: '0' }}>
+    <div style={{ paddingTop: '0', position: 'relative' }}>
+      {/* Floating Back Button */}
+      <div className="floating-back">
+        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
+          <span className="material-icons">arrow_back</span>
+        </button>
+      </div>
       <section className="shop-hero">
         <img 
           src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000"

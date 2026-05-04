@@ -35,6 +35,7 @@ export default function NotificationToast() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
+        flexShrink: 0,
         animation: 'scaleIn 0.3s ease 0.2s both'
       }}>
         <span className="material-icons" style={{ fontSize: '14px', color: '#fff' }}>check</span>
