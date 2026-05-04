@@ -65,6 +65,17 @@ export function AppProvider({ children }) {
             if (wishSnap.exists()) setWishlist(wishSnap.data().items || []);
           } else {
             // User exists in Auth but not in Firestore (Unregistered)
+            // Automate cleanup of orphaned data to save Firestore space
+            try {
+              const { deleteDoc } = await import('firebase/firestore');
+              await Promise.all([
+                deleteDoc(doc(db, "carts", uid)),
+                deleteDoc(doc(db, "wishlists", uid))
+              ]);
+            } catch (cleanupErr) {
+              console.error("Data cleanup error:", cleanupErr);
+            }
+            
             await signOut(auth);
             setIsLoggedIn(false);
             setUser(null);
@@ -159,9 +170,45 @@ export function AppProvider({ children }) {
     window.location.href = '/';
   };
 
+  const deleteAccount = async () => {
+    if (!user || !user.uid) return;
+    const uid = user.uid;
+    
+    try {
+      const { deleteDoc, doc } = await import('firebase/firestore');
+      const { deleteUser } = await import('firebase/auth');
+      
+      // 1. Purge Firestore Data
+      await Promise.all([
+        deleteDoc(doc(db, "users", uid)),
+        deleteDoc(doc(db, "carts", uid)),
+        deleteDoc(doc(db, "wishlists", uid))
+      ]);
+      
+      // 2. Delete Auth Account
+      await deleteUser(user);
+      
+      // 3. Cleanup State
+      setCart([]);
+      setWishlist([]);
+      setIsLoggedIn(false);
+      setUser(null);
+      setNotification("Account and data permanently deleted.");
+      window.location.href = '/';
+    } catch (err) {
+      console.error("Deletion error:", err);
+      if (err.code === 'auth/requires-recent-login') {
+        setNotification("Please re-login to delete your account.");
+      } else {
+        setNotification("Error deleting account. Please try again.");
+      }
+      setTimeout(() => setNotification(null), 4000);
+    }
+  };
+
   const contextValue = useMemo(() => ({
     cart, setCart, addToCart, wishlist, setWishlist, toggleWishlist,
-    isLoggedIn, setIsLoggedIn, logout,
+    isLoggedIn, setIsLoggedIn, logout, deleteAccount,
     isSearchOpen, setIsSearchOpen, selectedProduct, setSelectedProduct,
     products, loading, notification, setNotification,
     userAvatar, setUserAvatar, user

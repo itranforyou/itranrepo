@@ -12,7 +12,7 @@ export default function Header() {
   const [isShopOpen, setIsShopOpen] = useState(false);
   const [isEditingAvatar, setIsEditingAvatar] = useState(false);
   const [hoveredCollection, setHoveredCollection] = useState(null);
-  const { cart, isLoggedIn, logout, userAvatar, setUserAvatar } = useAppContext();
+  const { cart, isLoggedIn, logout, deleteAccount, userAvatar, setUserAvatar } = useAppContext();
   const [user, setUser] = useState(null);
   const pathname = usePathname();
   const profileRef = useRef(null);
@@ -224,9 +224,24 @@ export default function Header() {
                     <Link href="/wishlist" onClick={() => setIsProfileOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none', color: '#222', fontSize: '0.95rem', fontWeight: 500 }}>
                       <span className="material-icons" style={{ fontSize: '1.3rem', color: '#999' }}>favorite_border</span> Wishlist
                     </Link>
-                    <button onClick={() => { logout(); setIsProfileOpen(false); }} style={{ background: 'none', border: 'none', padding: 0, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem', color: '#dc2626', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 600 }}>
+                    <button onClick={() => { logout(); setIsProfileOpen(false); }} style={{ background: 'none', border: 'none', padding: 0, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem', color: '#666', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 500 }}>
                       <span className="material-icons" style={{ fontSize: '1.3rem' }}>logout</span> Sign Out
                     </button>
+                    
+                    <div style={{ marginTop: '1rem', borderTop: '1px solid #f5f5f5', paddingTop: '1.5rem' }}>
+                      <button 
+                        onClick={() => {
+                          if (window.confirm("ARE YOU SURE? This will permanently erase your profile, cart, and all curated data. This action cannot be undone.")) {
+                            deleteAccount();
+                            setIsProfileOpen(false);
+                          }
+                        }} 
+                        style={{ background: 'none', border: 'none', padding: 0, color: '#dc2626', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em' }}
+                        className="label-caps"
+                      >
+                        DELETE MY ACCOUNT
+                      </button>
+                    </div>
                   </div>
                 </div>
               ) : (
