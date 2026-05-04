@@ -23,7 +23,7 @@ export default function Login() {
     { name: 'Felix', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Felix' },
     { name: 'Milo', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Milo' },
     { name: 'Bubba', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Bubba' },
-    { name: 'Lilly', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Lilly' },
+    { name: 'Piper', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Piper' },
     { name: 'Daisy', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Daisy' },
     { name: 'Luna', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Luna' },
   ];

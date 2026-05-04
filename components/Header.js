@@ -21,7 +21,7 @@ export default function Header() {
     'https://api.dicebear.com/7.x/bottts/svg?seed=Felix',
     'https://api.dicebear.com/7.x/bottts/svg?seed=Milo',
     'https://api.dicebear.com/7.x/bottts/svg?seed=Bubba',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Lilly',
+    'https://api.dicebear.com/7.x/bottts/svg?seed=Piper',
     'https://api.dicebear.com/7.x/bottts/svg?seed=Daisy',
     'https://api.dicebear.com/7.x/bottts/svg?seed=Luna',
   ];
