@@ -134,10 +134,10 @@ export default function Login() {
           if (!querySnapshot.empty) {
             msg = "entered password is wrong";
           } else {
-            msg = "email is not registered, register it first";
+            msg = "email is not registered";
           }
         } catch (e) {
-          msg = "email is not registered, register it first";
+          msg = "email is not registered";
         }
       } else if (error.code === 'auth/email-already-in-use') {
         msg = "This email is already registered.";
