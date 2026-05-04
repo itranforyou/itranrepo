@@ -121,9 +121,24 @@ export default function Login() {
       setIsLoggedIn(true);
       window.location.href = '/';
     } catch (error) {
-      let msg = "Email or password is wrong."; // Default for most auth errors
+      let msg = "Email or password is wrong.";
+      
       if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
-        msg = "email is not registered, register it first";
+        try {
+          const { db } = await import('@/lib/firebase');
+          const { collection, query, where, getDocs } = await import('firebase/firestore');
+          // Check if this email exists in our records at all
+          const q = query(collection(db, "users"), where("email", "==", email.trim()));
+          const querySnapshot = await getDocs(q);
+          
+          if (!querySnapshot.empty) {
+            msg = "entered password is wrong";
+          } else {
+            msg = "email is not registered, register it first";
+          }
+        } catch (e) {
+          msg = "email is not registered, register it first";
+        }
       } else if (error.code === 'auth/email-already-in-use') {
         msg = "This email is already registered.";
       } else if (error.code === 'auth/weak-password') {
