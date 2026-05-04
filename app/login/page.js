@@ -68,19 +68,62 @@ export default function Login() {
       const { auth } = await import('@/lib/firebase');
       const { signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile } = await import('firebase/auth');
       
+      const { db } = await import('@/lib/firebase');
+      const { doc, getDoc, setDoc } = await import('firebase/firestore');
+
       if (isRegister) {
-        const result = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(result.user, { displayName: fullName, photoURL: userAvatar });
+        try {
+          const result = await createUserWithEmailAndPassword(auth, email, password);
+          await updateProfile(result.user, { displayName: fullName, photoURL: userAvatar });
+          await setDoc(doc(db, "users", result.user.uid), {
+            fullName,
+            email,
+            avatar: userAvatar,
+            createdAt: new Date().toISOString()
+          });
+        } catch (regError) {
+          if (regError.code === 'auth/email-already-in-use') {
+            // Attempt to 'self-heal' if Firestore doc is missing but Auth exists
+            try {
+              const signResult = await signInWithEmailAndPassword(auth, email, password);
+              const userSnap = await getDoc(doc(db, "users", signResult.user.uid));
+              
+              if (!userSnap.exists()) {
+                // Heal the account: Create the missing Firestore doc
+                await setDoc(doc(db, "users", signResult.user.uid), {
+                  fullName,
+                  email,
+                  avatar: userAvatar,
+                  createdAt: new Date().toISOString(),
+                  healedAt: new Date().toISOString()
+                });
+              } else {
+                // Account really does exist fully
+                throw regError;
+              }
+            } catch (healError) {
+              // If sign-in fails, it's a real 'already in use' conflict or wrong password
+              throw regError;
+            }
+          } else {
+            throw regError;
+          }
+        }
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
+        const result = await signInWithEmailAndPassword(auth, email, password);
+        const userDoc = await getDoc(doc(db, "users", result.user.uid));
+        if (!userDoc.exists()) {
+          await auth.signOut();
+          throw { code: 'auth/user-not-found' };
+        }
       }
       
       setIsLoggedIn(true);
       window.location.href = '/';
     } catch (error) {
       let msg = "Email or password is wrong."; // Default for most auth errors
-      if (error.code === 'auth/user-not-found') {
-        msg = "the email is not registered";
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+        msg = "email is not registered, register it first";
       } else if (error.code === 'auth/email-already-in-use') {
         msg = "This email is already registered.";
       } else if (error.code === 'auth/weak-password') {

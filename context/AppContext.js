@@ -46,19 +46,29 @@ export function AppProvider({ children }) {
     const authUnsubscribe = onAuthStateChanged(auth, async (u) => {
       setIsRestoring(true);
       if (u && u.uid) {
-        setIsLoggedIn(true);
-        setUser(u);
         try {
           const uid = u.uid;
-          const [userSnap, cartSnap, wishSnap] = await Promise.all([
-            getDoc(doc(db, "users", uid)),
-            getDoc(doc(db, "carts", uid)),
-            getDoc(doc(db, "wishlists", uid))
-          ]);
+          const userSnap = await getDoc(doc(db, "users", uid));
 
-          if (userSnap.exists() && userSnap.data().avatar) setUserAvatar(userSnap.data().avatar);
-          if (cartSnap.exists()) setCart(cartSnap.data().items || []);
-          if (wishSnap.exists()) setWishlist(wishSnap.data().items || []);
+          if (userSnap.exists()) {
+            setIsLoggedIn(true);
+            setUser(u);
+            if (userSnap.data().avatar) setUserAvatar(userSnap.data().avatar);
+            
+            // Fetch cart and wishlist in parallel
+            const [cartSnap, wishSnap] = await Promise.all([
+              getDoc(doc(db, "carts", uid)),
+              getDoc(doc(db, "wishlists", uid))
+            ]);
+            
+            if (cartSnap.exists()) setCart(cartSnap.data().items || []);
+            if (wishSnap.exists()) setWishlist(wishSnap.data().items || []);
+          } else {
+            // User exists in Auth but not in Firestore (Unregistered)
+            await signOut(auth);
+            setIsLoggedIn(false);
+            setUser(null);
+          }
         } catch (err) {
           console.error("Restoration error:", err);
         }
