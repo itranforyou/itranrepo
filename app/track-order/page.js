@@ -1,15 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
+import { useAppContext } from '@/context/AppContext';
 
 export default function TrackOrderPage() {
+  const router = useRouter();
+  const { isLoggedIn } = useAppContext();
   const [orderId, setOrderId] = useState('');
   const [trackingData, setTrackingData] = useState(null);
   const [loading, setLoading] = useState(false);
 
+
+
   const handleTrack = (e) => {
     e.preventDefault();
+    if (!isLoggedIn) {
+      router.push('/login');
+      return;
+    }
     setLoading(true);
     // Simulate API call
     setTimeout(() => {

@@ -17,6 +17,12 @@ export default function ProductPage({ params }) {
   const [activeAccordion, setActiveAccordion] = useState(0);
   const [reviews, setReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, comment: '' });
+  const { packagingOptions } = useAppContext();
+  const [selectedPackaging, setSelectedPackaging] = useState(null);
+  const [giftOptions, setGiftOptions] = useState({
+    isGift: false,
+    message: ''
+  });
 
   useEffect(() => {
     if (isLoggedIn && user) {
@@ -59,6 +65,7 @@ export default function ProductPage({ params }) {
     try {
       await addDoc(collection(db, 'reviews'), {
         productId: id,
+        userId: user.uid, // Track ownership for cleanup
         name: reviewForm.name,
         rating: reviewForm.rating,
         comment: reviewForm.comment,
@@ -199,7 +206,7 @@ export default function ProductPage({ params }) {
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem' }}>
                 <button 
                   className="btn-primary" 
-                  onClick={() => addToCart(product)}
+                  onClick={() => addToCart(product, giftOptions.isGift ? { ...giftOptions, packaging: selectedPackaging } : null)}
                   style={{ flex: 1, padding: '1.5rem', fontSize: '0.8rem' }}
                 >
                   ADD TO CART
@@ -221,6 +228,66 @@ export default function ProductPage({ params }) {
                     {wishlist.some(item => item.id === product.id) ? 'favorite' : 'favorite_border'}
                   </span>
                 </button>
+              </div>
+
+              {/* GIFT PACKAGING OPTIONS */}
+              <div style={{ marginBottom: '3rem', padding: '2rem', border: '1px solid var(--border)', background: '#fff' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
+                  <input 
+                    type="checkbox" 
+                    id="isGift" 
+                    checked={giftOptions.isGift} 
+                    onChange={(e) => {
+                      const isGift = e.target.checked;
+                      setGiftOptions({...giftOptions, isGift});
+                      if (!isGift) setSelectedPackaging(null);
+                    }} 
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="isGift" className="label-caps" style={{ fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600 }}>This is a Gift</label>
+                </div>
+
+                {giftOptions.isGift && (
+                  <Reveal>
+                    <div style={{ marginTop: '2rem' }}>
+                      <div className="label-caps" style={{ fontSize: '0.7rem', color: 'var(--primary)', marginBottom: '1rem', letterSpacing: '0.1em' }}>Select Packaging</div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                        {packagingOptions.map((opt) => (
+                          <div 
+                            key={opt.id}
+                            onClick={() => setSelectedPackaging(selectedPackaging?.id === opt.id ? null : opt)}
+                            style={{ 
+                              padding: '1rem', 
+                              border: selectedPackaging?.id === opt.id ? '2px solid var(--primary)' : '1px solid var(--border)',
+                              background: selectedPackaging?.id === opt.id ? 'rgba(141, 75, 0, 0.03)' : 'transparent',
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              transition: 'all 0.3s ease',
+                              position: 'relative'
+                            }}
+                          >
+                            <img src={opt.image || null} alt="" style={{ width: '100%', height: '80px', objectFit: 'contain', marginBottom: '0.75rem' }} />
+                            <div className="label-caps" style={{ fontSize: '0.65rem', marginBottom: '0.25rem' }}>{opt.name}</div>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>+₹{opt.price}</div>
+                            {selectedPackaging?.id === opt.id && (
+                              <div style={{ position: 'absolute', top: '5px', right: '5px' }}>
+                                <span className="material-icons" style={{ fontSize: '1.2rem', color: 'var(--primary)' }}>check_circle</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="label-caps" style={{ fontSize: '0.7rem', color: 'var(--primary)', marginBottom: '1rem', letterSpacing: '0.1em' }}>Gift Message (Optional)</div>
+                      <textarea 
+                        placeholder="Write a silent message to be delivered with the scent..."
+                        value={giftOptions.message}
+                        onChange={(e) => setGiftOptions({...giftOptions, message: e.target.value})}
+                        style={{ width: '100%', padding: '1rem', border: '1px solid var(--border)', background: 'transparent', resize: 'none', height: '100px', fontSize: '0.9rem' }}
+                      />
+                    </div>
+                  </Reveal>
+                )}
               </div>
 
               <div className="product-accordion">

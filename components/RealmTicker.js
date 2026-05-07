@@ -14,19 +14,38 @@ export default function RealmTicker() {
     { name: 'Unisex', href: '/unisex', img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=800' },
     { name: 'Spiritual', href: '/spiritual', img: 'https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=800' },
     { name: 'Car Diffusers', href: '/car-diffusers', img: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Incense Sticks', href: '/incense-sticks', img: 'https://images.unsplash.com/photo-1602928294241-7662c19e5d41?auto=format&fit=crop&q=80&w=800' },
   ];
 
-  // Duplicate for seamless loop
-  const displayRealms = [...realms, ...realms];
+  // Duplicate for seamless infinite loop
+  const displayRealms = [...realms, ...realms, ...realms];
 
-  const pauseAutoScroll = () => {
-    setIsPaused(true);
-    setTimeout(() => setIsPaused(false), 5000);
+  useEffect(() => {
+    const ticker = tickerRef.current;
+    if (!ticker) return;
+
+    // Initial center to allow scrolling in both directions
+    setTimeout(() => {
+      ticker.scrollLeft = ticker.scrollWidth / 3;
+    }, 100);
+  }, []);
+
+  const handleManualScroll = () => {
+    const ticker = tickerRef.current;
+    if (!ticker) return;
+
+    const singleSetWidth = ticker.scrollWidth / 3;
+    
+    // Infinite warp logic
+    if (ticker.scrollLeft >= singleSetWidth * 2) {
+      ticker.scrollLeft = singleSetWidth;
+    } else if (ticker.scrollLeft <= 10) { // Small buffer for smooth reverse
+      ticker.scrollLeft = singleSetWidth;
+    }
   };
 
   const handleScroll = (direction) => {
-    pauseAutoScroll();
-    const CARD_WIDTH = 448; // 400px + 48px gap
+    const CARD_WIDTH = 448;
     if (tickerRef.current) {
       tickerRef.current.scrollBy({ left: direction * CARD_WIDTH, behavior: 'smooth' });
     }
@@ -41,10 +60,9 @@ export default function RealmTicker() {
         <span className="material-icons">chevron_right</span>
       </button>
 
-      <div className="realm-ticker" id="realm-ticker" ref={tickerRef}>
+      <div className="realm-ticker" id="realm-ticker" ref={tickerRef} onScroll={handleManualScroll}>
         <div 
           className="realm-ticker-track" 
-          style={{ animationPlayState: isPaused ? 'paused' : 'running' }}
           ref={trackRef}
         >
           {displayRealms.map((realm, index) => (

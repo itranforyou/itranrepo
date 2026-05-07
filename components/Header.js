@@ -32,6 +32,7 @@ export default function Header() {
     { name: 'UNISEX', slug: 'unisex' },
     { name: 'SPIRITUAL', slug: 'spiritual' },
     { name: 'CAR DIFFUSERS', slug: 'car-diffusers' },
+    { name: 'INCENSE STICKS', slug: 'incense-sticks' },
   ];
 
   useEffect(() => {

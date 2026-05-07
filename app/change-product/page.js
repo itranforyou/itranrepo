@@ -7,7 +7,7 @@ import Reveal from '@/components/Reveal';
 export default function ChangeProductPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminCreds, setAdminCreds] = useState({ id: '', pass: '' });
-  const [activeTab, setActiveTab] = useState('add'); // 'add' or 'manage'
+  const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', or 'packaging'
   
   // States for Add/Edit
   const [formData, setFormData] = useState({
@@ -24,6 +24,16 @@ export default function ChangeProductPage() {
   const [urlInputs, setUrlInputs] = useState(['']);
   const [editingId, setEditingId] = useState(null);
   
+  // Packaging state
+  const [packagingData, setPackagingData] = useState({
+    name: '',
+    price: '',
+    enabled: true
+  });
+  const [packagingFile, setPackagingFile] = useState(null);
+  const [editingPackId, setEditingPackId] = useState(null);
+  const [packagingList, setPackagingList] = useState([]);
+  
   // Inventory state
   const [inventory, setInventory] = useState([]);
   const [inventorySearch, setInventorySearch] = useState('');
@@ -32,7 +42,13 @@ export default function ChangeProductPage() {
   const [message, setMessage] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('Checking...');
 
-  const categories = ['Him Collection', 'Her Collection', 'Unisex Collection', 'Spiritual Collection', 'Car Diffusers'];
+  const { packagingOptions } = require('@/context/AppContext').useAppContext();
+  
+  useEffect(() => {
+    if (packagingOptions) setPackagingList(packagingOptions);
+  }, [packagingOptions]);
+
+  const categories = ['Him Collection', 'Her Collection', 'Unisex Collection', 'Spiritual Collection', 'Car Diffusers', 'Incense Sticks'];
 
   const addUrlField = () => setUrlInputs([...urlInputs, '']);
   const removeUrlField = (index) => setUrlInputs(urlInputs.filter((_, i) => i !== index));
@@ -118,6 +134,43 @@ export default function ChangeProductPage() {
     }
   };
 
+  const handlePackagingSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    const { addPackagingOption, updatePackagingOption } = require('@/lib/packaging');
+    try {
+      const data = {
+        ...packagingData,
+        price: parseInt(packagingData.price)
+      };
+      if (editingPackId) {
+        await updatePackagingOption(editingPackId, data, packagingFile);
+        setMessage('SUCCESS: Packaging updated!');
+      } else {
+        await addPackagingOption(data, packagingFile);
+        setMessage('SUCCESS: Packaging added!');
+      }
+      setPackagingData({ name: '', price: '', enabled: true });
+      setPackagingFile(null);
+      setEditingPackId(null);
+    } catch (err) {
+      setMessage('ERROR: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deletePackaging = async (id) => {
+    if (!confirm('Delete this packaging?')) return;
+    const { deletePackagingOption } = require('@/lib/packaging');
+    try {
+      await deletePackagingOption(id);
+      alert('Deleted');
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
   const handleEdit = (product) => {
     setEditingId(product.id);
     setFormData({
@@ -198,6 +251,13 @@ export default function ChangeProductPage() {
             className="label-caps"
           >
             MANAGE INVENTORY ({inventory.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('packaging')}
+            style={{ flex: 1, padding: '1rem', background: activeTab === 'packaging' ? '#fff' : 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.3s' }}
+            className="label-caps"
+          >
+            GIFT PACKAGING
           </button>
         </div>
 
@@ -313,6 +373,55 @@ export default function ChangeProductPage() {
                   </button>
                 </div>
               </form>
+            </div>
+          </Reveal>
+        ) : activeTab === 'packaging' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: '3rem', border: '1px solid var(--border)', marginBottom: '3rem' }}>
+              <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', marginBottom: '2rem' }}>{editingPackId ? 'Edit Packaging' : 'Add Packaging'}</h1>
+              {message && (
+                <div style={{ padding: '1rem', marginBottom: '2rem', background: message.includes('ERROR') ? '#fee2e2' : '#f0fdf4', color: message.includes('ERROR') ? '#991b1b' : '#166534', fontSize: '0.85rem' }}>
+                  {message}
+                </div>
+              )}
+              <form onSubmit={handlePackagingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Packaging Name</label>
+                  <input type="text" required value={packagingData.name} onChange={(e) => setPackagingData({...packagingData, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                </div>
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Price (₹)</label>
+                  <input type="number" required value={packagingData.price} onChange={(e) => setPackagingData({...packagingData, price: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                </div>
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Preview Image</label>
+                  <input type="file" onChange={(e) => setPackagingFile(e.target.files[0])} style={{ width: '100%', padding: '0.75rem 0' }} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input type="checkbox" checked={packagingData.enabled} onChange={(e) => setPackagingData({...packagingData, enabled: e.target.checked})} />
+                  <label className="label-caps" style={{ fontSize: '0.7rem' }}>Enable this option</label>
+                </div>
+                <div style={{ display: 'flex', gap: '1rem' }}>
+                  {editingPackId && <button type="button" onClick={() => { setEditingPackId(null); setPackagingData({ name: '', price: '', enabled: true }); }} className="label-caps" style={{ flex: 1, padding: '1rem', border: '1px solid var(--border)', background: 'none' }}>Cancel</button>}
+                  <button type="submit" className="btn-primary label-caps" style={{ flex: 2, padding: '1rem' }} disabled={loading}>
+                    {loading ? 'SAVING...' : (editingPackId ? 'UPDATE PACKAGING' : 'ADD PACKAGING')}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              {packagingList.map(pack => (
+                <div key={pack.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: '1.5rem', textAlign: 'center' }}>
+                  <img src={pack.image || 'https://via.placeholder.com/150'} alt="" style={{ width: '100%', height: '120px', objectFit: 'cover', marginBottom: '1rem' }} />
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', marginBottom: '0.25rem' }}>{pack.name}</h3>
+                  <p style={{ color: 'var(--primary)', fontWeight: 600 }}>₹{pack.price}</p>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
+                    <button onClick={() => { setEditingPackId(pack.id); setPackagingData({ name: pack.name, price: pack.price, enabled: pack.enabled }); }} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #000', cursor: 'pointer' }}>EDIT</button>
+                    <button onClick={() => deletePackaging(pack.id)} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #991b1b', color: '#991b1b', cursor: 'pointer' }}>DELETE</button>
+                  </div>
+                </div>
+              ))}
             </div>
           </Reveal>
         ) : (

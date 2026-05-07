@@ -19,6 +19,7 @@ export function AppProvider({ children }) {
   const [isRestoring, setIsRestoring] = useState(true);
   const [userAvatar, setUserAvatar] = useState('https://api.dicebear.com/7.x/bottts/svg?seed=Felix');
   const [user, setUser] = useState(null);
+  const [packagingOptions, setPackagingOptions] = useState([]);
 
   const syncTimeoutRef = useRef(null);
 
@@ -41,6 +42,11 @@ export function AppProvider({ children }) {
     }, (error) => {
       console.error("Products listener error:", error);
       setLoading(false);
+    });
+
+    const packagingUnsubscribe = onSnapshot(collection(db, "gift_packaging"), (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setPackagingOptions(data.filter(p => p.enabled !== false));
     });
 
     const authUnsubscribe = onAuthStateChanged(auth, async (u) => {
@@ -95,6 +101,7 @@ export function AppProvider({ children }) {
 
     return () => {
       productsUnsubscribe();
+      packagingUnsubscribe();
       authUnsubscribe();
     };
   }, []);
@@ -127,15 +134,22 @@ export function AppProvider({ children }) {
     return () => { if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current); };
   }, [cart, wishlist, userAvatar, isLoggedIn, isRestoring, user]);
 
-  const addToCart = (product) => {
+  const addToCart = (product, giftOptions = null) => {
     if (!isLoggedIn) { window.location.href = '/login'; return; }
     setCart(prev => {
       const newCart = [...prev];
-      const existing = newCart.find(item => item.id === product.id);
+      // If gift options are provided, treat it as a unique cart item
+      const existing = !giftOptions ? newCart.find(item => item.id === product.id && !item.giftOptions) : null;
+      
       if (existing) {
         existing.quantity = (existing.quantity || 1) + 1;
       } else {
-        newCart.push({ ...product, quantity: 1 });
+        newCart.push({ 
+          ...product, 
+          quantity: 1, 
+          giftOptions,
+          cartItemId: Date.now() + Math.random().toString(36).substr(2, 9) // Unique ID for cart items
+        });
       }
       return newCart;
     });
@@ -175,15 +189,22 @@ export function AppProvider({ children }) {
     const uid = user.uid;
     
     try {
-      const { deleteDoc, doc } = await import('firebase/firestore');
+      const { deleteDoc, doc, collection, query, where, getDocs, writeBatch } = await import('firebase/firestore');
       const { deleteUser } = await import('firebase/auth');
       
-      // 1. Purge Firestore Data
+      // 1. Purge Firestore Profile/Cart/Wishlist
       await Promise.all([
         deleteDoc(doc(db, "users", uid)),
         deleteDoc(doc(db, "carts", uid)),
         deleteDoc(doc(db, "wishlists", uid))
       ]);
+
+      // 1.5 Purge User Reviews
+      const q = query(collection(db, "reviews"), where("userId", "==", uid));
+      const reviewDocs = await getDocs(q);
+      const batch = writeBatch(db);
+      reviewDocs.forEach((d) => batch.delete(d.ref));
+      await batch.commit();
       
       // 2. Delete Auth Account
       await deleteUser(user);
@@ -211,8 +232,8 @@ export function AppProvider({ children }) {
     isLoggedIn, setIsLoggedIn, logout, deleteAccount,
     isSearchOpen, setIsSearchOpen, selectedProduct, setSelectedProduct,
     products, loading, notification, setNotification,
-    userAvatar, setUserAvatar, user
-  }), [cart, wishlist, isLoggedIn, isSearchOpen, selectedProduct, products, loading, notification, userAvatar, user]);
+    userAvatar, setUserAvatar, user, packagingOptions
+  }), [cart, wishlist, isLoggedIn, isSearchOpen, selectedProduct, products, loading, notification, userAvatar, user, packagingOptions]);
 
   return (
     <AppContext.Provider value={contextValue}>

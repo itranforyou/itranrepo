@@ -41,6 +41,13 @@ const COLLECTION_MAP = {
     image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2000',
     category: 'Car Diffusers',
     label: 'Curated Realm'
+  },
+  'incense-sticks': {
+    title: 'Incense Sticks',
+    subtitle: 'Hand-rolled sticks of pure devotion. Infuse your space with the timeless aroma of sacred sandalwood, jasmine, and traditional resins.',
+    image: 'https://images.unsplash.com/photo-1602928294241-7662c19e5d41?auto=format&fit=crop&q=80&w=2000',
+    category: 'Incense Sticks',
+    label: 'Curated Realm'
   }
 };
 

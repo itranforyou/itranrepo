@@ -25,7 +25,8 @@ export default function Cart() {
   const subtotal = cart.reduce((acc, item) => {
     const rawPrice = item.price ? String(item.price).replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim() : '0';
     const price = parseFloat(rawPrice) || 0;
-    return acc + (price * (item.quantity || 1));
+    const packagingPrice = item.giftOptions?.packaging?.price || 0;
+    return acc + ((price + packagingPrice) * (item.quantity || 1));
   }, 0);
 
   if (cart.length === 0) {
@@ -63,7 +64,9 @@ export default function Cart() {
             </div>
 
             {cart.map((item, index) => {
-              const itemTotal = parseFloat(String(item.price || '0').replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim()) * (item.quantity || 1);
+              const basePrice = parseFloat(String(item.price || '0').replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim());
+              const packPrice = item.giftOptions?.packaging?.price || 0;
+              const itemTotal = (basePrice + packPrice) * (item.quantity || 1);
               return (
                 <div key={index} className="cart-item-row">
                   <div className="cart-item-info">
@@ -73,7 +76,21 @@ export default function Cart() {
                     <div className="cart-item-details">
                       <h3>{item.name}</h3>
                       <div className="label-caps category">{item.category}</div>
-                      <button onClick={() => removeItem(index)} className="remove-btn">REMOVE</button>
+                      
+                      {item.giftOptions?.packaging && (
+                        <div style={{ marginTop: '0.75rem', padding: '0.5rem', background: '#fcfcfc', border: '1px solid var(--border)', fontSize: '0.75rem' }}>
+                          <div className="label-caps" style={{ color: 'var(--primary)', fontSize: '0.6rem', marginBottom: '0.25rem' }}>Gift Packaging</div>
+                          <div>{item.giftOptions.packaging.name} (+₹{item.giftOptions.packaging.price})</div>
+                        </div>
+                      )}
+
+                      {item.giftOptions?.message && (
+                        <div style={{ marginTop: '0.5rem', fontStyle: 'italic', color: 'var(--muted-foreground)', fontSize: '0.8rem', maxWidth: '250px' }}>
+                          &quot;{item.giftOptions.message}&quot;
+                        </div>
+                      )}
+
+                      <button onClick={() => removeItem(index)} className="remove-btn" style={{ marginTop: '1rem' }}>REMOVE</button>
                     </div>
                   </div>
                   <div className="cart-item-meta">

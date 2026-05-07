@@ -11,7 +11,7 @@ export default function AllProducts() {
   const { products } = useAppContext();
   const [filter, setFilter] = useState('ALL SCENTS');
 
-  const categories = ['ALL SCENTS', 'HIM', 'HER', 'SPIRITUAL', 'HOME FRAGRANCE'];
+  const categories = ['ALL SCENTS', 'HIM', 'HER', 'SPIRITUAL', 'HOME FRAGRANCE', 'INCENSE STICKS'];
 
   const filteredProducts = filter === 'ALL SCENTS' 
     ? products 
@@ -21,6 +21,7 @@ export default function AllProducts() {
         if (filter === 'HER') return pCat.includes('her');
         if (filter === 'SPIRITUAL') return pCat.includes('spiritual');
         if (filter === 'HOME FRAGRANCE') return pCat.includes('home');
+        if (filter === 'INCENSE STICKS') return pCat.includes('incense');
         return true;
       });
 
