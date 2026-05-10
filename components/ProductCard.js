@@ -31,7 +31,12 @@ export default function ProductCard({ product, delay = 0 }) {
   const handleAddToCart = (e) => {
     e.preventDefault(); 
     e.stopPropagation();
-    addToCart(product);
+    
+    // Automatically select first fragrance note as it's now mandatory
+    const defaultNote = product.notes && product.notes.length > 0 ? product.notes[0].name : null;
+    const options = defaultNote ? { selectedNote: defaultNote } : null;
+    
+    addToCart(product, options);
   };
 
   const handleWishlist = (e) => {
@@ -150,6 +155,13 @@ export default function ProductCard({ product, delay = 0 }) {
               </>
             ) : (
               <span style={{ color: '#8B4513', fontWeight: 600, fontSize: '0.95rem' }}>{product.price}</span>
+            )}
+            {product.size && (
+              <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginLeft: 'auto', borderLeft: '1px solid #eee', paddingLeft: '0.6rem' }} className="label-caps">
+                {product.category === 'Incense Sticks' 
+                  ? `Sets of ${product.size}` 
+                  : (product.size.toString().toLowerCase().endsWith('ml') ? product.size : `${product.size}ml`)}
+              </span>
             )}
           </div>
         </div>

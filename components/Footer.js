@@ -13,7 +13,13 @@ export default function Footer() {
     <footer>
       <div className="footer-grid">
         <div>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.5rem', marginBottom: '1rem' }}>Scented Silence</div>
+          <div style={{ marginBottom: '1rem' }}>
+            <img 
+              src="/images/ittar.png" 
+              alt="Scented Silence" 
+              style={{ height: '32px', width: 'auto', objectFit: 'contain' }} 
+            />
+          </div>
           <p style={{ color: 'var(--muted-foreground)', fontSize: '0.875rem' }}>Crafted in quiet devotion.</p>
         </div>
         <div className="footer-links label-caps">

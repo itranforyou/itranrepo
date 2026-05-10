@@ -17,7 +17,7 @@ export function AppProvider({ children }) {
   const [loading, setLoading] = useState(true);
   const [notification, setNotification] = useState(null);
   const [isRestoring, setIsRestoring] = useState(true);
-  const [userAvatar, setUserAvatar] = useState('https://api.dicebear.com/7.x/bottts/svg?seed=Felix');
+  const [userAvatar, setUserAvatar] = useState('https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y');
   const [user, setUser] = useState(null);
   const [packagingOptions, setPackagingOptions] = useState([]);
 
@@ -70,21 +70,10 @@ export function AppProvider({ children }) {
             if (cartSnap.exists()) setCart(cartSnap.data().items || []);
             if (wishSnap.exists()) setWishlist(wishSnap.data().items || []);
           } else {
-            // User exists in Auth but not in Firestore (Unregistered)
-            // Automate cleanup of orphaned data to save Firestore space
-            try {
-              const { deleteDoc } = await import('firebase/firestore');
-              await Promise.all([
-                deleteDoc(doc(db, "carts", uid)),
-                deleteDoc(doc(db, "wishlists", uid))
-              ]);
-            } catch (cleanupErr) {
-              console.error("Data cleanup error:", cleanupErr);
-            }
-            
-            await signOut(auth);
+            // New user or missing profile - allow them to stay authenticated in Firebase
+            // but don't mark as 'app logged in' until Login.js finishes setDoc
             setIsLoggedIn(false);
-            setUser(null);
+            setUser(u);
           }
         } catch (err) {
           console.error("Restoration error:", err);
@@ -94,7 +83,7 @@ export function AppProvider({ children }) {
         setUser(null);
         setCart([]);
         setWishlist([]);
-        setUserAvatar('https://api.dicebear.com/7.x/bottts/svg?seed=Felix');
+        setUserAvatar('https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y');
       }
       setIsRestoring(false);
     });
@@ -134,21 +123,25 @@ export function AppProvider({ children }) {
     return () => { if (syncTimeoutRef.current) clearTimeout(syncTimeoutRef.current); };
   }, [cart, wishlist, userAvatar, isLoggedIn, isRestoring, user]);
 
-  const addToCart = (product, giftOptions = null) => {
+  const addToCart = (product, options = null, quantity = 1) => {
     if (!isLoggedIn) { window.location.href = '/login'; return; }
     setCart(prev => {
       const newCart = [...prev];
-      // If gift options are provided, treat it as a unique cart item
-      const existing = !giftOptions ? newCart.find(item => item.id === product.id && !item.giftOptions) : null;
+      // Check for same product AND same note preference
+      const existing = newCart.find(item => 
+        item.id === product.id && 
+        item.giftOptions?.selectedNote === options?.selectedNote &&
+        item.giftOptions?.isGift === options?.isGift
+      );
       
       if (existing) {
-        existing.quantity = (existing.quantity || 1) + 1;
+        existing.quantity = (existing.quantity || 1) + quantity;
       } else {
         newCart.push({ 
           ...product, 
-          quantity: 1, 
-          giftOptions,
-          cartItemId: Date.now() + Math.random().toString(36).substr(2, 9) // Unique ID for cart items
+          quantity: quantity, 
+          giftOptions: options,
+          cartItemId: Date.now() + Math.random().toString(36).substr(2, 9)
         });
       }
       return newCart;
@@ -178,20 +171,26 @@ export function AppProvider({ children }) {
     await signOut(auth);
     setCart([]);
     setWishlist([]);
-    setUserAvatar('https://api.dicebear.com/7.x/bottts/svg?seed=Felix');
+    setUserAvatar('https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp&f=y');
     setIsLoggedIn(false);
     setUser(null);
     window.location.href = '/';
   };
 
-  const deleteAccount = async () => {
+  const deleteAccount = async (password = null) => {
     if (!user || !user.uid) return;
     const uid = user.uid;
     
     try {
       const { deleteDoc, doc, collection, query, where, getDocs, writeBatch } = await import('firebase/firestore');
-      const { deleteUser } = await import('firebase/auth');
+      const { deleteUser, EmailAuthProvider, reauthenticateWithCredential } = await import('firebase/auth');
       
+      // If password is provided, try to re-authenticate first
+      if (password) {
+        const credential = EmailAuthProvider.credential(user.email, password);
+        await reauthenticateWithCredential(user, credential);
+      }
+
       // 1. Purge Firestore Profile/Cart/Wishlist
       await Promise.all([
         deleteDoc(doc(db, "users", uid)),
@@ -219,7 +218,12 @@ export function AppProvider({ children }) {
     } catch (err) {
       console.error("Deletion error:", err);
       if (err.code === 'auth/requires-recent-login') {
-        setNotification("Please re-login to delete your account.");
+        setNotification("Security Check: Please confirm your password to delete account.");
+        // We throw the error so the UI can catch it and show a password prompt
+        throw err;
+      } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+        setNotification("Incorrect password. Deletion cancelled.");
+        throw err;
       } else {
         setNotification("Error deleting account. Please try again.");
       }

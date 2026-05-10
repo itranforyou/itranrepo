@@ -29,6 +29,15 @@ export default function Cart() {
     return acc + ((price + packagingPrice) * (item.quantity || 1));
   }, 0);
 
+  const savings = cart.reduce((acc, item) => {
+    const costPrice = item.costPrice ? parseFloat(String(item.costPrice).replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim()) : 0;
+    const sellPrice = item.price ? parseFloat(String(item.price).replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim()) : 0;
+    if (costPrice > sellPrice) {
+      return acc + ((costPrice - sellPrice) * (item.quantity || 1));
+    }
+    return acc;
+  }, 0);
+
   if (cart.length === 0) {
     return (
       <div style={{ paddingTop: '150px', textAlign: 'center', paddingBottom: '150px' }}>
@@ -56,11 +65,12 @@ export default function Cart() {
 
         <div className="cart-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '4rem', alignItems: 'start' }}>
           <div>
-            <div className="cart-header-labels label-caps" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 0.5fr', gap: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '2rem' }}>
+            <div className="cart-header-labels label-caps" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 40px', gap: '2rem', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)', marginBottom: '2rem' }}>
               <div style={{ fontSize: '0.7rem' }}>Product</div>
               <div style={{ fontSize: '0.7rem' }}>Price</div>
-              <div style={{ fontSize: '0.7rem' }}>Quantity</div>
-              <div style={{ fontSize: '0.7rem' }}>Total</div>
+              <div style={{ fontSize: '0.7rem', textAlign: 'center' }}>Quantity</div>
+              <div style={{ fontSize: '0.7rem', textAlign: 'right' }}>Total</div>
+              <div style={{ fontSize: '0.7rem' }}></div>
             </div>
 
             {cart.map((item, index) => {
@@ -68,41 +78,46 @@ export default function Cart() {
               const packPrice = item.giftOptions?.packaging?.price || 0;
               const itemTotal = (basePrice + packPrice) * (item.quantity || 1);
               return (
-                <div key={index} className="cart-item-row">
-                  <div className="cart-item-info">
-                    <div className="cart-item-image">
-                      <img src={item.image || item.images?.[0]} alt={item.name} />
+                <div key={index} className="cart-item-row" style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr 40px', gap: '2rem', alignItems: 'center', padding: '2rem 0', borderBottom: '1px solid var(--border)' }}>
+                  <div className="cart-item-info" style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
+                    <div className="cart-item-image" style={{ width: '80px', height: '100px', flexShrink: 0 }}>
+                      <img src={item.image || item.images?.[0]} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </div>
                     <div className="cart-item-details">
-                      <h3>{item.name}</h3>
-                      <div className="label-caps category">{item.category}</div>
+                      <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{item.name}</h3>
+                      <div className="label-caps category" style={{ fontSize: '0.6rem', color: 'var(--muted-foreground)' }}>{item.category}</div>
                       
-                      {item.giftOptions?.packaging && (
-                        <div style={{ marginTop: '0.75rem', padding: '0.5rem', background: '#fcfcfc', border: '1px solid var(--border)', fontSize: '0.75rem' }}>
-                          <div className="label-caps" style={{ color: 'var(--primary)', fontSize: '0.6rem', marginBottom: '0.25rem' }}>Gift Packaging</div>
-                          <div>{item.giftOptions.packaging.name} (+₹{item.giftOptions.packaging.price})</div>
+                      {item.giftOptions?.selectedNote && (
+                        <div style={{ marginTop: '0.5rem', fontSize: '0.75rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                          <span className="material-icons" style={{ fontSize: '0.9rem' }}>spa</span>
+                          <span>{item.giftOptions.selectedNote}</span>
                         </div>
                       )}
-
-                      {item.giftOptions?.message && (
-                        <div style={{ marginTop: '0.5rem', fontStyle: 'italic', color: 'var(--muted-foreground)', fontSize: '0.8rem', maxWidth: '250px' }}>
-                          &quot;{item.giftOptions.message}&quot;
-                        </div>
-                      )}
-
-                      <button onClick={() => removeItem(index)} className="remove-btn" style={{ marginTop: '1rem' }}>REMOVE</button>
                     </div>
                   </div>
-                  <div className="cart-item-meta">
-                    <div className="cart-item-price-unit">{item.price}</div>
-                    <div className="cart-item-qty">
-                      <button onClick={() => updateQuantity(index, -1)}>-</button>
-                      <span>{item.quantity || 1}</span>
-                      <button onClick={() => updateQuantity(index, 1)}>+</button>
-                    </div>
-                    <div className="cart-item-total-price">
-                      Rs. {itemTotal.toFixed(2)}
-                    </div>
+
+                  <div className="cart-item-price-unit" style={{ fontSize: '0.95rem' }}>{item.price}</div>
+                  
+                  <div className="cart-item-qty" style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', width: 'fit-content', margin: '0 auto' }}>
+                    <button onClick={() => updateQuantity(index, -1)} style={{ padding: '0.5rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer' }}>-</button>
+                    <span style={{ padding: '0 0.5rem', fontSize: '0.9rem', minWidth: '25px', textAlign: 'center' }}>{item.quantity || 1}</span>
+                    <button onClick={() => updateQuantity(index, 1)} style={{ padding: '0.5rem 0.75rem', background: 'none', border: 'none', cursor: 'pointer' }}>+</button>
+                  </div>
+
+                  <div className="cart-item-total-price" style={{ textAlign: 'right', fontWeight: 600, fontSize: '1rem' }}>
+                    Rs. {itemTotal.toFixed(2)}
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button 
+                      onClick={() => removeItem(index)} 
+                      aria-label="Remove item"
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ccc', transition: 'color 0.2s' }}
+                      onMouseOver={(e) => e.currentTarget.style.color = '#991b1b'}
+                      onMouseOut={(e) => e.currentTarget.style.color = '#ccc'}
+                    >
+                      <span className="material-icons" style={{ fontSize: '1.2rem' }}>delete_outline</span>
+                    </button>
                   </div>
                 </div>
               );
@@ -119,6 +134,14 @@ export default function Cart() {
               <span style={{ color: 'var(--muted-foreground)' }}>Shipping</span>
               <span style={{ fontSize: '0.8rem', color: 'var(--primary)' }}>CALCULATED AT NEXT STEP</span>
             </div>
+
+            {savings > 0 && (
+              <div style={{ padding: '0.75rem', background: '#f0fdf4', border: '1px dashed #166534', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#166534' }}>YOU SAVED</span>
+                <span style={{ fontWeight: 700, color: '#166534' }}>Rs. {savings.toFixed(2)}</span>
+              </div>
+            )}
+
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.5rem', marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between' }}>
               <span style={{ fontWeight: 600 }}>Estimated Total</span>
               <span style={{ fontSize: '1.5rem', fontWeight: 600 }}>Rs. {subtotal.toFixed(2)}</span>

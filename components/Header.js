@@ -10,21 +10,15 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [isEditingAvatar, setIsEditingAvatar] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
   const [hoveredCollection, setHoveredCollection] = useState(null);
   const { cart, isLoggedIn, logout, deleteAccount, userAvatar, setUserAvatar } = useAppContext();
   const [user, setUser] = useState(null);
   const pathname = usePathname();
   const profileRef = useRef(null);
 
-  const avatarOptions = [
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Felix',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Milo',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Bubba',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Piper',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Daisy',
-    'https://api.dicebear.com/7.x/bottts/svg?seed=Luna',
-  ];
+
 
   const shopCollections = [
     { name: 'HIM', slug: 'him' },
@@ -85,7 +79,11 @@ export default function Header() {
       </div>
 
       <Link href="/" className="logo">
-        SCENTED SILENCE
+        <img 
+          src="/images/ittar.png" 
+          alt="Scented Silence" 
+          style={{ height: '40px', width: 'auto', objectFit: 'contain' }} 
+        />
       </Link>
 
       <nav className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
@@ -153,7 +151,7 @@ export default function Header() {
 
         <div style={{ position: 'relative' }} ref={profileRef}>
           <button 
-            onClick={() => { setIsProfileOpen(!isProfileOpen); setIsEditingAvatar(false); }}
+            onClick={() => { setIsProfileOpen(!isProfileOpen); setShowDeleteConfirm(false); }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem' }}
           >
             {isLoggedIn ? (
@@ -183,40 +181,12 @@ export default function Header() {
                   <div style={{ marginBottom: '2rem', textAlign: 'center' }}>
                     <div style={{ position: 'relative', display: 'inline-block', marginBottom: '1rem' }}>
                       <img src={userAvatar} alt="Profile" style={{ width: '80px', height: '80px', borderRadius: '50%', border: '3px solid #f8f8f8', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }} />
-                      <button 
-                        onClick={() => setIsEditingAvatar(!isEditingAvatar)}
-                        style={{ position: 'absolute', bottom: '2px', right: '2px', background: '#000', color: '#fff', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}
-                      >
-                        <span className="material-icons" style={{ fontSize: '14px' }}>{isEditingAvatar ? 'close' : 'edit'}</span>
-                      </button>
                     </div>
                     <div style={{ fontWeight: 700, fontSize: '1.25rem', color: '#111', letterSpacing: '-0.02em' }}>{user.displayName || user.email.split('@')[0]}</div>
                     <div style={{ fontSize: '0.8rem', color: '#888' }}>{user.email}</div>
                   </div>
 
-                  {isEditingAvatar && (
-                    <div style={{ marginBottom: '2rem', background: '#fcfcfc', padding: '1.25rem', borderRadius: '14px', border: '1px solid #f0f0f0', animation: 'fadeInUp 0.3s ease' }}>
-                      <div className="label-caps" style={{ fontSize: '0.6rem', color: '#aaa', marginBottom: '1rem', letterSpacing: '0.1em' }}>Switch Your Persona</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '0.6rem' }}>
-                        {avatarOptions.map((opt, i) => (
-                          <img 
-                            key={i} 
-                            src={opt} 
-                            onClick={() => setUserAvatar(opt)}
-                            style={{ 
-                              width: '100%', 
-                              cursor: 'pointer', 
-                              borderRadius: '8px',
-                              border: userAvatar === opt ? '2px solid #000' : '1px solid #eee',
-                              opacity: userAvatar === opt ? 1 : 0.6,
-                              transition: 'all 0.2s',
-                              background: '#fff'
-                            }} 
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', borderTop: '1px solid #f5f5f5', paddingTop: '1.75rem' }}>
                     <Link href="/orders" onClick={() => setIsProfileOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none', color: '#222', fontSize: '0.95rem', fontWeight: 500 }}>
@@ -230,18 +200,58 @@ export default function Header() {
                     </button>
                     
                     <div style={{ marginTop: '1rem', borderTop: '1px solid #f5f5f5', paddingTop: '1.5rem' }}>
-                      <button 
-                        onClick={() => {
-                          if (window.confirm("ARE YOU SURE? This will permanently erase your profile, cart, and all curated data. This action cannot be undone.")) {
-                            deleteAccount();
-                            setIsProfileOpen(false);
-                          }
-                        }} 
-                        style={{ background: 'none', border: 'none', padding: 0, color: '#dc2626', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em' }}
-                        className="label-caps"
-                      >
-                        DELETE MY ACCOUNT
-                      </button>
+                      {showDeleteConfirm ? (
+                        <div style={{ animation: 'fadeIn 0.3s ease' }}>
+                          <p style={{ fontSize: '0.7rem', color: '#666', marginBottom: '1rem', lineHeight: 1.4 }}>Enter password to confirm permanent deletion.</p>
+                          <input 
+                            type="password" 
+                            placeholder="Current Password" 
+                            value={deletePassword}
+                            onChange={(e) => setDeletePassword(e.target.value)}
+                            style={{ width: '100%', padding: '0.75rem', border: '1px solid #eee', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}
+                          />
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button 
+                              onClick={async () => {
+                                try {
+                                  await deleteAccount(deletePassword);
+                                  setIsProfileOpen(false);
+                                } catch (err) {
+                                  // Error already handled in context notification
+                                }
+                              }} 
+                              style={{ flex: 1, background: '#dc2626', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+                            >
+                              DELETE FOREVER
+                            </button>
+                            <button 
+                              onClick={() => setShowDeleteConfirm(false)}
+                              style={{ flex: 1, background: '#f5f5f5', color: '#666', border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+                            >
+                              CANCEL
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <button 
+                          onClick={async () => {
+                            if (window.confirm("ARE YOU SURE? This will permanently erase your profile, cart, and all curated data. This action cannot be undone.")) {
+                              try {
+                                await deleteAccount();
+                                setIsProfileOpen(false);
+                              } catch (err) {
+                                if (err.code === 'auth/requires-recent-login') {
+                                  setShowDeleteConfirm(true);
+                                }
+                              }
+                            }
+                          }} 
+                          style={{ background: 'none', border: 'none', padding: 0, color: '#dc2626', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em' }}
+                          className="label-caps"
+                        >
+                          DELETE MY ACCOUNT
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

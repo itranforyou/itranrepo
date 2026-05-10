@@ -7,12 +7,14 @@ export default function ProductModal() {
   const { selectedProduct, setSelectedProduct, addToCart, products } = useAppContext();
   const [imageIndex, setImageIndex] = useState(0);
   const [activeAccordion, setActiveAccordion] = useState(0);
+  const [quantity, setQuantity] = useState(1);
   const modalContainerRef = useRef(null);
 
   useEffect(() => {
     if (selectedProduct) {
       setImageIndex(0);
       setActiveAccordion(0);
+      setQuantity(1);
       if (modalContainerRef.current) {
         modalContainerRef.current.scrollTop = 0;
       }
@@ -106,13 +108,30 @@ export default function ProductModal() {
               {selectedProduct.desc}
             </p>
             
-            <button 
-              className="btn-primary" 
-              onClick={() => addToCart(selectedProduct)}
-              style={{ width: '100%', marginBottom: '2rem', padding: '1.25rem' }}
-            >
-              ADD TO CART
-            </button>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#fff' }}>
+                <button 
+                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                  style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
+                >-</button>
+                <span style={{ padding: '0 0.5rem', fontSize: '0.9rem', minWidth: '30px', textAlign: 'center' }}>{quantity}</span>
+                <button 
+                  onClick={() => setQuantity(quantity + 1)}
+                  style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
+                >+</button>
+              </div>
+              <button 
+                className="btn-primary" 
+                onClick={() => {
+                  const defaultNote = selectedProduct.notes && selectedProduct.notes.length > 0 ? selectedProduct.notes[0].name : null;
+                  const options = defaultNote ? { selectedNote: defaultNote } : null;
+                  addToCart(selectedProduct, options, quantity);
+                }}
+                style={{ flex: 1, padding: '1.25rem' }}
+              >
+                ADD TO CART
+              </button>
+            </div>
             
             <div className="product-accordion">
               <div className={`accordion-item ${activeAccordion === 0 ? 'active' : ''}`}>

@@ -23,6 +23,13 @@ export default function ProductPage({ params }) {
     isGift: false,
     message: ''
   });
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+
+  const toggleNoteSelection = (noteName) => {
+    // Note is mandatory, so clicking selected note doesn't deselect
+    setSelectedNote(noteName);
+  };
 
   useEffect(() => {
     if (isLoggedIn && user) {
@@ -36,6 +43,10 @@ export default function ProductPage({ params }) {
     if (products.length > 0) {
       const p = products.find(p => p.id === id);
       setProduct(p);
+      // Auto-select first note if available
+      if (p && p.notes && Array.isArray(p.notes) && p.notes.length > 0) {
+        setSelectedNote(p.notes[0].name);
+      }
     }
   }, [id, products]);
 
@@ -197,16 +208,84 @@ export default function ProductPage({ params }) {
                     {discountPercentage}% OFF
                   </div>
                 )}
+                {product.size && (
+                  <div style={{ marginLeft: 'auto', border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.75rem' }} className="label-caps">
+                    {product.category === 'Incense Sticks' 
+                      ? `Sets of ${product.size}` 
+                      : (product.size.toString().toLowerCase().endsWith('ml') ? product.size : `${product.size}ml`)}
+                  </div>
+                )}
               </div>
 
-              <p style={{ lineHeight: 1.9, marginBottom: '3rem', color: 'var(--muted-foreground)', fontSize: '1.1rem' }}>
+              <p style={{ lineHeight: 1.9, marginBottom: '2rem', color: 'var(--muted-foreground)', fontSize: '1.1rem' }}>
                 {product.desc}
               </p>
 
+              {product.notes && Array.isArray(product.notes) && product.notes.length > 0 && (
+                <div style={{ marginBottom: '3rem' }}>
+                  <div className="label-caps" style={{ fontSize: '0.65rem', color: 'var(--primary)', marginBottom: '0.5rem', letterSpacing: '0.1em' }}>Fragrance Ritual Notes</div>
+                  <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: '1.5rem' }}>Select your primary note preference</p>
+                  <div style={{ display: 'flex', gap: '1.5rem', overflowX: 'auto', paddingBottom: '1rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {product.notes.map((note, idx) => {
+                      const isSelected = selectedNote === note.name;
+                      return (
+                        <div 
+                          key={idx} 
+                          onClick={() => toggleNoteSelection(note.name)}
+                          style={{ flex: '0 0 120px', textAlign: 'center', cursor: 'pointer' }}
+                        >
+                          <div style={{ 
+                            width: '120px', 
+                            height: '120px', 
+                            background: isSelected ? 'rgba(141, 75, 0, 0.05)' : '#fcfcfc', 
+                            border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)', 
+                            borderRadius: '50%', 
+                            overflow: 'hidden', 
+                            marginBottom: '0.75rem', 
+                            padding: '10px',
+                            transition: 'all 0.3s ease',
+                            position: 'relative'
+                          }}>
+                            <img src={note.image || 'https://via.placeholder.com/100'} alt={note.name} style={{ width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'multiply', opacity: isSelected ? 1 : 0.7 }} />
+                            {isSelected && (
+                              <div style={{ position: 'absolute', top: '5px', right: '5px', background: 'var(--primary)', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <span className="material-icons" style={{ fontSize: '12px', color: '#fff' }}>check</span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="label-caps" style={{ fontSize: '0.6rem', color: isSelected ? 'var(--primary)' : 'var(--foreground)', fontWeight: isSelected ? 700 : 600 }}>{note.name}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#fff' }}>
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                  >-</button>
+                  <span style={{ padding: '0 1rem', fontSize: '1rem', minWidth: '40px', textAlign: 'center' }}>{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)}
+                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                  >+</button>
+                </div>
                 <button 
                   className="btn-primary" 
-                  onClick={() => addToCart(product, giftOptions.isGift ? { ...giftOptions, packaging: selectedPackaging } : null)}
+                  onClick={() => {
+                    if (!selectedNote) {
+                      alert("Please select a fragrance note to continue.");
+                      return;
+                    }
+                    const extraData = {
+                      ...giftOptions,
+                      selectedNote: selectedNote
+                    };
+                    addToCart(product, extraData, quantity);
+                  }}
                   style={{ flex: 1, padding: '1.5rem', fontSize: '0.8rem' }}
                 >
                   ADD TO CART

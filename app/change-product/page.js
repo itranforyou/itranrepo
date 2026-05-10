@@ -17,10 +17,10 @@ export default function ChangeProductPage() {
     isOffer: false,
     category: 'Him Collection',
     description: '',
+    notes: [], // Changed to array of objects {name, image}
+    size: '',
     isBestSeller: false
   });
-  const [imageFiles, setImageFiles] = useState([]);
-  const [uploadMethod, setUploadMethod] = useState('file');
   const [urlInputs, setUrlInputs] = useState(['']);
   const [editingId, setEditingId] = useState(null);
   
@@ -30,7 +30,7 @@ export default function ChangeProductPage() {
     price: '',
     enabled: true
   });
-  const [packagingFile, setPackagingFile] = useState(null);
+  const [packagingImageUrl, setPackagingImageUrl] = useState('');
   const [editingPackId, setEditingPackId] = useState(null);
   const [packagingList, setPackagingList] = useState([]);
   
@@ -56,6 +56,21 @@ export default function ChangeProductPage() {
     const newUrls = [...urlInputs];
     newUrls[index] = value;
     setUrlInputs(newUrls);
+  };
+
+  const addNoteField = () => {
+    const currentNotes = Array.isArray(formData.notes) ? formData.notes : [];
+    setFormData({...formData, notes: [...currentNotes, { name: '', image: '' }]});
+  };
+  const removeNoteField = (index) => {
+    const currentNotes = Array.isArray(formData.notes) ? formData.notes : [];
+    setFormData({...formData, notes: currentNotes.filter((_, i) => i !== index)});
+  };
+  const updateNoteField = (index, field, value) => {
+    const currentNotes = Array.isArray(formData.notes) ? formData.notes : [];
+    const newNotes = [...currentNotes];
+    newNotes[index][field] = value;
+    setFormData({...formData, notes: newNotes});
   };
 
   const handleAdminLogin = (e) => {
@@ -91,12 +106,12 @@ export default function ChangeProductPage() {
       isOffer: false,
       category: 'Him Collection',
       description: '',
+      notes: [],
+      size: '',
       isBestSeller: false
     });
-    setImageFiles([]);
     setUrlInputs(['']);
     setEditingId(null);
-    setUploadMethod('file');
     setMessage('');
   };
 
@@ -110,14 +125,14 @@ export default function ChangeProductPage() {
         ...formData,
         price: formData.price.toString().startsWith('Rs.') ? formData.price : `Rs. ${formData.price}`,
         costPrice: formData.isOffer && formData.costPrice ? (formData.costPrice.toString().startsWith('Rs.') ? formData.costPrice : `Rs. ${formData.costPrice}`) : null,
-        images: uploadMethod === 'url' ? urlInputs.filter(url => url.trim() !== '') : (formData.images || [])
+        images: urlInputs.filter(url => url.trim() !== '')
       };
       
       if (editingId) {
-        await updateProduct(editingId, productData, uploadMethod === 'file' ? imageFiles : []);
+        await updateProduct(editingId, productData, []);
         setMessage('SUCCESS: Product updated!');
       } else {
-        await addProduct(productData, uploadMethod === 'file' ? imageFiles : []);
+        await addProduct(productData, []);
         setMessage('SUCCESS: Product added!');
       }
       
@@ -141,17 +156,18 @@ export default function ChangeProductPage() {
     try {
       const data = {
         ...packagingData,
-        price: parseInt(packagingData.price)
+        price: parseInt(packagingData.price),
+        image: packagingImageUrl
       };
       if (editingPackId) {
-        await updatePackagingOption(editingPackId, data, packagingFile);
+        await updatePackagingOption(editingPackId, data, null);
         setMessage('SUCCESS: Packaging updated!');
       } else {
-        await addPackagingOption(data, packagingFile);
+        await addPackagingOption(data, null);
         setMessage('SUCCESS: Packaging added!');
       }
       setPackagingData({ name: '', price: '', enabled: true });
-      setPackagingFile(null);
+      setPackagingImageUrl('');
       setEditingPackId(null);
     } catch (err) {
       setMessage('ERROR: ' + err.message);
@@ -180,12 +196,11 @@ export default function ChangeProductPage() {
       isOffer: !!product.costPrice,
       category: product.category || 'Him Collection',
       description: product.description || product.desc || '',
+      notes: Array.isArray(product.notes) ? product.notes : [],
+      size: product.size || '',
       isBestSeller: product.isBestSeller || false,
-      images: product.images || []
     });
-    setUrlInputs(product.images && product.images.length > 0 ? product.images : ['']);
-    setUploadMethod('url'); 
-    setActiveTab('add');
+    setUrlInputs(product.images && product.images.length > 0 ? product.images : ['']);    setActiveTab('add');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -324,41 +339,58 @@ export default function ChangeProductPage() {
                   <textarea required value={formData.description || ''} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={3} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', resize: 'none' }} />
                 </div>
 
-                <div>
-                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Images (Existing + New)</label>
-                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
-                    <button type="button" onClick={() => setUploadMethod('file')} style={{ flex: 1, padding: '0.5rem', fontSize: '0.6rem', background: uploadMethod === 'file' ? 'var(--foreground)' : 'transparent', color: uploadMethod === 'file' ? 'var(--background)' : 'var(--foreground)', border: '1px solid var(--border)' }} className="label-caps">Add via Files</button>
-                    <button type="button" onClick={() => setUploadMethod('url')} style={{ flex: 1, padding: '0.5rem', fontSize: '0.6rem', background: uploadMethod === 'url' ? 'var(--foreground)' : 'transparent', color: uploadMethod === 'url' ? 'var(--background)' : 'var(--foreground)', border: '1px solid var(--border)' }} className="label-caps">Edit URLs</button>
+                <div style={{ background: '#fcfcfc', padding: '1.5rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <label className="label-caps" style={{ fontSize: '0.7rem' }}>Fragrance Notes (Multiple)</label>
+                    <button type="button" onClick={addNoteField} style={{ background: 'var(--foreground)', color: 'var(--background)', border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.6rem', cursor: 'pointer' }} className="label-caps">+ Add Note</button>
                   </div>
                   
-                  {uploadMethod === 'file' ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                      <input key="file-input-manage" type="file" accept="image/*" multiple onChange={(e) => {
-                        const files = Array.from(e.target.files);
-                        const oversized = files.filter(f => f.size > 2 * 1024 * 1024);
-                        if (oversized.length > 0) {
-                          alert(`ERROR: Image(s) too large. Max 2MB.`);
-                          e.target.value = '';
-                          setImageFiles([]);
-                        } else {
-                          setImageFiles(files);
-                        }
-                      }} style={{ width: '100%', padding: '0.5rem 0' }} />
-                      <p style={{ fontSize: '0.6rem', color: 'var(--muted-foreground)' }}>New images will be added to the gallery.</p>
-                    </div>
-                  ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {urlInputs.map((url, index) => (
-                        <div key={index} style={{ display: 'flex', gap: '0.5rem' }}>
-                          <input type="url" placeholder="Image URL" value={url || ''} onChange={(e) => updateUrlField(index, e.target.value)} style={{ flex: 1, padding: '0.75rem', border: '1px solid var(--border)' }} />
-                          {urlInputs.length > 1 && (
-                            <button type="button" onClick={() => removeUrlField(index)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '0.5rem', cursor: 'pointer' }}>×</button>
-                          )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {(Array.isArray(formData.notes) ? formData.notes : []).map((note, index) => (
+                      <div key={index} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', background: '#fff', padding: '1rem', border: '1px solid #eee' }}>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Note Name</label>
+                          <input type="text" value={note.name} onChange={(e) => updateNoteField(index, 'name', e.target.value)} placeholder="e.g. Oud" style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)' }} />
                         </div>
-                      ))}
-                      <button type="button" onClick={addUrlField} style={{ background: 'none', border: '1px dashed var(--border)', padding: '0.75rem', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">+ Add Image URL</button>
-                    </div>
-                  )}
+                        <div style={{ flex: 2 }}>
+                          <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Note Image URL</label>
+                          <input type="url" value={note.image} onChange={(e) => updateNoteField(index, 'image', e.target.value)} placeholder="https://..." style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)' }} />
+                        </div>
+                        <button type="button" onClick={() => removeNoteField(index)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '0.55rem', cursor: 'pointer', height: '38px' }}>×</button>
+                      </div>
+                    ))}
+                    {(!formData.notes || formData.notes.length === 0) && (
+                      <p style={{ fontSize: '0.7rem', color: '#888', textAlign: 'center' }}>No fragrance notes added yet.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div style={{ width: '150px' }}>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>
+                    {formData.category === 'Incense Sticks' ? 'Quantity (Set of)' : 'Size (ml)'}
+                  </label>
+                  <input 
+                    type="text" 
+                    value={formData.size || ''} 
+                    onChange={(e) => setFormData({...formData, size: e.target.value})} 
+                    placeholder={formData.category === 'Incense Sticks' ? 'e.g. 100' : 'e.g. 100ml'} 
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
+                  />
+                </div>
+
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Product Images (URLs)</label>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {urlInputs.map((url, index) => (
+                      <div key={index} style={{ display: 'flex', gap: '0.5rem' }}>
+                        <input type="url" placeholder="Image URL" value={url || ''} onChange={(e) => updateUrlField(index, e.target.value)} style={{ flex: 1, padding: '0.75rem', border: '1px solid var(--border)' }} />
+                        {urlInputs.length > 1 && (
+                          <button type="button" onClick={() => removeUrlField(index)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '0.5rem', cursor: 'pointer' }}>×</button>
+                        )}
+                      </div>
+                    ))}
+                    <button type="button" onClick={addUrlField} style={{ background: 'none', border: '1px dashed var(--border)', padding: '0.75rem', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">+ Add Image URL</button>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
@@ -394,15 +426,15 @@ export default function ChangeProductPage() {
                   <input type="number" required value={packagingData.price} onChange={(e) => setPackagingData({...packagingData, price: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
                 </div>
                 <div>
-                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Preview Image</label>
-                  <input type="file" onChange={(e) => setPackagingFile(e.target.files[0])} style={{ width: '100%', padding: '0.75rem 0' }} />
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Preview Image URL</label>
+                  <input type="url" placeholder="Paste image link here" value={packagingImageUrl} onChange={(e) => setPackagingImageUrl(e.target.value)} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                   <input type="checkbox" checked={packagingData.enabled} onChange={(e) => setPackagingData({...packagingData, enabled: e.target.checked})} />
                   <label className="label-caps" style={{ fontSize: '0.7rem' }}>Enable this option</label>
                 </div>
                 <div style={{ display: 'flex', gap: '1rem' }}>
-                  {editingPackId && <button type="button" onClick={() => { setEditingPackId(null); setPackagingData({ name: '', price: '', enabled: true }); }} className="label-caps" style={{ flex: 1, padding: '1rem', border: '1px solid var(--border)', background: 'none' }}>Cancel</button>}
+                  {editingPackId && <button type="button" onClick={() => { setEditingPackId(null); setPackagingData({ name: '', price: '', enabled: true }); setPackagingImageUrl(''); }} className="label-caps" style={{ flex: 1, padding: '1rem', border: '1px solid var(--border)', background: 'none' }}>Cancel</button>}
                   <button type="submit" className="btn-primary label-caps" style={{ flex: 2, padding: '1rem' }} disabled={loading}>
                     {loading ? 'SAVING...' : (editingPackId ? 'UPDATE PACKAGING' : 'ADD PACKAGING')}
                   </button>
@@ -417,7 +449,7 @@ export default function ChangeProductPage() {
                   <h3 className="label-caps" style={{ fontSize: '0.8rem', marginBottom: '0.25rem' }}>{pack.name}</h3>
                   <p style={{ color: 'var(--primary)', fontWeight: 600 }}>₹{pack.price}</p>
                   <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
-                    <button onClick={() => { setEditingPackId(pack.id); setPackagingData({ name: pack.name, price: pack.price, enabled: pack.enabled }); }} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #000', cursor: 'pointer' }}>EDIT</button>
+                    <button onClick={() => { setEditingPackId(pack.id); setPackagingData({ name: pack.name, price: pack.price, enabled: pack.enabled }); setPackagingImageUrl(pack.image || ''); }} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #000', cursor: 'pointer' }}>EDIT</button>
                     <button onClick={() => deletePackaging(pack.id)} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #991b1b', color: '#991b1b', cursor: 'pointer' }}>DELETE</button>
                   </div>
                 </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
@@ -9,7 +9,6 @@ import { useAppContext } from '@/context/AppContext';
 export default function Login() {
   const router = useRouter();
   const [isRegister, setIsRegister] = useState(false);
-  const [step, setStep] = useState(1); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isReset, setIsReset] = useState(false);
@@ -17,16 +16,15 @@ export default function Login() {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { setIsLoggedIn, setUserAvatar, userAvatar, setNotification } = useAppContext();
+  const { setIsLoggedIn, isLoggedIn, setUserAvatar, userAvatar, setNotification } = useAppContext();
+  
+  useEffect(() => {
+    if (isLoggedIn) {
+      router.push('/');
+    }
+  }, [isLoggedIn, router]);
 
-  const avatars = [
-    { name: 'Felix', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Felix' },
-    { name: 'Milo', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Milo' },
-    { name: 'Bubba', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Bubba' },
-    { name: 'Piper', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Piper' },
-    { name: 'Daisy', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Daisy' },
-    { name: 'Luna', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Luna' },
-  ];
+
 
 
 
@@ -58,10 +56,7 @@ export default function Login() {
       handleResetPassword(e);
       return;
     }
-    if (isRegister && step === 1) {
-      setStep(2);
-      return;
-    }
+
     
     setLoading(true);
     try {
@@ -70,10 +65,10 @@ export default function Login() {
       
       const { db } = await import('@/lib/firebase');
       const { doc, getDoc, setDoc } = await import('firebase/firestore');
-
       if (isRegister) {
         try {
-          const result = await createUserWithEmailAndPassword(auth, email, password);
+          console.log("Attempting signup for:", email.trim());
+          const result = await createUserWithEmailAndPassword(auth, email.trim(), password);
           await updateProfile(result.user, { displayName: fullName, photoURL: userAvatar });
           await setDoc(doc(db, "users", result.user.uid), {
             fullName,
@@ -85,7 +80,7 @@ export default function Login() {
           if (regError.code === 'auth/email-already-in-use') {
             // Attempt to 'self-heal' if Firestore doc is missing but Auth exists
             try {
-              const signResult = await signInWithEmailAndPassword(auth, email, password);
+              const signResult = await signInWithEmailAndPassword(auth, email.trim(), password);
               const userSnap = await getDoc(doc(db, "users", signResult.user.uid));
               
               if (!userSnap.exists()) {
@@ -102,15 +97,17 @@ export default function Login() {
                 throw regError;
               }
             } catch (healError) {
-              // If sign-in fails, it's a real 'already in use' conflict or wrong password
-              throw regError;
+              // If sign-in fails, it means the password for the existing account is wrong
+              const errorWithContext = new Error("This email is already in use with a different password.");
+              errorWithContext.code = 'auth/wrong-password'; 
+              throw errorWithContext;
             }
           } else {
             throw regError;
           }
         }
       } else {
-        const result = await signInWithEmailAndPassword(auth, email, password);
+        const result = await signInWithEmailAndPassword(auth, email.trim(), password);
         const userDoc = await getDoc(doc(db, "users", result.user.uid));
         if (!userDoc.exists()) {
           await auth.signOut();
@@ -119,11 +116,20 @@ export default function Login() {
       }
       
       setIsLoggedIn(true);
-      window.location.href = '/';
+      router.push('/');
     } catch (error) {
-      let msg = "Email or password is wrong.";
+      console.error("DEBUG: Auth error caught:", error.code, error.message);
+      let msg = "Something went wrong. Please check your credentials.";
       
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential') {
+      if (error.code === 'auth/invalid-email') {
+        msg = "The email address is invalid.";
+      } else if (error.code === 'auth/operation-not-allowed') {
+        msg = "Email/Password sign-in is not enabled in Firebase Console.";
+      } else if (error.code === 'auth/email-already-in-use') {
+        msg = "This email is already registered.";
+      } else if (error.code === 'auth/weak-password') {
+        msg = "Password should be at least 6 characters.";
+      } else if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
         try {
           const { db } = await import('@/lib/firebase');
           const { collection, query, where, getDocs } = await import('firebase/firestore');
@@ -132,17 +138,13 @@ export default function Login() {
           const querySnapshot = await getDocs(q);
           
           if (!querySnapshot.empty) {
-            msg = "entered password is wrong";
+            msg = isRegister ? "This email is already in use. Please sign in instead." : "The password you entered is incorrect.";
           } else {
-            msg = "email is not registered";
+            msg = "This email is not registered with us.";
           }
         } catch (e) {
-          msg = "email is not registered";
+          msg = "Incorrect email or password.";
         }
-      } else if (error.code === 'auth/email-already-in-use') {
-        msg = "This email is already registered.";
-      } else if (error.code === 'auth/weak-password') {
-        msg = "Password should be at least 6 characters.";
       }
       
       setNotification(msg);
@@ -162,18 +164,18 @@ export default function Login() {
         <Reveal>
           <div style={{ background: '#fff', padding: '3.5rem', border: '1px solid var(--border)', textAlign: 'center' }}>
             <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>
-              {isReset ? (resetSent ? 'Check Email' : 'Reset Silence') : isRegister ? (step === 1 ? 'Join Us' : 'Pick a Buddy') : 'Welcome Back'}
+              {isReset ? (resetSent ? 'Check Email' : 'Reset Silence') : isRegister ? 'Join Us' : 'Welcome Back'}
             </h1>
             
             <form onSubmit={handleEmailAuth} style={{ textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-              {isRegister && step === 1 && (
+              {isRegister && (
                 <div>
                   <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem' }}>Full Name</label>
                   <input type="text" required value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: 'transparent' }} />
                 </div>
               )}
               
-              {step === 1 && !resetSent && (
+              {!resetSent && (
                 <>
                   <div>
                     <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem' }}>Email Address</label>
@@ -217,31 +219,11 @@ export default function Login() {
                 </div>
               )}
 
-              {isRegister && step === 2 && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1.5rem', margin: '1.5rem 0' }}>
-                  {avatars.map((av, idx) => (
-                    <div 
-                      key={idx} 
-                      onClick={() => setUserAvatar(av.url)}
-                      style={{ 
-                        cursor: 'pointer', 
-                        padding: '10px', 
-                        border: userAvatar === av.url ? '2px solid #000' : '1px solid #eee',
-                        borderRadius: '12px',
-                        background: userAvatar === av.url ? '#f5f5f5' : 'transparent',
-                        transition: 'all 0.2s'
-                      }}
-                    >
-                      <img src={av.url} alt={av.name} style={{ width: '100%', borderRadius: '8px' }} />
-                      <div className="label-caps" style={{ fontSize: '0.5rem', textAlign: 'center', marginTop: '0.5rem', color: '#888' }}>{av.name}</div>
-                    </div>
-                  ))}
-                </div>
-              )}
+
               
               {!resetSent && (
                 <button type="submit" disabled={loading} className="btn-primary label-caps" style={{ width: '100%', marginTop: '1rem', padding: '1rem' }}>
-                  {loading ? 'PROCESSING...' : (isReset ? 'SEND RESET LINK' : isRegister ? (step === 1 ? 'Next: Pick a Buddy' : 'Let\'s Go!') : 'Sign In')}
+                  {loading ? 'PROCESSING...' : (isReset ? 'SEND RESET LINK' : isRegister ? 'Join the Silence' : 'Sign In')}
                 </button>
               )}
 
@@ -249,17 +231,13 @@ export default function Login() {
                 <button type="button" onClick={() => setIsReset(false)} className="label-caps" style={{ background: 'none', border: 'none', color: '#888', marginTop: '1rem', cursor: 'pointer', fontSize: '0.65rem' }}>Cancel Reset</button>
               )}
 
-              {step === 1 && (
-                <>
 
-                </>
-              )}
             </form>
 
             <div style={{ marginTop: '2.5rem', paddingTop: '2rem', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
               <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>
                 {isRegister ? 'Already have an account?' : 'New to Scented Silence?'}
-                <button onClick={() => { setIsRegister(!isRegister); setStep(1); }} style={{ background: 'none', border: 'none', color: 'var(--primary)', marginLeft: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>
+                <button onClick={() => setIsRegister(!isRegister)} style={{ background: 'none', border: 'none', color: 'var(--primary)', marginLeft: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>
                   {isRegister ? 'Sign In' : 'Create One'}
                 </button>
               </p>
