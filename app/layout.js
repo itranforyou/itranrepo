@@ -6,7 +6,7 @@ import SearchModal from "@/components/SearchModal";
 import NotificationToast from "@/components/NotificationToast";
 
 export const metadata = {
-  title: "Scented Silence | Luxe Fragrance Showcase",
+  title: "Itran",
   description: "Discover fragrances crafted in silence, designed to speak volumes.",
 };
 
