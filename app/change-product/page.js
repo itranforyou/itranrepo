@@ -3,11 +3,23 @@
 import { useState, useEffect } from 'react';
 import { addProduct, getProducts, updateProduct, deleteProduct } from '@/lib/products';
 import Reveal from '@/components/Reveal';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 
 export default function ChangeProductPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminCreds, setAdminCreds] = useState({ id: '', pass: '' });
-  const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', or 'packaging'
+  const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', 'packaging', or 'enquiries'
+  
+  // Enquiries state
+  const [enquiries, setEnquiries] = useState([]);
+  const [enquirySearch, setEnquirySearch] = useState('');
+  const [enquiryFilter, setEnquiryFilter] = useState('All');
+
+  // Contact Enquiries state
+  const [contactEnquiries, setContactEnquiries] = useState([]);
+  const [contactSearch, setContactSearch] = useState('');
+  const [contactFilter, setContactFilter] = useState('All');
   
   // States for Add/Edit
   const [formData, setFormData] = useState({
@@ -95,8 +107,67 @@ export default function ChangeProductPage() {
   useEffect(() => {
     if (isAuthenticated) {
       fetchInventory();
+      
+      // Real-time listener for enquiries
+      const q = query(collection(db, 'bulkEnquiries'), orderBy('createdAt', 'desc'));
+      const unsubscribe = onSnapshot(q, (snapshot) => {
+        const enquiryData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setEnquiries(enquiryData);
+      });
+
+      // Real-time listener for contact enquiries
+      const qContact = query(collection(db, 'contactEnquiries'), orderBy('createdAt', 'desc'));
+      const unsubscribeContact = onSnapshot(qContact, (snapshot) => {
+        const contactData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setContactEnquiries(contactData);
+      });
+
+      return () => {
+        unsubscribe();
+        unsubscribeContact();
+      };
     }
   }, [isAuthenticated]);
+
+  const updateContactStatus = async (id, newStatus) => {
+    try {
+      await updateDoc(doc(db, 'contactEnquiries', id), { status: newStatus });
+    } catch (err) {
+      alert('Update failed: ' + err.message);
+    }
+  };
+
+  const deleteContactEnquiry = async (id) => {
+    if (!confirm('Permanently delete this enquiry?')) return;
+    try {
+      await deleteDoc(doc(db, 'contactEnquiries', id));
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  };
+
+  const updateEnquiryStatus = async (id, newStatus) => {
+    try {
+      await updateDoc(doc(db, 'bulkEnquiries', id), { status: newStatus });
+    } catch (err) {
+      alert('Update failed: ' + err.message);
+    }
+  };
+
+  const deleteEnquiry = async (id) => {
+    if (!confirm('Permanently delete this enquiry?')) return;
+    try {
+      await deleteDoc(doc(db, 'bulkEnquiries', id));
+    } catch (err) {
+      alert('Delete failed: ' + err.message);
+    }
+  };
 
   const resetForm = () => {
     setFormData({
@@ -249,36 +320,103 @@ export default function ChangeProductPage() {
 
   return (
     <div style={{ paddingTop: '120px', minHeight: '100vh', background: '#faf9f7', paddingBottom: '100px' }}>
-      <div className="container" style={{ maxWidth: '800px' }}>
+      <div className="container" style={{ maxWidth: '1000px', padding: '0 var(--spacing-gutter)' }}>
         
         {/* Tab Selection */}
-        <div style={{ display: 'flex', gap: '1px', marginBottom: '2rem', background: 'var(--border)', padding: '4px', borderRadius: '8px' }}>
+        <div style={{ 
+          display: 'flex', 
+          flexWrap: 'wrap',
+          gap: '4px', 
+          marginBottom: '2rem', 
+          background: 'var(--border)', 
+          padding: '4px', 
+          borderRadius: '8px' 
+        }}>
           <button 
             onClick={() => { setActiveTab('add'); resetForm(); }}
-            style={{ flex: 1, padding: '1rem', background: activeTab === 'add' ? '#fff' : 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.3s' }}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'add' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
             className="label-caps"
           >
-            {editingId ? 'EDITING PRODUCT' : 'ADD NEW PRODUCT'}
+            {editingId ? 'EDITING' : 'ADD PRODUCT'}
           </button>
           <button 
             onClick={() => setActiveTab('manage')}
-            style={{ flex: 1, padding: '1rem', background: activeTab === 'manage' ? '#fff' : 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.3s' }}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'manage' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
             className="label-caps"
           >
-            MANAGE INVENTORY ({inventory.length})
+            INVENTORY ({inventory.length})
           </button>
           <button 
             onClick={() => setActiveTab('packaging')}
-            style={{ flex: 1, padding: '1rem', background: activeTab === 'packaging' ? '#fff' : 'transparent', border: 'none', borderRadius: '6px', cursor: 'pointer', transition: 'all 0.3s' }}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'packaging' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
             className="label-caps"
           >
-            GIFT PACKAGING
+            PACKAGING
+          </button>
+          <button 
+            onClick={() => setActiveTab('enquiries')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'enquiries' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            BULK ({enquiries.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('contact-enquiries')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'contact-enquiries' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            CONTACTS ({contactEnquiries.length})
           </button>
         </div>
 
         {activeTab === 'add' ? (
           <Reveal>
-            <div style={{ background: '#fff', padding: '3rem', border: '1px solid var(--border)' }}>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', margin: 0 }}>{editingId ? 'Edit Product' : 'Add New Product'}</h1>
                 <div style={{ fontSize: '0.65rem', padding: '0.4rem 0.8rem', background: connectionStatus === 'Connected Successfully' ? '#f0fdf4' : '#fee2e2', color: connectionStatus === 'Connected Successfully' ? '#166534' : '#991b1b', border: '1px solid currentColor', borderRadius: '20px', fontWeight: 600 }}>
@@ -310,14 +448,14 @@ export default function ChangeProductPage() {
                     </label>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '1rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                     {formData.isOffer && (
-                      <div style={{ flex: 1 }}>
+                      <div>
                         <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Cost Price (Original)</label>
                         <input type="number" required={formData.isOffer} value={formData.costPrice || ''} onChange={(e) => setFormData({...formData, costPrice: e.target.value})} placeholder="e.g. 2999" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
                       </div>
                     )}
-                    <div style={{ flex: 1 }}>
+                    <div>
                       <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>{formData.isOffer ? 'Sell Price (Discounted)' : 'Price (without Rs.)'}</label>
                       <input type="number" required value={formData.price || ''} onChange={(e) => setFormData({...formData, price: e.target.value})} placeholder="e.g. 2199" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
                     </div>
@@ -347,16 +485,16 @@ export default function ChangeProductPage() {
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {(Array.isArray(formData.notes) ? formData.notes : []).map((note, index) => (
-                      <div key={index} style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', background: '#fff', padding: '1rem', border: '1px solid #eee' }}>
-                        <div style={{ flex: 1 }}>
+                      <div key={index} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end', background: '#fff', padding: '1rem', border: '1px solid #eee' }}>
+                        <div style={{ flex: '1 1 150px' }}>
                           <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Note Name</label>
                           <input type="text" value={note.name} onChange={(e) => updateNoteField(index, 'name', e.target.value)} placeholder="e.g. Oud" style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)' }} />
                         </div>
-                        <div style={{ flex: 2 }}>
+                        <div style={{ flex: '2 1 200px' }}>
                           <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Note Image URL</label>
                           <input type="url" value={note.image} onChange={(e) => updateNoteField(index, 'image', e.target.value)} placeholder="https://..." style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)' }} />
                         </div>
-                        <button type="button" onClick={() => removeNoteField(index)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '0.55rem', cursor: 'pointer', height: '38px' }}>×</button>
+                        <button type="button" onClick={() => removeNoteField(index)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '0.55rem', cursor: 'pointer', height: '38px', flexShrink: 0 }}>×</button>
                       </div>
                     ))}
                     {(!formData.notes || formData.notes.length === 0) && (
@@ -409,7 +547,7 @@ export default function ChangeProductPage() {
           </Reveal>
         ) : activeTab === 'packaging' ? (
           <Reveal>
-            <div style={{ background: '#fff', padding: '3rem', border: '1px solid var(--border)', marginBottom: '3rem' }}>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '3rem' }}>
               <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', marginBottom: '2rem' }}>{editingPackId ? 'Edit Packaging' : 'Add Packaging'}</h1>
               {message && (
                 <div style={{ padding: '1rem', marginBottom: '2rem', background: message.includes('ERROR') ? '#fee2e2' : '#f0fdf4', color: message.includes('ERROR') ? '#991b1b' : '#166534', fontSize: '0.85rem' }}>
@@ -456,10 +594,173 @@ export default function ChangeProductPage() {
               ))}
             </div>
           </Reveal>
+        ) : activeTab === 'enquiries' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ flex: '1 1 300px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Search by customer name or product..." 
+                  value={enquirySearch}
+                  onChange={(e) => setEnquirySearch(e.target.value)}
+                  style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem' }} 
+                />
+              </div>
+              <div style={{ flex: '1 1 150px' }}>
+                <select 
+                  value={enquiryFilter} 
+                  onChange={(e) => setEnquiryFilter(e.target.value)}
+                  style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem', background: '#fff' }}
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Contacted">Contacted</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {enquiries
+                .filter(enq => {
+                  const matchesSearch = enq.fullName?.toLowerCase().includes(enquirySearch.toLowerCase()) || enq.productName?.toLowerCase().includes(enquirySearch.toLowerCase());
+                  const matchesFilter = enquiryFilter === 'All' || enq.status === enquiryFilter;
+                  return matchesSearch && matchesFilter;
+                })
+                .map((enq) => (
+                <div key={enq.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: 'var(--spacing-gutter)' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div>
+                      <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>{enq.status.toUpperCase()}</div>
+                      <h3 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', margin: 0 }}>{enq.fullName}</h3>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', marginTop: '0.25rem' }}>{new Date(enq.createdAt?.seconds * 1000).toLocaleString()}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                      <select 
+                        value={enq.status} 
+                        onChange={(e) => updateEnquiryStatus(enq.id, e.target.value)}
+                        style={{ padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', background: enq.status === 'Pending' ? '#fff4ed' : enq.status === 'Contacted' ? '#eff6ff' : '#f0fdf4' }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Completed">Completed</option>
+                      </select>
+                      <button onClick={() => deleteEnquiry(enq.id)} style={{ padding: '0.5rem', color: '#991b1b', border: 'none', background: 'none', cursor: 'pointer' }} className="material-icons">delete_outline</button>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '1.5rem', background: '#faf9f7', padding: '1.5rem' }}>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.4rem' }}>Contact Info</label>
+                      <p style={{ fontSize: '0.9rem', margin: 0 }}>{enq.phone}</p>
+                      <p style={{ fontSize: '0.9rem', margin: 0 }}>{enq.email}</p>
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.4rem' }}>Request Details</label>
+                      <p style={{ fontSize: '0.9rem', margin: 0 }}><strong>Product:</strong> {enq.productName}</p>
+                      <p style={{ fontSize: '0.9rem', margin: 0 }}><strong>Qty:</strong> {enq.quantity}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.4rem' }}>Message / Vision</label>
+                    <p style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{enq.message}</p>
+                  </div>
+                </div>
+              ))}
+              {enquiries.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '5rem', background: '#fff', border: '1px dashed var(--border)' }}>
+                  <p className="label-caps">No bulk enquiries found.</p>
+                </div>
+              )}
+            </div>
+          </Reveal>
+        ) : activeTab === 'contact-enquiries' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ flex: '1 1 300px' }}>
+                <input 
+                  type="text" 
+                  placeholder="Search by name, email or subject..." 
+                  value={contactSearch}
+                  onChange={(e) => setContactSearch(e.target.value)}
+                  style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem' }} 
+                />
+              </div>
+              <div style={{ flex: '1 1 150px' }}>
+                <select 
+                  value={contactFilter} 
+                  onChange={(e) => setContactFilter(e.target.value)}
+                  style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem', background: '#fff' }}
+                >
+                  <option value="All">All Statuses</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Contacted">Contacted</option>
+                  <option value="Completed">Completed</option>
+                </select>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+              {contactEnquiries
+                .filter(enq => {
+                  const matchesSearch = enq.fullName?.toLowerCase().includes(contactSearch.toLowerCase()) || 
+                                      enq.email?.toLowerCase().includes(contactSearch.toLowerCase()) ||
+                                      enq.subject?.toLowerCase().includes(contactSearch.toLowerCase());
+                  const matchesFilter = contactFilter === 'All' || enq.status === contactFilter;
+                  return matchesSearch && matchesFilter;
+                })
+                .map((enq) => (
+                <div key={enq.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: 'var(--spacing-gutter)' }}>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
+                    <div>
+                      <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>{enq.status.toUpperCase()}</div>
+                      <h3 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', margin: 0 }}>{enq.fullName}</h3>
+                      <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', marginTop: '0.25rem' }}>{new Date(enq.createdAt?.seconds * 1000).toLocaleString()}</p>
+                    </div>
+                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                      <select 
+                        value={enq.status} 
+                        onChange={(e) => updateContactStatus(enq.id, e.target.value)}
+                        style={{ padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', background: enq.status === 'Pending' ? '#fff4ed' : enq.status === 'Contacted' ? '#eff6ff' : '#f0fdf4' }}
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Contacted">Contacted</option>
+                        <option value="Completed">Completed</option>
+                      </select>
+                      <button onClick={() => deleteContactEnquiry(enq.id)} style={{ padding: '0.5rem', color: '#991b1b', border: 'none', background: 'none', cursor: 'pointer' }} className="material-icons">delete_outline</button>
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '1.5rem', background: '#faf9f7', padding: '1.5rem' }}>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.4rem' }}>Contact Info</label>
+                      <p style={{ fontSize: '0.9rem', margin: 0 }}>{enq.phone}</p>
+                      <p style={{ fontSize: '0.9rem', margin: 0 }}>{enq.email}</p>
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.4rem' }}>Subject</label>
+                      <p style={{ fontSize: '0.9rem', margin: 0 }}>{enq.subject}</p>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.4rem' }}>Message</label>
+                    <p style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{enq.message}</p>
+                  </div>
+                </div>
+              ))}
+              {contactEnquiries.length === 0 && (
+                <div style={{ textAlign: 'center', padding: '5rem', background: '#fff', border: '1px dashed var(--border)' }}>
+                  <p className="label-caps">No contact enquiries found.</p>
+                </div>
+              )}
+            </div>
+          </Reveal>
         ) : (
           <Reveal>
-            <div style={{ background: '#fff', padding: '2rem', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-              <div style={{ flex: 2 }}>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+              <div style={{ flex: '1 1 300px' }}>
                 <input 
                   type="text" 
                   placeholder="Search by product name..." 
@@ -468,7 +769,7 @@ export default function ChangeProductPage() {
                   style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem' }} 
                 />
               </div>
-              <div style={{ flex: 1 }}>
+              <div style={{ flex: '1 1 150px' }}>
                 <select 
                   value={inventoryFilter} 
                   onChange={(e) => setInventoryFilter(e.target.value)}

@@ -8,6 +8,11 @@ import NotificationToast from "@/components/NotificationToast";
 export const metadata = {
   title: "Itran",
   description: "Discover fragrances crafted in silence, designed to speak volumes.",
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({ children }) {

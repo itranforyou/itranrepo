@@ -32,15 +32,15 @@ export default function Header() {
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
-    
+
     const checkUser = async () => {
       try {
         const { auth } = await import('@/lib/firebase');
         auth.onAuthStateChanged((u) => setUser(u));
-      } catch (err) {}
+      } catch (err) { }
     };
     checkUser();
-    
+
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -79,32 +79,32 @@ export default function Header() {
       </div>
 
       <Link href="/" className="logo">
-        <img 
-          src="/images/ittar.png" 
-          alt="Scented Silence" 
-          style={{ height: '40px', width: 'auto', objectFit: 'contain' }} 
+        <img
+          src="/images/ittar.png"
+          alt="Itran"
+          style={{ height: '60px', width: 'auto', objectFit: 'contain' }}
         />
       </Link>
 
       <nav className={`nav-links ${isMenuOpen ? 'open' : ''}`}>
-        <Link 
-          href="/" 
+        <Link
+          href="/"
           onClick={() => setIsMenuOpen(false)}
           className={`nav-link ${pathname === '/' ? 'active' : ''}`}
           style={{ color: pathname === '/' ? 'var(--primary)' : '' }}
         >
           Home
         </Link>
-        
-        <div 
+
+        <div
           className={`nav-dropdown ${isShopOpen ? 'active' : ''}`}
           onMouseEnter={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsShopOpen(true); }}
           onMouseLeave={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsShopOpen(false); }}
         >
-          <div 
+          <div
             className={`nav-link-item ${shopCollections.some(col => pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'active' : ''}`}
-            style={{ 
-              color: shopCollections.some(col => pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'var(--primary)' : '' 
+            style={{
+              color: shopCollections.some(col => pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'var(--primary)' : ''
             }}
             onClick={() => { if (typeof window !== 'undefined' && window.innerWidth <= 768) setIsShopOpen(!isShopOpen); }}
           >
@@ -114,7 +114,7 @@ export default function Header() {
 
           <div className="nav-dropdown-content">
             {shopCollections.map((col) => (
-              <Link 
+              <Link
                 key={col.slug}
                 href={col.slug === 'all-products' ? '/all-products' : `/${col.slug}`}
                 onClick={() => { setIsShopOpen(false); setIsMenuOpen(false); }}
@@ -150,7 +150,7 @@ export default function Header() {
         </Link>
 
         <div style={{ position: 'relative' }} ref={profileRef}>
-          <button 
+          <button
             onClick={() => { setIsProfileOpen(!isProfileOpen); setShowDeleteConfirm(false); }}
             style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem' }}
           >
@@ -198,20 +198,20 @@ export default function Header() {
                     <button onClick={() => { logout(); setIsProfileOpen(false); }} style={{ background: 'none', border: 'none', padding: 0, marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '1rem', color: '#666', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 500 }}>
                       <span className="material-icons" style={{ fontSize: '1.3rem' }}>logout</span> Sign Out
                     </button>
-                    
+
                     <div style={{ marginTop: '1rem', borderTop: '1px solid #f5f5f5', paddingTop: '1.5rem' }}>
                       {showDeleteConfirm ? (
                         <div style={{ animation: 'fadeIn 0.3s ease' }}>
                           <p style={{ fontSize: '0.7rem', color: '#666', marginBottom: '1rem', lineHeight: 1.4 }}>Enter password to confirm permanent deletion.</p>
-                          <input 
-                            type="password" 
-                            placeholder="Current Password" 
+                          <input
+                            type="password"
+                            placeholder="Current Password"
                             value={deletePassword}
                             onChange={(e) => setDeletePassword(e.target.value)}
                             style={{ width: '100%', padding: '0.75rem', border: '1px solid #eee', borderRadius: '8px', marginBottom: '1rem', fontSize: '0.85rem' }}
                           />
                           <div style={{ display: 'flex', gap: '0.5rem' }}>
-                            <button 
+                            <button
                               onClick={async () => {
                                 try {
                                   await deleteAccount(deletePassword);
@@ -219,12 +219,12 @@ export default function Header() {
                                 } catch (err) {
                                   // Error already handled in context notification
                                 }
-                              }} 
+                              }}
                               style={{ flex: 1, background: '#dc2626', color: '#fff', border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
                             >
                               DELETE FOREVER
                             </button>
-                            <button 
+                            <button
                               onClick={() => setShowDeleteConfirm(false)}
                               style={{ flex: 1, background: '#f5f5f5', color: '#666', border: 'none', padding: '0.75rem', borderRadius: '8px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
                             >
@@ -233,7 +233,7 @@ export default function Header() {
                           </div>
                         </div>
                       ) : (
-                        <button 
+                        <button
                           onClick={async () => {
                             if (window.confirm("ARE YOU SURE? This will permanently erase your profile, cart, and all curated data. This action cannot be undone.")) {
                               try {
@@ -245,7 +245,7 @@ export default function Header() {
                                 }
                               }
                             }
-                          }} 
+                          }}
                           style={{ background: 'none', border: 'none', padding: 0, color: '#dc2626', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.1em' }}
                           className="label-caps"
                         >

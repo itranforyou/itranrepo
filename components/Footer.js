@@ -16,8 +16,8 @@ export default function Footer() {
           <div style={{ marginBottom: '1rem' }}>
             <img 
               src="/images/ittar.png" 
-              alt="Scented Silence" 
-              style={{ height: '32px', width: 'auto', objectFit: 'contain' }} 
+              alt="Itran" 
+              style={{ height: '48px', width: 'auto', objectFit: 'contain' }} 
             />
           </div>
           <p style={{ color: 'var(--muted-foreground)', fontSize: '0.875rem' }}>Crafted in quiet devotion.</p>

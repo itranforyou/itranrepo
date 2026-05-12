@@ -50,7 +50,7 @@ export default function Home() {
           </Reveal>
           <Reveal delay={0.2}>
             <p style={{ fontSize: '1.125rem', color: 'rgba(255,255,255,0.85)', marginBottom: '3rem', textShadow: '0 2px 6px rgba(0,0,0,0.5)' }}>
-              Scented Silence was born from a desire to escape the noise. Every drop of our fragrance is composed slowly, honoring ancient distillation methods and sourcing only the rarest, most emotive botanicals.
+              Itran was born from a desire to escape the noise. Every drop of our fragrance is composed slowly, honoring ancient distillation methods and sourcing only the rarest, most emotive botanicals.
             </p>
           </Reveal>
           <Reveal delay={0.4}>
@@ -63,7 +63,7 @@ export default function Home() {
 
       <main>
         {/* CURATED REALMS SECTION */}
-        <section id="collection" style={{ padding: 'var(--spacing-section) 0', backgroundColor: '#ffffff' }}>
+        <section id="collection" style={{ padding: 'var(--spacing-section) 0', backgroundColor: 'var(--background)' }}>
           <div className="container" style={{ maxWidth: '100%', padding: 0 }}>
             <Reveal>
               <h2 style={{ textAlign: 'center', fontSize: '3rem', marginBottom: '4rem' }}>Curated Realms</h2>
@@ -73,7 +73,7 @@ export default function Home() {
         </section>
 
         {/* BEST SELLERS SECTION */}
-        <section id="best-sellers" style={{ padding: 'var(--spacing-section) 0', background: '#faf9f7' }}>
+        <section id="best-sellers" style={{ padding: 'var(--spacing-section) 0', background: 'var(--muted)' }}>
           <div className="container">
             <Reveal style={{ marginBottom: '4rem', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '1.5rem' }}>
               <div>
@@ -102,7 +102,7 @@ export default function Home() {
               <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1rem', letterSpacing: '0.25em', fontSize: '0.7rem' }}>Since 1887</div>
               <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', marginBottom: '2rem' }}>Our Story</h2>
               <p style={{ color: 'var(--muted-foreground)', lineHeight: 1.9, fontSize: '1.05rem' }}>
-                Born in the ancient city of Kannauj — the perfume capital of India — Scented Silence carries five generations of distillation wisdom. We believe fragrance is not worn. It is remembered.
+                Born in the ancient city of Kannauj — the perfume capital of India — Itran carries five generations of distillation wisdom. We believe fragrance is not worn. It is remembered.
               </p>
             </Reveal>
 
@@ -134,7 +134,7 @@ export default function Home() {
             </div>
 
             {/* Philosophy Strip */}
-            <div style={{ background: '#faf9f7', padding: '5rem', display: 'flex', flexWrap: 'wrap', gap: '4rem', marginBottom: '7rem' }}>
+            <div style={{ background: 'var(--muted)', padding: '5rem', display: 'flex', flexWrap: 'wrap', gap: '4rem', marginBottom: '7rem' }}>
               <Reveal className="reveal-up" style={{ flex: '1 1 220px', textAlign: 'center' }}>
                 <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>eco</span>
                 <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>Ethically Sourced</h4>
