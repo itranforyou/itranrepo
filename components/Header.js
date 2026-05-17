@@ -143,22 +143,18 @@ export default function Header() {
         <Link href="/track-order" className={`nav-link ${pathname === '/track-order' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/track-order' ? 'var(--primary)' : '' }}>Track Your Order</Link>
       </nav>
 
-      <div className="header-actions">
-        <Link href="/cart" className="cart-icon">
-          <span className="material-icons" style={{ color: iconColor }}>shopping_bag</span>
+      <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+        <Link href="/cart" className="cart-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', height: '32px', width: '32px', textDecoration: 'none' }}>
+          <span className="material-icons" style={{ fontSize: '1.6rem', color: iconColor }}>shopping_bag</span>
           {cartCount > 0 && <span className="cart-badge">{cartCount}</span>}
         </Link>
 
-        <div style={{ position: 'relative' }} ref={profileRef}>
+        <div style={{ position: 'relative', display: 'flex', alignItems: 'center', height: '32px' }} ref={profileRef}>
           <button
             onClick={() => { setIsProfileOpen(!isProfileOpen); setShowDeleteConfirm(false); }}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: '0.5rem' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0, height: '32px', width: '32px' }}
           >
-            {isLoggedIn ? (
-              <img src={userAvatar} alt="Profile" style={{ width: '28px', height: '28px', borderRadius: '50%', border: `1px solid ${isScrolled ? '#ddd' : 'rgba(255,255,255,0.3)'}` }} />
-            ) : (
-              <span className="material-icons" style={{ fontSize: '1.6rem', color: iconColor }}>person_outline</span>
-            )}
+            <span className="material-icons" style={{ fontSize: '1.75rem', color: iconColor }}>person_outline</span>
           </button>
 
           {isProfileOpen && (
@@ -262,7 +258,7 @@ export default function Header() {
                   </div>
                   <h3 style={{ fontSize: '1.5rem', marginBottom: '0.75rem', fontFamily: 'var(--font-serif)', color: '#111', fontWeight: 500 }}>Your Journey Awaits</h3>
                   <p style={{ fontSize: '0.9rem', color: '#666', marginBottom: '2.5rem', lineHeight: 1.6, padding: '0 1rem' }}>Sign in to access your curated collection and trace your unique orders.</p>
-                  <Link href="/login" onClick={() => setIsProfileOpen(false)} className="btn-primary label-caps" style={{ width: '100%', display: 'block', padding: '1.25rem', fontSize: '0.75rem', borderRadius: '8px' }}>SIGN IN</Link>
+                  <Link href="/login" onClick={() => setIsProfileOpen(false)} className="btn-primary label-caps" style={{ width: '100%', display: 'block', padding: '1.25rem', fontSize: '0.75rem', borderRadius: '8px', color: 'var(--background)', textAlign: 'center' }}>SIGN IN</Link>
                 </div>
               )}
             </div>

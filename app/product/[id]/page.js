@@ -261,54 +261,6 @@ export default function ProductPage({ params }) {
                 </div>
               )}
 
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#fff' }}>
-                  <button 
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
-                  >-</button>
-                  <span style={{ padding: '0 1rem', fontSize: '1rem', minWidth: '40px', textAlign: 'center' }}>{quantity}</span>
-                  <button 
-                    onClick={() => setQuantity(quantity + 1)}
-                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
-                  >+</button>
-                </div>
-                <button 
-                  className="btn-primary" 
-                  onClick={() => {
-                    if (!selectedNote) {
-                      alert("Please select a fragrance note to continue.");
-                      return;
-                    }
-                    const extraData = {
-                      ...giftOptions,
-                      selectedNote: selectedNote
-                    };
-                    addToCart(product, extraData, quantity);
-                  }}
-                  style={{ flex: 1, padding: '1.5rem', fontSize: '0.8rem' }}
-                >
-                  ADD TO CART
-                </button>
-                <button 
-                  onClick={() => toggleWishlist(product)}
-                  style={{ 
-                    width: '64px', 
-                    background: 'none', 
-                    border: '1px solid var(--border)', 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s'
-                  }}
-                >
-                  <span className="material-icons" style={{ color: wishlist.some(item => item.id === product.id) ? '#b91c1c' : '#000' }}>
-                    {wishlist.some(item => item.id === product.id) ? 'favorite' : 'favorite_border'}
-                  </span>
-                </button>
-              </div>
-
               {/* GIFT PACKAGING OPTIONS */}
               <div style={{ marginBottom: '3rem', padding: '2rem', border: '1px solid var(--border)', background: '#fff' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
@@ -367,6 +319,55 @@ export default function ProductPage({ params }) {
                     </div>
                   </Reveal>
                 )}
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#fff' }}>
+                  <button 
+                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                  >-</button>
+                  <span style={{ padding: '0 1rem', fontSize: '1rem', minWidth: '40px', textAlign: 'center' }}>{quantity}</span>
+                  <button 
+                    onClick={() => setQuantity(quantity + 1)}
+                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                  >+</button>
+                </div>
+                <button 
+                  className="btn-primary" 
+                  onClick={() => {
+                    if (!selectedNote) {
+                      alert("Please select a fragrance note to continue.");
+                      return;
+                    }
+                    const extraData = {
+                      ...giftOptions,
+                      selectedNote: selectedNote,
+                      packaging: selectedPackaging
+                    };
+                    addToCart(product, extraData, quantity);
+                  }}
+                  style={{ flex: 1, padding: '1.5rem', fontSize: '0.8rem' }}
+                >
+                  ADD TO CART
+                </button>
+                <button 
+                  onClick={() => toggleWishlist(product)}
+                  style={{ 
+                    width: '64px', 
+                    background: 'none', 
+                    border: '1px solid var(--border)', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s'
+                  }}
+                >
+                  <span className="material-icons" style={{ color: wishlist.some(item => item.id === product.id) ? '#b91c1c' : '#000' }}>
+                    {wishlist.some(item => item.id === product.id) ? 'favorite' : 'favorite_border'}
+                  </span>
+                </button>
               </div>
 
               <div className="product-accordion">

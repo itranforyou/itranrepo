@@ -76,7 +76,7 @@ export default function ProductCard({ product, delay = 0 }) {
                 #1 Best Seller
               </div>
             )}
-            {discountPercentage && (
+            {discountPercentage > 0 && (
               <div style={{ background: '#991b1b', color: '#ffffff', fontSize: '0.6rem', letterSpacing: '0.15em', padding: '0.35rem 0.75rem', textTransform: 'uppercase' }}>
                 {discountPercentage}% OFF
               </div>

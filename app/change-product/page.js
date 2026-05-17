@@ -378,7 +378,7 @@ export default function ChangeProductPage() {
             }}
             className="label-caps"
           >
-            PACKAGING
+            GIFT PACKAGING
           </button>
           <button 
             onClick={() => setActiveTab('enquiries')}
@@ -571,24 +571,26 @@ export default function ChangeProductPage() {
                   <input type="checkbox" checked={packagingData.enabled} onChange={(e) => setPackagingData({...packagingData, enabled: e.target.checked})} />
                   <label className="label-caps" style={{ fontSize: '0.7rem' }}>Enable this option</label>
                 </div>
-                <div style={{ display: 'flex', gap: '1rem' }}>
-                  {editingPackId && <button type="button" onClick={() => { setEditingPackId(null); setPackagingData({ name: '', price: '', enabled: true }); setPackagingImageUrl(''); }} className="label-caps" style={{ flex: 1, padding: '1rem', border: '1px solid var(--border)', background: 'none' }}>Cancel</button>}
-                  <button type="submit" className="btn-primary label-caps" style={{ flex: 2, padding: '1rem' }} disabled={loading}>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  {editingPackId && <button type="button" onClick={() => { setEditingPackId(null); setPackagingData({ name: '', price: '', enabled: true }); setPackagingImageUrl(''); }} className="label-caps" style={{ flex: '1 1 120px', padding: '1rem', border: '1px solid var(--border)', background: 'none' }}>Cancel</button>}
+                  <button type="submit" className="btn-primary label-caps" style={{ flex: '2 1 200px', padding: '1rem' }} disabled={loading}>
                     {loading ? 'SAVING...' : (editingPackId ? 'UPDATE PACKAGING' : 'ADD PACKAGING')}
                   </button>
                 </div>
               </form>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem' }}>
               {packagingList.map(pack => (
-                <div key={pack.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: '1.5rem', textAlign: 'center' }}>
-                  <img src={pack.image || 'https://via.placeholder.com/150'} alt="" style={{ width: '100%', height: '120px', objectFit: 'cover', marginBottom: '1rem' }} />
-                  <h3 className="label-caps" style={{ fontSize: '0.8rem', marginBottom: '0.25rem' }}>{pack.name}</h3>
-                  <p style={{ color: 'var(--primary)', fontWeight: 600 }}>₹{pack.price}</p>
-                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem' }}>
-                    <button onClick={() => { setEditingPackId(pack.id); setPackagingData({ name: pack.name, price: pack.price, enabled: pack.enabled }); setPackagingImageUrl(pack.image || ''); }} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #000', cursor: 'pointer' }}>EDIT</button>
-                    <button onClick={() => deletePackaging(pack.id)} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #991b1b', color: '#991b1b', cursor: 'pointer' }}>DELETE</button>
+                <div key={pack.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: '1rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <img src={pack.image || 'https://via.placeholder.com/150'} alt="" style={{ width: '100%', height: '140px', objectFit: 'cover', marginBottom: '1rem' }} />
+                  <div>
+                    <h3 className="label-caps" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', lineHeight: 1.3 }}>{pack.name}</h3>
+                    <p style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.9rem' }}>₹{pack.price}</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+                    <button onClick={() => { setEditingPackId(pack.id); setPackagingData({ name: pack.name, price: pack.price, enabled: pack.enabled }); setPackagingImageUrl(pack.image || ''); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #000', cursor: 'pointer', paddingBottom: '2px' }}>EDIT</button>
+                    <button onClick={() => deletePackaging(pack.id)} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #991b1b', color: '#991b1b', cursor: 'pointer', paddingBottom: '2px' }}>DELETE</button>
                   </div>
                 </div>
               ))}
