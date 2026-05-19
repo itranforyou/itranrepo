@@ -66,7 +66,8 @@ export default function Home() {
         <section id="collection" style={{ padding: 'var(--spacing-section) 0', backgroundColor: 'var(--background)' }}>
           <div className="container" style={{ maxWidth: '100%', padding: 0 }}>
             <Reveal>
-              <h2 style={{ textAlign: 'center', fontSize: '3rem', marginBottom: '4rem' }}>Curated Realms</h2>
+              <h2 style={{ textAlign: 'center', fontSize: '3rem', marginBottom: '1rem' }}>Curated Realms</h2>
+              <div className="label-caps" style={{ textAlign: 'center', color: 'var(--primary)', marginBottom: '4rem', letterSpacing: '0.25em', fontSize: '0.75rem' }}>Artfully Handcrafted</div>
             </Reveal>
             <RealmTicker />
           </div>
@@ -93,43 +94,47 @@ export default function Home() {
           </div>
         </section>
 
-        {/* OUR STORY SECTION (Makhulal reference) */}
+        {/* HERITAGE STORYTELLING SECTION (Kannauj Craftsmanship) */}
+        <section style={{ padding: 'var(--spacing-section) 0', backgroundColor: 'var(--background)', borderTop: '1px solid var(--border)' }}>
+          <div className="container" style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '0 2rem' }}>
+            <Reveal>
+              <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1.25rem', letterSpacing: '0.3em', fontSize: '0.75rem' }}>Indian Heritage</div>
+              <h2 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', fontFamily: 'var(--font-serif)', marginBottom: '2rem', lineHeight: 1.3 }}>
+                Craftsmanship from the Perfume Capital of India
+              </h2>
+              <p style={{ color: 'var(--muted-foreground)', lineHeight: 2, fontSize: '1.1rem', maxWidth: '800px', margin: '0 auto' }}>
+                Nestled on the historic banks of the Ganges, the ancient city of Kannauj has stood as the perfume capital of India for thousands of years. Here, traditional attar-making craftsmanship is preserved like sacred wisdom—where copper <em>degs</em> whisper to clay receivers, and delicate blossoms are slowly coaxed into precious drops of pure, oil-based elixir. Every handcrafted fragrance from Itran is a living tribute to this timeless legacy, capturing the soul of the earth in its most silent and expressive form.
+              </p>
+            </Reveal>
+          </div>
+        </section>
+
+        {/* OUR STORY SECTION */}
         <section id="our-story" style={{ padding: 'var(--spacing-section) 0', background: 'var(--background)', borderTop: '1px solid var(--border)' }}>
           <div className="container">
             
             {/* Section Heading */}
-            <Reveal style={{ textAlign: 'center', maxWidth: '700px', margin: '0 auto 6rem' }}>
-              <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1rem', letterSpacing: '0.25em', fontSize: '0.7rem' }}>Since 1887</div>
-              <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', marginBottom: '2rem' }}>Our Story</h2>
-              <p style={{ color: 'var(--muted-foreground)', lineHeight: 1.9, fontSize: '1.05rem' }}>
-                Born in the ancient city of Kannauj — the perfume capital of India — Itran carries five generations of distillation wisdom. We believe fragrance is not worn. It is remembered.
+            <Reveal style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 6rem' }}>
+              <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1.25rem', letterSpacing: '0.25em', fontSize: '0.75rem' }}>Our Story</div>
+              <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', marginBottom: '2rem' }}>The Story Behind Itran</h2>
+              <p style={{ color: 'var(--foreground)', lineHeight: 1.9, fontSize: '1.2rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic', marginBottom: '2.5rem' }}>
+                At Itran, fragrance is more than just a scent — it’s a feeling, a memory, and a reflection of personality.
               </p>
             </Reveal>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '5rem', marginBottom: '7rem' }}>
-              <Reveal direction="right" className="img-reveal-wrapper" style={{ flex: '1 1 420px', maxWidth: '100%', height: '600px', maxHeight: '70vh' }}>
-                <img src="https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=1000" alt="Traditional Distillation" className="img-reveal loaded" />
+              <Reveal direction="right" className="img-reveal-wrapper" style={{ flex: '1 1 420px', maxWidth: '100%', height: '550px', maxHeight: '70vh' }}>
+                <img src="https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=1000" alt="Itran Journey" className="img-reveal loaded" />
               </Reveal>
               <Reveal direction="left" style={{ flex: '1 1 380px', maxWidth: '100%' }}>
-                <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1rem', fontSize: '0.7rem', letterSpacing: '0.2em' }}>The Foundation</div>
-                <h3 style={{ fontSize: '2rem', marginBottom: '1.5rem', fontFamily: 'var(--font-serif)' }}>Makhulal Ayodhya Prasad & Co.</h3>
+                <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1rem', fontSize: '0.7rem', letterSpacing: '0.2em' }}>The Spark</div>
+                <h3 style={{ fontSize: '2rem', marginBottom: '1.5rem', fontFamily: 'var(--font-serif)' }}>A Fascinating Obsession</h3>
                 <p style={{ color: 'var(--muted-foreground)', lineHeight: 1.9, marginBottom: '1.5rem' }}>
-                  Established in 1887 in the heart of Kannauj, our house — Makhulal Ayodhya Prasad and Co. — began as a small workshop near the banks of the Ganga. Our founders mastered the ancient art of <em>deg-bhapka</em>, a hydro-distillation process that coaxes pure attar from flowers at dawn, capturing the soul of each bloom before the morning sun evaporates it.
+                  My journey with perfume oils began long before Itran was created. I have always been deeply fascinated by fragrances — the way a single scent can create memories, spark emotions, and leave a lasting impression. Perfume oils stood out because of their richness and depth.
                 </p>
-                <div style={{ display: 'flex', gap: '3rem', flexWrap: 'wrap' }}>
-                  <div>
-                    <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', marginBottom: '0.25rem' }}>137+</div>
-                    <div style={{ fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Years of Craft</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', marginBottom: '0.25rem' }}>5</div>
-                    <div style={{ fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Generations</div>
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '2.5rem', fontFamily: 'var(--font-serif)', marginBottom: '0.25rem' }}>100%</div>
-                    <div style={{ fontSize: '0.75rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted-foreground)' }}>Natural Ingredients</div>
-                  </div>
-                </div>
+                <p style={{ color: 'var(--muted-foreground)', lineHeight: 1.9, marginBottom: '1.5rem' }}>
+                  Everything changed when a close friend visiting from Qatar gifted me a premium perfume oil. The fragrance lasted for hours, attracted compliments everywhere, and sparked a deep curiosity in me — why should such beautiful, luxury fragrances only come from abroad?
+                </p>
               </Reveal>
             </div>
 
@@ -137,18 +142,18 @@ export default function Home() {
             <div style={{ background: 'var(--muted)', padding: '5rem', display: 'flex', flexWrap: 'wrap', gap: '4rem', marginBottom: '7rem' }}>
               <Reveal className="reveal-up" style={{ flex: '1 1 220px', textAlign: 'center' }}>
                 <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>eco</span>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>Ethically Sourced</h4>
-                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>Every botanical is hand-selected from its native habitat — rose petals from Taif, vetiver roots from Haiti, sandalwood from Mysore.</p>
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>Premium Quality</h4>
+                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>Artisanal formulation that feels incredibly luxurious, lasts all day, and remains accessible to true fragrance appreciators.</p>
               </Reveal>
               <Reveal className="reveal-up" delay={0.1} style={{ flex: '1 1 220px', textAlign: 'center' }}>
-                <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>science</span>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>Ancient Craft</h4>
-                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>We use traditional copper <em>degs</em> and bhapka vessels — unchanged for centuries — because patience and heat coax what machines cannot.</p>
+                <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>gavel</span>
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>Proudly Handcrafted</h4>
+                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>We celebrate our country&apos;s deep connection, knowledge, and heritage of natural perfume oils and ittars.</p>
               </Reveal>
               <Reveal className="reveal-up" delay={0.2} style={{ flex: '1 1 220px', textAlign: 'center' }}>
-                <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>favorite</span>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>No Compromise</h4>
-                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>No synthetic shortcuts. Each bottle is numbered, filled by hand, and sealed with intention in Kannauj, India.</p>
+                <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>fingerprint</span>
+                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>Your Scent Identity</h4>
+                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>A beautiful fragrance becomes a permanent part of your identity and the memories you leave behind.</p>
               </Reveal>
             </div>
 

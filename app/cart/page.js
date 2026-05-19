@@ -44,15 +44,15 @@ export default function Cart() {
   };
 
   const subtotal = cart.reduce((acc, item) => {
-    const rawPrice = item.price ? String(item.price).replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim() : '0';
+    const rawPrice = item.price ? String(item.price).replace(/[^0-9.]/g, '') : '0';
     const price = parseFloat(rawPrice) || 0;
     const packagingPrice = item.giftOptions?.packaging?.price || 0;
     return acc + ((price + packagingPrice) * (item.quantity || 1));
   }, 0);
 
   const savings = cart.reduce((acc, item) => {
-    const costPrice = item.costPrice ? parseFloat(String(item.costPrice).replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim()) : 0;
-    const sellPrice = item.price ? parseFloat(String(item.price).replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim()) : 0;
+    const costPrice = item.costPrice ? parseFloat(String(item.costPrice).replace(/[^0-9.]/g, '')) : 0;
+    const sellPrice = item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0;
     if (costPrice > sellPrice) {
       return acc + ((costPrice - sellPrice) * (item.quantity || 1));
     }
@@ -95,7 +95,7 @@ export default function Cart() {
             </div>
 
             {cart.map((item, index) => {
-              const basePrice = parseFloat(String(item.price || '0').replace('$', '').replace('Rs.', '').replace('Rs. ', '').trim());
+              const basePrice = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
               const packPrice = item.giftOptions?.packaging?.price || 0;
               const itemTotal = (basePrice + packPrice) * (item.quantity || 1);
               const isEditing = editingGiftIndex === index;

@@ -71,6 +71,11 @@ export default function ProductCard({ product, delay = 0 }) {
           />
           
           <div style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 2 }}>
+            {product.inStock === false && (
+              <div style={{ background: '#7f1d1d', color: '#ffffff', fontSize: '0.6rem', letterSpacing: '0.15em', padding: '0.35rem 0.75rem', textTransform: 'uppercase', fontWeight: 600 }}>
+                SOLD OUT
+              </div>
+            )}
             {product.isBestSeller && (
               <div style={{ background: 'var(--foreground)', color: 'var(--background)', fontSize: '0.6rem', letterSpacing: '0.15em', padding: '0.35rem 0.75rem', textTransform: 'uppercase' }}>
                 #1 Best Seller
@@ -109,30 +114,32 @@ export default function ProductCard({ product, delay = 0 }) {
           </button>
           
           {/* Quick Add Button */}
-          <button 
-            onClick={handleAddToCart}
-            className="quick-add-btn"
-            style={{ 
-              position: 'absolute', 
-              bottom: '1rem', 
-              right: '1rem', 
-              background: '#fff', 
-              border: 'none', 
-              padding: '0.75rem', 
-              borderRadius: '50%', 
-              display: 'flex', 
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-              zIndex: 3,
-              cursor: 'pointer'
-            }}
-          >
-            <span className="material-icons" style={{ fontSize: '1.2rem', color: '#000' }}>shopping_bag</span>
-          </button>
+          {product.inStock !== false && (
+            <button 
+              onClick={handleAddToCart}
+              className="quick-add-btn"
+              style={{ 
+                position: 'absolute', 
+                bottom: '1rem', 
+                right: '1rem', 
+                background: '#fff', 
+                border: 'none', 
+                padding: '0.75rem', 
+                borderRadius: '50%', 
+                display: 'flex', 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                zIndex: 3,
+                cursor: 'pointer'
+              }}
+            >
+              <span className="material-icons" style={{ fontSize: '1.2rem', color: '#000' }}>shopping_bag</span>
+            </button>
+          )}
         </div>
         <div className="product-details" style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' }}>
           <div style={{ width: '100%' }}>
             <div style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: '0.2rem' }}>
-              {product.category}
+              {product.category?.replace(' Collection', '')}
             </div>
             <h3 style={{ 
               fontSize: '1rem', 
@@ -158,7 +165,7 @@ export default function ProductCard({ product, delay = 0 }) {
             )}
             {product.size && (
               <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginLeft: 'auto', borderLeft: '1px solid #eee', paddingLeft: '0.6rem' }} className="label-caps">
-                {product.category === 'Incense Sticks' 
+                {['Incense Sticks', 'Dhoop Sticks', 'Sandali', 'Mohak'].includes(product.category)
                   ? `Sets of ${product.size}` 
                   : (product.size.toString().toLowerCase().endsWith('ml') ? product.size : `${product.size}ml`)}
               </span>

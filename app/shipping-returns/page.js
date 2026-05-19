@@ -76,23 +76,16 @@ export default function ShippingReturns() {
               </p>
               
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 600 }}>Damaged or Incorrect Items</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 600 }}>No Returns & No Exchanges</h3>
                 <p style={{ color: '#666', lineHeight: 1.8 }}>
-                  If your order arrives damaged or you receive the incorrect item, please contact us within <strong>48 hours</strong> of delivery. We will arrange a complimentary replacement immediately.
+                  Due to the highly personal, artisanal, and hygiene-sensitive nature of our hand-bottled fragrances, all sales are final. We enforce a strict <strong>No Exchange & No Return</strong> policy on all processed orders. We kindly request that you review the fragrance profiles, scent categories, and botanical notes carefully before finalizing your selection.
                 </p>
               </div>
 
               <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 600 }}>7-Day Returns</h3>
+                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 600 }}>Damaged or Transit-Affected Items</h3>
                 <p style={{ color: '#666', lineHeight: 1.8 }}>
-                  For unused and unopened products in their original packaging, we offer a 7-day return window. Please note that for hygiene and safety reasons, we cannot accept returns for bottles that have been opened or tested.
-                </p>
-              </div>
-
-              <div style={{ marginBottom: '2.5rem' }}>
-                <h3 style={{ fontSize: '1.25rem', marginBottom: '1rem', fontWeight: 600 }}>How to Start a Return</h3>
-                <p style={{ color: '#666', lineHeight: 1.8 }}>
-                  To initiate a return or exchange, please email our client care team at <strong>ittar@2026</strong> with your order number and reason for return. We will provide you with a return authorization and instructions.
+                  If your order arrives damaged, broken, or you receive an incorrect item, please email our client care team at <strong>Itranforyou06@gmail.com</strong> within <strong>48 hours</strong> of delivery with your order number and photographic proof. We will evaluate and issue a complimentary replacement immediately.
                 </p>
               </div>
             </div>

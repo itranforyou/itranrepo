@@ -87,13 +87,22 @@ export default function ProductModal() {
           </div>
           
           <div className="product-modal-content">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
               <div className="label-caps" style={{ color: 'var(--primary)', letterSpacing: '0.2em', fontSize: '0.7rem' }}>
                 {selectedProduct.category}
               </div>
               {selectedProduct.isBestSeller && (
                 <div style={{ fontSize: '0.6rem', padding: '0.25rem 0.5rem', background: 'var(--foreground)', color: 'var(--background)', letterSpacing: '0.1em' }}>
                   BEST SELLER
+                </div>
+              )}
+              {selectedProduct.inStock === false ? (
+                <div style={{ fontSize: '0.6rem', padding: '0.25rem 0.5rem', background: '#7f1d1d', color: '#fff', letterSpacing: '0.1em', fontWeight: 600 }} className="label-caps">
+                  OUT OF STOCK
+                </div>
+              ) : (
+                <div style={{ fontSize: '0.6rem', padding: '0.25rem 0.5rem', background: '#f0fdf4', color: '#15803d', letterSpacing: '0.1em', fontWeight: 600 }} className="label-caps">
+                  IN STOCK
                 </div>
               )}
             </div>
@@ -109,27 +118,31 @@ export default function ProductModal() {
             </p>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '3rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#fff' }}>
+              <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#fff', opacity: selectedProduct.inStock === false ? 0.5 : 1 }}>
                 <button 
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
+                  disabled={selectedProduct.inStock === false}
+                  style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: selectedProduct.inStock === false ? 'not-allowed' : 'pointer', fontSize: '1.1rem' }}
                 >-</button>
                 <span style={{ padding: '0 0.5rem', fontSize: '0.9rem', minWidth: '30px', textAlign: 'center' }}>{quantity}</span>
                 <button 
                   onClick={() => setQuantity(quantity + 1)}
-                  style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
+                  disabled={selectedProduct.inStock === false}
+                  style={{ padding: '0.5rem 1rem', background: 'none', border: 'none', cursor: selectedProduct.inStock === false ? 'not-allowed' : 'pointer', fontSize: '1.1rem' }}
                 >+</button>
               </div>
               <button 
                 className="btn-primary" 
+                disabled={selectedProduct.inStock === false}
                 onClick={() => {
+                  if (selectedProduct.inStock === false) return;
                   const defaultNote = selectedProduct.notes && selectedProduct.notes.length > 0 ? selectedProduct.notes[0].name : null;
                   const options = defaultNote ? { selectedNote: defaultNote } : null;
                   addToCart(selectedProduct, options, quantity);
                 }}
-                style={{ flex: 1, padding: '1.25rem' }}
+                style={{ flex: 1, padding: '1.25rem', opacity: selectedProduct.inStock === false ? 0.6 : 1, cursor: selectedProduct.inStock === false ? 'not-allowed' : 'pointer', background: selectedProduct.inStock === false ? '#7f1d1d' : 'var(--foreground)' }}
               >
-                ADD TO CART
+                {selectedProduct.inStock === false ? 'OUT OF STOCK' : 'ADD TO CART'}
               </button>
             </div>
             
@@ -154,6 +167,19 @@ export default function ProductModal() {
                 </button>
                 <div className="accordion-content">
                   <p>Apply to pulse points—wrists, neck, and behind the ears.</p>
+                </div>
+              </div>
+              <div className={`accordion-item ${activeAccordion === 2 ? 'active' : ''}`}>
+                <button className="accordion-header" onClick={() => setActiveAccordion(activeAccordion === 2 ? -1 : 2)}>
+                  Shipping & Returns
+                  <span className="material-icons">add</span>
+                </button>
+                <div className="accordion-content">
+                  <p style={{ fontWeight: 600, color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    <span className="material-icons" style={{ fontSize: '1rem' }}>gavel</span>
+                    No Exchange & No Return Policy
+                  </p>
+                  <p>Due to the personal, artisanal, and hygiene-sensitive nature of our handcrafted formulations, Scented Silence enforces a strict <strong>No Return & No Exchange</strong> policy. All purchases are final.</p>
                 </div>
               </div>
             </div>

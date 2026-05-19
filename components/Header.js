@@ -21,12 +21,9 @@ export default function Header() {
 
 
   const shopCollections = [
-    { name: 'HIM', slug: 'him' },
-    { name: 'HER', slug: 'her' },
-    { name: 'UNISEX', slug: 'unisex' },
-    { name: 'SPIRITUAL', slug: 'spiritual' },
-    { name: 'CAR DIFFUSERS', slug: 'car-diffusers' },
-    { name: 'INCENSE STICKS', slug: 'incense-sticks' },
+    { name: 'PERFUME OIL', slug: 'perfume-oil' },
+    { name: 'DIFFUSERS', slug: 'diffusers' },
+    { name: 'DHOOP STICKS', slug: 'dhoop-sticks' },
   ];
 
   useEffect(() => {
@@ -70,7 +67,7 @@ export default function Header() {
   }, [isProfileOpen, isMenuOpen]);
 
   const cartCount = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
-  const iconColor = '#1a1c1c';
+  const iconColor = 'var(--foreground)';
 
   return (
     <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
@@ -102,9 +99,9 @@ export default function Header() {
           onMouseLeave={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsShopOpen(false); }}
         >
           <div
-            className={`nav-link-item ${shopCollections.some(col => pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'active' : ''}`}
+            className={`nav-link-item ${shopCollections.some(col => !col.isHeader && pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'active' : ''}`}
             style={{
-              color: shopCollections.some(col => pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'var(--primary)' : ''
+              color: shopCollections.some(col => !col.isHeader && pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'var(--primary)' : ''
             }}
             onClick={() => { if (typeof window !== 'undefined' && window.innerWidth <= 768) setIsShopOpen(!isShopOpen); }}
           >
@@ -113,13 +110,17 @@ export default function Header() {
           </div>
 
           <div className="nav-dropdown-content">
-            {shopCollections.map((col) => (
+            {shopCollections.map((col, idx) => (
               <Link
                 key={col.slug}
                 href={col.slug === 'all-products' ? '/all-products' : `/${col.slug}`}
                 onClick={() => { setIsShopOpen(false); setIsMenuOpen(false); }}
                 className="dropdown-link"
-                style={{ color: pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`) ? 'var(--primary)' : '' }}
+                style={{ 
+                  color: pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`) ? 'var(--primary)' : '',
+                  paddingLeft: '1.5rem',
+                  textTransform: 'uppercase'
+                }}
               >
                 {col.name}
               </Link>

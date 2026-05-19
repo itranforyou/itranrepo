@@ -1,29 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
 import { useAppContext } from '@/context/AppContext';
+import FilterSort from '@/components/FilterSort';
 
 export default function AllProducts() {
   const router = useRouter();
   const { products } = useAppContext();
   const [filter, setFilter] = useState('ALL SCENTS');
+  const [finalProducts, setFinalProducts] = useState([]);
 
-  const categories = ['ALL SCENTS', 'HIM', 'HER', 'SPIRITUAL', 'HOME FRAGRANCE', 'INCENSE STICKS'];
+  const categories = ['ALL SCENTS', 'PERFUME OIL', 'DIFFUSERS', 'DHOOP STICKS'];
 
-  const filteredProducts = filter === 'ALL SCENTS' 
-    ? products 
-    : products.filter(p => {
-        const pCat = (p.category || '').toLowerCase();
-        if (filter === 'HIM') return pCat.includes('him');
-        if (filter === 'HER') return pCat.includes('her');
-        if (filter === 'SPIRITUAL') return pCat.includes('spiritual');
-        if (filter === 'HOME FRAGRANCE') return pCat.includes('home');
-        if (filter === 'INCENSE STICKS') return pCat.includes('incense');
-        return true;
-      });
+  const baseFilteredProducts = useMemo(() => {
+    return filter === 'ALL SCENTS' 
+      ? products 
+      : products.filter(p => {
+          const pCat = (p.category || '').toLowerCase();
+          if (filter === 'PERFUME OIL') return pCat.includes('him') || pCat.includes('her') || pCat.includes('unisex') || pCat.includes('perfume');
+          if (filter === 'DIFFUSERS') return pCat.includes('diffuser') || pCat.includes('car') || pCat.includes('home');
+          if (filter === 'DHOOP STICKS') return pCat.includes('dhoop') || pCat.includes('sandali') || pCat.includes('mohak') || pCat.includes('incense');
+          return true;
+        });
+  }, [products, filter]);
 
   return (
     <div style={{ paddingTop: '0', position: 'relative' }}>
@@ -69,8 +71,11 @@ export default function AllProducts() {
             ))}
           </Reveal>
 
+          {/* Premium Filter & Sort controls */}
+          <FilterSort products={baseFilteredProducts} onFilterSortChange={setFinalProducts} />
+
           <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '3rem' }}>
-            {filteredProducts.map((product, index) => (
+            {finalProducts.map((product, index) => (
               <ProductCard key={product.id} product={product} delay={index * 0.05} />
             ))}
           </div>

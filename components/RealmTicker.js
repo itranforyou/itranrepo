@@ -2,20 +2,41 @@
 
 import { useRef, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { db } from '@/lib/firebase';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 export default function RealmTicker() {
   const trackRef = useRef(null);
   const tickerRef = useRef(null);
   const [isPaused, setIsPaused] = useState(false);
 
-  const realms = [
+  const defaultRealms = [
     { name: 'Him', href: '/him', img: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=800' },
     { name: 'Her', href: '/her', img: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&q=80&w=800' },
     { name: 'Unisex', href: '/unisex', img: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Spiritual', href: '/spiritual', img: 'https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Car Diffusers', href: '/car-diffusers', img: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=800' },
-    { name: 'Incense Sticks', href: '/incense-sticks', img: 'https://images.unsplash.com/photo-1602928294241-7662c19e5d41?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Car Diffuser', href: '/car-diffusers', img: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Home Diffuser', href: '/home-diffuser', img: 'https://images.unsplash.com/photo-1602928294241-7662c19e5d41?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Sandali', href: '/sandali', img: 'https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=800' },
+    { name: 'Mohak', href: '/mohak', img: 'https://images.unsplash.com/photo-1602928294241-7662c19e5d41?auto=format&fit=crop&q=80&w=800' },
   ];
+
+  const [realms, setRealms] = useState(defaultRealms);
+
+  useEffect(() => {
+    const q = query(collection(db, 'realms'), orderBy('createdAt', 'asc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      if (!snapshot.empty) {
+        const realmsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setRealms(realmsData);
+      } else {
+        setRealms(defaultRealms);
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   // Duplicate for seamless infinite loop
   const displayRealms = [...realms, ...realms, ...realms];
@@ -28,7 +49,7 @@ export default function RealmTicker() {
     setTimeout(() => {
       ticker.scrollLeft = ticker.scrollWidth / 3;
     }, 100);
-  }, []);
+  }, [realms]);
 
   const handleManualScroll = () => {
     const ticker = tickerRef.current;

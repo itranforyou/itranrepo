@@ -46,7 +46,7 @@ export default function Contact() {
     }
   };
 
-  const whatsappNumber = "9311605860";
+  const whatsappNumber = "919311605860";
   const whatsappMessage = encodeURIComponent("Hello, I would like to know more about your perfumes.");
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
 

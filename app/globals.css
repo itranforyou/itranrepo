@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;600&family=Noto+Serif:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 
 :root {
   --background: #fdfaf7; /* Luxury Nude Background */
   --foreground: #1c1e1c; /* Deep Charcoal Greenish Black */
-  --primary: #2d4a3e;    /* Sophisticated Forest Green */
+  --primary: #8B4513;    /* Sophisticated Brown */
   --primary-foreground: #ffffff;
   --secondary: #c1703a;  /* Elegant Burnt Orange */
   --secondary-foreground: #ffffff;
@@ -12,8 +12,8 @@
   --muted-foreground: #6d5a50; /* Warm Earthy Nude */
   --border: #e8dfd5;    /* Nude Border */
 
-  --font-serif: 'Noto Serif', serif;
-  --font-sans: 'Manrope', sans-serif;
+  --font-serif: 'Libre Baskerville', serif;
+  --font-sans: 'Libre Baskerville', serif;
 
   --spacing-container: 1440px;
   --spacing-gutter: 2rem;
@@ -119,7 +119,7 @@ header {
 .hamburger {
   width: 24px;
   height: 2px;
-  background: #1a1c1c;
+  background: var(--foreground);
   position: relative;
   transition: all 0.3s ease;
 }
@@ -130,7 +130,7 @@ header {
   position: absolute;
   width: 24px;
   height: 2px;
-  background: #1a1c1c;
+  background: var(--foreground);
   left: 0;
   transition: all 0.3s ease;
 }
@@ -432,8 +432,7 @@ header {
     /* Slightly smaller to offset bold weight */
     font-family: var(--font-serif);
     font-weight: 700;
-    /* Bold text */
-    color: #1a1c1c;
+    color: var(--foreground);
     padding: 0.4rem 1.5rem;
     /* Ultra-tight padding */
     width: 100%;
@@ -769,7 +768,7 @@ body.menu-active .floating-back {
   top: -50%;
   left: -50%;
   background-image:
-    radial-gradient(ellipse at 30% 30%, rgba(45, 74, 62, 0.15) 0%, transparent 40%), /* Forest Green */
+    radial-gradient(ellipse at 30% 30%, rgba(139, 69, 19, 0.15) 0%, transparent 40%), /* Sophisticated Brown */
     radial-gradient(ellipse at 70% 60%, rgba(212, 163, 163, 0.1) 0%, transparent 50%), /* Dusty Pink */
     radial-gradient(ellipse at 50% 80%, rgba(232, 223, 213, 0.2) 0%, transparent 60%); /* Nude */
   filter: blur(40px);
@@ -778,7 +777,7 @@ body.menu-active .floating-back {
 
 .smoke-layer:nth-child(2) {
   background-image:
-    radial-gradient(ellipse at 60% 40%, rgba(45, 74, 62, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 60% 40%, rgba(139, 69, 19, 0.1) 0%, transparent 50%),
     radial-gradient(ellipse at 40% 70%, rgba(212, 163, 163, 0.05) 0%, transparent 40%);
   animation: drift 25s infinite alternate-reverse ease-in-out;
   transform: scale(1.2);

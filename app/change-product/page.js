@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { addProduct, getProducts, updateProduct, deleteProduct } from '@/lib/products';
 import Reveal from '@/components/Reveal';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function ChangeProductPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -31,7 +31,8 @@ export default function ChangeProductPage() {
     description: '',
     notes: [], // Changed to array of objects {name, image}
     size: '',
-    isBestSeller: false
+    isBestSeller: false,
+    inStock: true
   });
   const [urlInputs, setUrlInputs] = useState(['']);
   const [editingId, setEditingId] = useState(null);
@@ -45,6 +46,11 @@ export default function ChangeProductPage() {
   const [packagingImageUrl, setPackagingImageUrl] = useState('');
   const [editingPackId, setEditingPackId] = useState(null);
   const [packagingList, setPackagingList] = useState([]);
+  
+  // Realms state
+  const [realms, setRealms] = useState([]);
+  const [editingRealmId, setEditingRealmId] = useState(null);
+  const [realmData, setRealmData] = useState({ name: '', img: '', targetType: 'category', categorySlug: 'perfume-oil', productIds: [] });
   
   // Inventory state
   const [inventory, setInventory] = useState([]);
@@ -60,7 +66,7 @@ export default function ChangeProductPage() {
     if (packagingOptions) setPackagingList(packagingOptions);
   }, [packagingOptions]);
 
-  const categories = ['Him Collection', 'Her Collection', 'Unisex Collection', 'Spiritual Collection', 'Car Diffusers', 'Incense Sticks'];
+  const categories = ['Him', 'Her', 'Unisex', 'Car Diffuser', 'Home Diffuser', 'Sandali', 'Mohak'];
 
   const addUrlField = () => setUrlInputs([...urlInputs, '']);
   const removeUrlField = (index) => setUrlInputs(urlInputs.filter((_, i) => i !== index));
@@ -128,9 +134,20 @@ export default function ChangeProductPage() {
         setContactEnquiries(contactData);
       });
 
+      // Real-time listener for realms
+      const qRealms = query(collection(db, 'realms'), orderBy('createdAt', 'asc'));
+      const unsubscribeRealms = onSnapshot(qRealms, (snapshot) => {
+        const realmsData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setRealms(realmsData);
+      });
+
       return () => {
         unsubscribe();
         unsubscribeContact();
+        unsubscribeRealms();
       };
     }
   }, [isAuthenticated]);
@@ -179,7 +196,8 @@ export default function ChangeProductPage() {
       description: '',
       notes: [],
       size: '',
-      isBestSeller: false
+      isBestSeller: false,
+      inStock: true
     });
     setUrlInputs(['']);
     setEditingId(null);
@@ -262,14 +280,15 @@ export default function ChangeProductPage() {
     setEditingId(product.id);
     setFormData({
       name: product.name || '',
-      price: product.price?.toString().replace('Rs.', '').replace('Rs. ', '').replace('$', '').trim() || '',
-      costPrice: product.costPrice?.toString().replace('Rs.', '').replace('Rs. ', '').replace('$', '').trim() || '',
+      price: product.price?.toString().replace(/[^0-9.]/g, '') || '',
+      costPrice: product.costPrice?.toString().replace(/[^0-9.]/g, '') || '',
       isOffer: !!product.costPrice,
       category: product.category || 'Him Collection',
       description: product.description || product.desc || '',
       notes: Array.isArray(product.notes) ? product.notes : [],
       size: product.size || '',
       isBestSeller: product.isBestSeller || false,
+      inStock: product.inStock !== false
     });
     setUrlInputs(product.images && product.images.length > 0 ? product.images : ['']);    setActiveTab('add');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -283,6 +302,52 @@ export default function ChangeProductPage() {
       alert('Product deleted successfully');
     } catch (err) {
       alert('Delete failed: ' + err.message);
+    }
+  };
+
+  const toggleStock = async (product) => {
+    try {
+      const productRef = doc(db, 'products', product.id);
+      const newInStock = product.inStock === false ? true : false;
+      await updateDoc(productRef, { inStock: newInStock });
+      
+      // Update local state instantly
+      setInventory(prev => prev.map(p => p.id === product.id ? { ...p, inStock: newInStock } : p));
+    } catch (err) {
+      alert('Failed to update stock status: ' + err.message);
+    }
+  };
+
+  const handleRealmSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      if (editingRealmId) {
+        let finalHref = realmData.targetType === 'category' ? `/${realmData.categorySlug}` : `/realm/${editingRealmId}`;
+        await updateDoc(doc(db, 'realms', editingRealmId), { ...realmData, href: finalHref });
+        setMessage('SUCCESS: Realm updated!');
+      } else {
+        const docRef = await addDoc(collection(db, 'realms'), { ...realmData, createdAt: serverTimestamp(), href: '' });
+        let finalHref = realmData.targetType === 'category' ? `/${realmData.categorySlug}` : `/realm/${docRef.id}`;
+        await updateDoc(docRef, { href: finalHref });
+        setMessage('SUCCESS: Realm added!');
+      }
+      setRealmData({ name: '', img: '', targetType: 'category', categorySlug: 'perfume-oil', productIds: [] });
+      setEditingRealmId(null);
+    } catch (err) {
+      setMessage('ERROR: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteRealm = async (id) => {
+    if (!confirm('Delete this realm?')) return;
+    try {
+      await deleteDoc(doc(db, 'realms', id));
+      alert('Deleted');
+    } catch (err) {
+      alert(err.message);
     }
   };
 
@@ -412,6 +477,22 @@ export default function ChangeProductPage() {
           >
             CONTACTS ({contactEnquiries.length})
           </button>
+          <button 
+            onClick={() => setActiveTab('realms')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'realms' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            REALMS ({realms.length})
+          </button>
         </div>
 
         {activeTab === 'add' ? (
@@ -505,13 +586,13 @@ export default function ChangeProductPage() {
 
                 <div style={{ width: '150px' }}>
                   <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>
-                    {formData.category === 'Incense Sticks' ? 'Quantity (Set of)' : 'Size (ml)'}
+                    {['Incense Sticks', 'Dhoop Sticks', 'Sandali', 'Mohak'].includes(formData.category) ? 'Quantity (Set of)' : 'Size (ml)'}
                   </label>
                   <input 
                     type="text" 
                     value={formData.size || ''} 
                     onChange={(e) => setFormData({...formData, size: e.target.value})} 
-                    placeholder={formData.category === 'Incense Sticks' ? 'e.g. 100' : 'e.g. 100ml'} 
+                    placeholder={['Incense Sticks', 'Dhoop Sticks', 'Sandali', 'Mohak'].includes(formData.category) ? 'e.g. 100' : 'e.g. 100ml'} 
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
                   />
                 </div>
@@ -531,9 +612,27 @@ export default function ChangeProductPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <input type="checkbox" id="bestSeller" checked={!!formData.isBestSeller} onChange={(e) => setFormData({...formData, isBestSeller: e.target.checked})} />
-                  <label htmlFor="bestSeller" className="label-caps" style={{ fontSize: '0.7rem', cursor: 'pointer' }}>Mark as Best Seller</label>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '2rem', borderTop: '1px solid var(--border)', paddingTop: '1.5rem', marginTop: '1.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <input 
+                      type="checkbox" 
+                      id="inStock" 
+                      checked={formData.inStock !== false} 
+                      onChange={(e) => setFormData({...formData, inStock: e.target.checked})} 
+                      style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }}
+                    />
+                    <label htmlFor="inStock" className="label-caps" style={{ fontSize: '0.7rem', cursor: 'pointer', fontWeight: 600 }}>Product is In Stock</label>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <input 
+                      type="checkbox" 
+                      id="bestSeller" 
+                      checked={!!formData.isBestSeller} 
+                      onChange={(e) => setFormData({...formData, isBestSeller: e.target.checked})} 
+                      style={{ width: '16px', height: '16px', accentColor: 'var(--primary)' }}
+                    />
+                    <label htmlFor="bestSeller" className="label-caps" style={{ fontSize: '0.7rem', cursor: 'pointer' }}>Mark as Best Seller</label>
+                  </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
@@ -759,6 +858,107 @@ export default function ChangeProductPage() {
               )}
             </div>
           </Reveal>
+        ) : activeTab === 'realms' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '3rem' }}>
+              <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', marginBottom: '2rem' }}>{editingRealmId ? 'Edit Realm' : 'Add Realm'}</h1>
+              {message && (
+                <div style={{ padding: '1rem', marginBottom: '2rem', background: message.includes('ERROR') ? '#fee2e2' : '#f0fdf4', color: message.includes('ERROR') ? '#991b1b' : '#166534', fontSize: '0.85rem' }}>
+                  {message}
+                </div>
+              )}
+              <form onSubmit={handleRealmSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Realm Name</label>
+                  <input type="text" required value={realmData.name} onChange={(e) => setRealmData({...realmData, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} placeholder="e.g. Him" />
+                </div>
+                <div>
+                  <div style={{ display: 'flex', gap: '2rem', marginBottom: '1rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <input type="radio" name="targetType" value="category" checked={realmData.targetType === 'category'} onChange={() => setRealmData({...realmData, targetType: 'category'})} />
+                      Link to Category
+                    </label>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer' }}>
+                      <input type="radio" name="targetType" value="custom" checked={realmData.targetType === 'custom'} onChange={() => setRealmData({...realmData, targetType: 'custom'})} />
+                      Custom Product Selection
+                    </label>
+                  </div>
+
+                  {realmData.targetType === 'category' ? (
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Category Target</label>
+                      <select value={realmData.categorySlug || 'perfume-oil'} onChange={(e) => setRealmData({...realmData, categorySlug: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff' }}>
+                        <option value="perfume-oil">Perfume Oil</option>
+                        <option value="diffusers">Diffusers</option>
+                        <option value="dhoop-sticks">Dhoop Sticks</option>
+                        <option value="him">Him</option>
+                        <option value="her">Her</option>
+                        <option value="unisex">Unisex</option>
+                        <option value="car-diffusers">Car Diffusers</option>
+                        <option value="home-diffuser">Home Diffuser</option>
+                        <option value="sandali">Sandali</option>
+                        <option value="mohak">Mohak</option>
+                      </select>
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Select Products ({realmData.productIds?.length || 0} selected)</label>
+                      <div style={{ border: '1px solid var(--border)', padding: '1rem', maxHeight: '200px', overflowY: 'auto', background: '#faf9f7' }}>
+                        {inventory.map(prod => (
+                          <label key={prod.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem', fontSize: '0.85rem', cursor: 'pointer' }}>
+                            <input 
+                              type="checkbox" 
+                              checked={realmData.productIds?.includes(prod.id) || false}
+                              onChange={(e) => {
+                                const currentIds = realmData.productIds || [];
+                                if (e.target.checked) {
+                                  setRealmData({...realmData, productIds: [...currentIds, prod.id]});
+                                } else {
+                                  setRealmData({...realmData, productIds: currentIds.filter(id => id !== prod.id)});
+                                }
+                              }}
+                            />
+                            {prod.name} <span style={{ color: 'var(--primary)', fontSize: '0.7rem' }}>({prod.category})</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Image URL</label>
+                  <input type="url" required value={realmData.img} onChange={(e) => setRealmData({...realmData, img: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} placeholder="https://..." />
+                </div>
+                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                  {editingRealmId && <button type="button" onClick={() => { setEditingRealmId(null); setRealmData({ name: '', img: '', targetType: 'category', categorySlug: 'perfume-oil', productIds: [] }); }} className="label-caps" style={{ flex: '1 1 120px', padding: '1rem', border: '1px solid var(--border)', background: 'none' }}>Cancel</button>}
+                  <button type="submit" className="btn-primary label-caps" style={{ flex: '2 1 200px', padding: '1rem' }} disabled={loading}>
+                    {loading ? 'SAVING...' : (editingRealmId ? 'UPDATE REALM' : 'ADD REALM')}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem' }}>
+              {realms.map(realm => (
+                <div key={realm.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: '1rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <img src={realm.img || 'https://via.placeholder.com/300x400'} alt="" style={{ width: '100%', height: '200px', objectFit: 'cover', marginBottom: '1rem' }} />
+                  <div>
+                    <h3 className="label-caps" style={{ fontSize: '0.85rem', marginBottom: '0.25rem', lineHeight: 1.3 }}>{realm.name}</h3>
+                    <p style={{ color: 'var(--muted-foreground)', fontSize: '0.75rem', wordBreak: 'break-all' }}>{realm.href}</p>
+                  </div>
+                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
+                    <button onClick={() => { setEditingRealmId(realm.id); setRealmData({ name: realm.name, targetType: realm.targetType || 'category', categorySlug: realm.categorySlug || 'perfume-oil', productIds: realm.productIds || [], img: realm.img }); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #000', cursor: 'pointer', paddingBottom: '2px' }}>EDIT</button>
+                    <button onClick={() => deleteRealm(realm.id)} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #991b1b', color: '#991b1b', cursor: 'pointer', paddingBottom: '2px' }}>DELETE</button>
+                  </div>
+                </div>
+              ))}
+              {realms.length === 0 && (
+                <div style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '5rem', background: '#fff', border: '1px dashed var(--border)' }}>
+                  <p className="label-caps">No curated realms found.</p>
+                </div>
+              )}
+            </div>
+          </Reveal>
         ) : (
           <Reveal>
             <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
@@ -798,6 +998,31 @@ export default function ChangeProductPage() {
                           <span style={{ textDecoration: 'line-through', color: '#999', marginRight: '0.5rem' }}>{product.costPrice}</span>
                         )}
                         <span style={{ color: product.costPrice ? '#991b1b' : '#111', fontWeight: product.costPrice ? 600 : 400 }}>{product.price}</span>
+                      </div>
+                      <div style={{ marginTop: '0.5rem' }}>
+                        <button 
+                          onClick={() => toggleStock(product)}
+                          style={{
+                            background: product.inStock !== false ? '#f0fdf4' : '#fee2e2',
+                            color: product.inStock !== false ? '#15803d' : '#b91c1c',
+                            border: '1px solid currentColor',
+                            borderRadius: '20px',
+                            padding: '0.2rem 0.6rem',
+                            fontSize: '0.6rem',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            fontWeight: 600
+                          }}
+                          className="label-caps"
+                          title="Click to toggle stock status"
+                        >
+                          <span className="material-icons" style={{ fontSize: '0.75rem' }}>
+                            {product.inStock !== false ? 'check_circle' : 'cancel'}
+                          </span>
+                          {product.inStock !== false ? 'IN STOCK' : 'OUT OF STOCK'}
+                        </button>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>

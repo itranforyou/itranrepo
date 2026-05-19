@@ -179,13 +179,22 @@ export default function ProductPage({ params }) {
           {/* Content Section */}
           <div>
             <Reveal>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                 <div className="label-caps" style={{ color: 'var(--primary)', letterSpacing: '0.2em', fontSize: '0.7rem' }}>
-                  {product.category}
+                  {product.category?.replace(' Collection', '')}
                 </div>
                 {product.isBestSeller && (
                   <div style={{ fontSize: '0.6rem', padding: '0.25rem 0.5rem', background: 'var(--foreground)', color: 'var(--background)', letterSpacing: '0.1em' }}>
                     BEST SELLER
+                  </div>
+                )}
+                {product.inStock === false ? (
+                  <div style={{ fontSize: '0.6rem', padding: '0.25rem 0.5rem', background: '#7f1d1d', color: '#fff', letterSpacing: '0.1em', fontWeight: 600 }} className="label-caps">
+                    OUT OF STOCK
+                  </div>
+                ) : (
+                  <div style={{ fontSize: '0.6rem', padding: '0.25rem 0.5rem', background: '#f0fdf4', color: '#15803d', letterSpacing: '0.1em', fontWeight: 600 }} className="label-caps">
+                    IN STOCK
                   </div>
                 )}
               </div>
@@ -210,7 +219,7 @@ export default function ProductPage({ params }) {
                 )}
                 {product.size && (
                   <div style={{ marginLeft: 'auto', border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.75rem' }} className="label-caps">
-                    {product.category === 'Incense Sticks' 
+                    {['Incense Sticks', 'Dhoop Sticks', 'Sandali', 'Mohak'].includes(product.category)
                       ? `Sets of ${product.size}` 
                       : (product.size.toString().toLowerCase().endsWith('ml') ? product.size : `${product.size}ml`)}
                   </div>
@@ -321,21 +330,25 @@ export default function ProductPage({ params }) {
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#fff' }}>
+               <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#fff', opacity: product.inStock === false ? 0.5 : 1 }}>
                   <button 
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                    disabled={product.inStock === false}
+                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: product.inStock === false ? 'not-allowed' : 'pointer', fontSize: '1.2rem' }}
                   >-</button>
                   <span style={{ padding: '0 1rem', fontSize: '1rem', minWidth: '40px', textAlign: 'center' }}>{quantity}</span>
                   <button 
                     onClick={() => setQuantity(quantity + 1)}
-                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.2rem' }}
+                    disabled={product.inStock === false}
+                    style={{ padding: '0 1rem', background: 'none', border: 'none', cursor: product.inStock === false ? 'not-allowed' : 'pointer', fontSize: '1.2rem' }}
                   >+</button>
                 </div>
                 <button 
                   className="btn-primary" 
+                  disabled={product.inStock === false}
                   onClick={() => {
+                    if (product.inStock === false) return;
                     if (!selectedNote) {
                       alert("Please select a fragrance note to continue.");
                       return;
@@ -347,9 +360,9 @@ export default function ProductPage({ params }) {
                     };
                     addToCart(product, extraData, quantity);
                   }}
-                  style={{ flex: 1, padding: '1.5rem', fontSize: '0.8rem' }}
+                  style={{ flex: 1, padding: '1.5rem', fontSize: '0.8rem', opacity: product.inStock === false ? 0.6 : 1, cursor: product.inStock === false ? 'not-allowed' : 'pointer', background: product.inStock === false ? '#7f1d1d' : 'var(--foreground)' }}
                 >
-                  ADD TO CART
+                  {product.inStock === false ? 'OUT OF STOCK' : 'ADD TO CART'}
                 </button>
                 <button 
                   onClick={() => toggleWishlist(product)}
@@ -385,13 +398,26 @@ export default function ProductPage({ params }) {
                     </ul>
                   </div>
                 </div>
-                <div className={`accordion-item ${activeAccordion === 1 ? 'active' : ''}`} style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+                <div className={`accordion-item ${activeAccordion === 1 ? 'active' : ''}`} style={{ borderTop: '1px solid var(--border)' }}>
                   <button className="accordion-header" onClick={() => setActiveAccordion(activeAccordion === 1 ? -1 : 1)} style={{ padding: '1.5rem 0' }}>
                     How to Wear
                     <span className="material-icons" style={{ transition: 'transform 0.3s ease', transform: activeAccordion === 1 ? 'rotate(45deg)' : 'rotate(0deg)', fontSize: '1.4rem' }}>add</span>
                   </button>
                   <div className="accordion-content">
                     <p>Apply to pulse points—wrists, neck, and behind the ears. For a longer-lasting trail, mist over clothing or hair.</p>
+                  </div>
+                </div>
+                <div className={`accordion-item ${activeAccordion === 2 ? 'active' : ''}`} style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+                  <button className="accordion-header" onClick={() => setActiveAccordion(activeAccordion === 2 ? -1 : 2)} style={{ padding: '1.5rem 0' }}>
+                    Shipping & Returns
+                    <span className="material-icons" style={{ transition: 'transform 0.3s ease', transform: activeAccordion === 2 ? 'rotate(45deg)' : 'rotate(0deg)', fontSize: '1.4rem' }}>add</span>
+                  </button>
+                  <div className="accordion-content">
+                    <p style={{ fontWeight: 600, color: '#7f1d1d', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                      <span className="material-icons" style={{ fontSize: '1.1rem' }}>gavel</span>
+                      No Exchange & No Return Policy
+                    </p>
+                    <p>Due to the personal, artisanal, and hygiene-sensitive nature of our handcrafted formulations, Scented Silence enforces a strict <strong>No Return & No Exchange</strong> policy. All purchases are final. In the rare event of transit damage, please contact our support team within 48 hours.</p>
                   </div>
                 </div>
               </div>
