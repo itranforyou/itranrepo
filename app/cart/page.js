@@ -6,6 +6,24 @@ import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import { useAppContext } from '@/context/AppContext';
 
+// Robust price parser — handles 'Rs. 1,499', '₹1499', '$185', raw numbers, etc.
+const parsePrice = (val) => {
+  if (!val && val !== 0) return 0;
+  if (typeof val === 'number') return val;
+  const clean = val.toString()
+    .replace(/Rs\.?/gi, '')
+    .replace(/₹/g, '')
+    .replace(/\$/g, '')
+    .replace(/,/g, '')
+    .trim();
+  const parsed = parseFloat(clean);
+  return isNaN(parsed) ? 0 : parsed;
+};
+
+// Format a number as Indian Rupees: ₹1,499
+const fmtINR = (amount) =>
+  '₹' + Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+
 export default function Cart() {
   const router = useRouter();
   const { cart, setCart, packagingOptions } = useAppContext();
@@ -44,15 +62,14 @@ export default function Cart() {
   };
 
   const subtotal = cart.reduce((acc, item) => {
-    const rawPrice = item.price ? String(item.price).replace(/[^0-9.]/g, '') : '0';
-    const price = parseFloat(rawPrice) || 0;
-    const packagingPrice = item.giftOptions?.packaging?.price || 0;
+    const price = parsePrice(item.price);
+    const packagingPrice = parsePrice(item.giftOptions?.packaging?.price);
     return acc + ((price + packagingPrice) * (item.quantity || 1));
   }, 0);
 
   const savings = cart.reduce((acc, item) => {
-    const costPrice = item.costPrice ? parseFloat(String(item.costPrice).replace(/[^0-9.]/g, '')) : 0;
-    const sellPrice = item.price ? parseFloat(String(item.price).replace(/[^0-9.]/g, '')) : 0;
+    const costPrice = parsePrice(item.costPrice);
+    const sellPrice = parsePrice(item.price);
     if (costPrice > sellPrice) {
       return acc + ((costPrice - sellPrice) * (item.quantity || 1));
     }
@@ -95,8 +112,8 @@ export default function Cart() {
             </div>
 
             {cart.map((item, index) => {
-              const basePrice = parseFloat(String(item.price || '0').replace(/[^0-9.]/g, ''));
-              const packPrice = item.giftOptions?.packaging?.price || 0;
+              const basePrice = parsePrice(item.price);
+              const packPrice = parsePrice(item.giftOptions?.packaging?.price);
               const itemTotal = (basePrice + packPrice) * (item.quantity || 1);
               const isEditing = editingGiftIndex === index;
 
@@ -124,7 +141,7 @@ export default function Cart() {
                               <div>
                                 <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600 }}>
                                   <span className="material-icons" style={{ fontSize: '0.9rem', verticalAlign: 'middle', marginRight: '4px' }}>card_giftcard</span>
-                                  Gift: {item.giftOptions.packaging ? `${item.giftOptions.packaging.name} (+Rs. ${item.giftOptions.packaging.price})` : 'Standard'}
+                                  Gift: {item.giftOptions.packaging ? `${item.giftOptions.packaging.name} (+${fmtINR(item.giftOptions.packaging.price)})` : 'Standard'}
                                 </div>
                                 {item.giftOptions.message && (
                                   <div style={{ fontSize: '0.7rem', color: 'var(--muted-foreground)', marginTop: '2px', fontStyle: 'italic', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -148,8 +165,8 @@ export default function Cart() {
                     </div>
 
                     <div className="cart-item-price-unit" style={{ fontSize: '0.95rem' }}>
-                      <div>Rs. {basePrice.toFixed(2)}</div>
-                      {packPrice > 0 && <div style={{ fontSize: '0.7rem', color: 'var(--primary)' }}>+ Rs. {packPrice.toFixed(2)} (Gift)</div>}
+                      <div>{fmtINR(basePrice)}</div>
+                      {packPrice > 0 && <div style={{ fontSize: '0.7rem', color: 'var(--primary)' }}>+ {fmtINR(packPrice)} (Gift)</div>}
                     </div>
                     
                     <div className="cart-item-qty">
@@ -159,7 +176,7 @@ export default function Cart() {
                     </div>
 
                     <div className="cart-item-total-price">
-                      Rs. {itemTotal.toFixed(2)}
+                      {fmtINR(itemTotal)}
                     </div>
 
                     <div className="cart-item-delete">
@@ -209,7 +226,7 @@ export default function Cart() {
                               >
                                 {opt.image && <img src={opt.image} alt="" style={{ width: '100%', height: '60px', objectFit: 'contain', marginBottom: '0.5rem' }} />}
                                 <div className="label-caps" style={{ fontSize: '0.6rem', marginBottom: '0.25rem' }}>{opt.name}</div>
-                                <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>+Rs. {opt.price}</div>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 600 }}>+{fmtINR(opt.price)}</div>
                               </div>
                             ))}
                           </div>
@@ -239,7 +256,7 @@ export default function Cart() {
             <h2 style={{ fontSize: '1.5rem', marginBottom: '2rem' }}>Order Summary</h2>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
               <span style={{ color: 'var(--muted-foreground)' }}>Subtotal</span>
-              <span>Rs. {subtotal.toFixed(2)}</span>
+              <span>{fmtINR(subtotal)}</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
               <span style={{ color: 'var(--muted-foreground)' }}>Shipping</span>
@@ -249,14 +266,14 @@ export default function Cart() {
             {savings > 0 && (
               <div style={{ padding: '0.75rem', background: '#f0fdf4', border: '1px dashed #166534', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#166534' }}>YOU SAVED</span>
-                <span style={{ fontWeight: 700, color: '#166534' }}>Rs. {savings.toFixed(2)}</span>
+                <span style={{ fontWeight: 700, color: '#166534' }}>{fmtINR(savings)}</span>
               </div>
             )}
 
             <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.5rem', marginBottom: '2.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontWeight: 600 }}>Estimated Total</span>
               <div style={{ textAlign: 'right' }}>
-                <span style={{ fontSize: '1.5rem', fontWeight: 600, display: 'block' }}>Rs. {subtotal.toFixed(2)}</span>
+                <span style={{ fontSize: '1.5rem', fontWeight: 600, display: 'block' }}>{fmtINR(subtotal)}</span>
               </div>
             </div>
             <button className="btn-primary label-caps" style={{ width: '100%', padding: '1.25rem' }}>Checkout Now</button>
