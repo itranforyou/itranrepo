@@ -219,7 +219,7 @@ export default function ProductPage({ params }) {
                 )}
                 {product.size && (
                   <div style={{ marginLeft: 'auto', border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.75rem' }} className="label-caps">
-                    {['Incense Sticks', 'Dhoop Sticks', 'Sandali', 'Mohak'].includes(product.category)
+                    {['Incense Sticks', 'Dhoop Sticks'].includes(product.category)
                       ? `Sets of ${product.size}` 
                       : (product.size.toString().toLowerCase().endsWith('ml') ? product.size : `${product.size}ml`)}
                   </div>

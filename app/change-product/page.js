@@ -66,7 +66,7 @@ export default function ChangeProductPage() {
     if (packagingOptions) setPackagingList(packagingOptions);
   }, [packagingOptions]);
 
-  const categories = ['Him', 'Her', 'Unisex', 'Car Diffuser', 'Home Diffuser', 'Sandali', 'Mohak'];
+  const categories = ['Him', 'Her', 'Unisex', 'Car Diffuser', 'Home Diffuser', 'Dhoop Sticks'];
 
   const addUrlField = () => setUrlInputs([...urlInputs, '']);
   const removeUrlField = (index) => setUrlInputs(urlInputs.filter((_, i) => i !== index));
@@ -586,13 +586,13 @@ export default function ChangeProductPage() {
 
                 <div style={{ width: '150px' }}>
                   <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>
-                    {['Incense Sticks', 'Dhoop Sticks', 'Sandali', 'Mohak'].includes(formData.category) ? 'Quantity (Set of)' : 'Size (ml)'}
+                    {['Incense Sticks', 'Dhoop Sticks'].includes(formData.category) ? 'Quantity (Set of)' : 'Size (ml)'}
                   </label>
                   <input 
                     type="text" 
                     value={formData.size || ''} 
                     onChange={(e) => setFormData({...formData, size: e.target.value})} 
-                    placeholder={['Incense Sticks', 'Dhoop Sticks', 'Sandali', 'Mohak'].includes(formData.category) ? 'e.g. 100' : 'e.g. 100ml'} 
+                    placeholder={['Incense Sticks', 'Dhoop Sticks'].includes(formData.category) ? 'e.g. 100' : 'e.g. 100ml'} 
                     style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
                   />
                 </div>
@@ -896,8 +896,6 @@ export default function ChangeProductPage() {
                         <option value="unisex">Unisex</option>
                         <option value="car-diffusers">Car Diffusers</option>
                         <option value="home-diffuser">Home Diffuser</option>
-                        <option value="sandali">Sandali</option>
-                        <option value="mohak">Mohak</option>
                       </select>
                     </div>
                   ) : (
