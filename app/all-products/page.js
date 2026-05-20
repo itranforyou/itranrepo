@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
@@ -72,7 +72,9 @@ export default function AllProducts() {
           </Reveal>
 
           {/* Premium Filter & Sort controls */}
-          <FilterSort products={baseFilteredProducts} onFilterSortChange={setFinalProducts} />
+          <Suspense fallback={<div>Loading...</div>}>
+            <FilterSort products={baseFilteredProducts} onFilterSortChange={setFinalProducts} />
+          </Suspense>
 
           <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '3rem' }}>
             {finalProducts.map((product, index) => (
