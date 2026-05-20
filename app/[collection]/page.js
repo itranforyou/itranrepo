@@ -32,8 +32,7 @@ const COLLECTION_MAP = {
     image: 'https://images.unsplash.com/photo-1608528577891-eb055944f2e7?auto=format&fit=crop&q=80&w=2000',
     category: 'Dhoop Sticks',
     label: 'Sacred Smoke',
-    isSuper: true,
-    subcategories: ['ALL DHOOP STICKS', 'SANDALI', 'MOHAK']
+    isSuper: true
   },
   'him': {
     title: 'Him',
@@ -152,7 +151,7 @@ export default function CollectionPage({ params }) {
 
       <section style={{ padding: '6rem 0', background: 'var(--background)' }}>
         <div className="container" style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 var(--spacing-gutter)' }}>
-          {config.isSuper && (
+          {config.isSuper && config.subcategories && (
             <Reveal className="filter-bar">
               {config.subcategories.map((cat) => (
                 <button
