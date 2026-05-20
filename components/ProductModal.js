@@ -227,7 +227,7 @@ export default function ProductModal() {
               {recommendations.map(p => (
                 <div key={p.id} className="rec-item" style={{ textAlign: 'center', cursor: 'pointer', maxWidth: '220px', margin: '0 auto' }} onClick={() => setSelectedProduct(p)}>
                   <div style={{ aspectRatio: '1', overflow: 'hidden', marginBottom: '1rem', border: '1px solid var(--border)' }}>
-                    <img src={p.images[0]} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={p.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                   <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '0.9rem', marginBottom: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {p.name}

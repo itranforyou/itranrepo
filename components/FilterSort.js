@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 
 // Price parser to convert string like "₹ 1,500.00" to number 1500
 const parsePrice = (priceStr) => {
@@ -28,8 +29,11 @@ export default function FilterSort({ products = [], onFilterSortChange }) {
 
   // Sort State
   const [sortBy, setSortBy] = useState('title-ascending'); // Default A-Z
-  // Search State
-  const [searchQuery, setSearchQuery] = useState('');
+  // Search State from URL
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchQuery = searchParams.get('search') || '';
 
   // Refs for clicking outside dropdowns to close them
   const containerRef = useRef(null);
@@ -65,24 +69,30 @@ export default function FilterSort({ products = [], onFilterSortChange }) {
     resetAvailability();
     resetPrice();
     setSortBy('title-ascending');
+    if (searchQuery) {
+      router.push(pathname); // Clears search params
+    }
   };
 
   // Determine active count or boolean to show "Reset"
   const isAvailabilityFiltered = availability.inStock || availability.outOfStock;
   const isPriceFiltered = priceRange.from !== '' || priceRange.to !== '';
-  const isFiltered = isAvailabilityFiltered || isPriceFiltered;
+  const isFiltered = isAvailabilityFiltered || isPriceFiltered || searchQuery !== '';
 
   // Perform filtering and sorting in a memoized value
   const filteredSortedProducts = useMemo(() => {
     let result = [...products];
 
-    // 0. Filter by Search Query
+    // 0. Filter by Search Query (name, category, or any fragrance note)
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(p =>
-        (p.name || '').toLowerCase().includes(q) ||
-        (p.category || '').toLowerCase().includes(q)
-      );
+      result = result.filter(p => {
+        if ((p.name || '').toLowerCase().includes(q)) return true;
+        if ((p.category || '').toLowerCase().includes(q)) return true;
+        // Match against fragrance notes array [{name, image}, ...]
+        if (Array.isArray(p.notes) && p.notes.some(n => (n.name || '').toLowerCase().includes(q))) return true;
+        return false;
+      });
     }
 
     // 1. Filter by Availability
@@ -326,44 +336,8 @@ export default function FilterSort({ products = [], onFilterSortChange }) {
           </div>
         </div>
 
-        {/* Right: Search + Product Count + Sort by */}
+        {/* Right: Product Count + Sort by */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', flexWrap: 'wrap' }}>
-
-          {/* Search Input */}
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-            <span className="material-icons" style={{ position: 'absolute', left: '0.5rem', fontSize: '1rem', color: 'var(--muted-foreground)', pointerEvents: 'none' }}>search</span>
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              style={{
-                paddingLeft: '2rem',
-                paddingRight: searchQuery ? '2rem' : '0.75rem',
-                paddingTop: '0.4rem',
-                paddingBottom: '0.4rem',
-                border: '1px solid var(--border)',
-                fontSize: '0.8rem',
-                fontFamily: 'var(--font-serif)',
-                background: 'transparent',
-                color: 'var(--foreground)',
-                width: '180px',
-                outline: 'none',
-                transition: 'border-color 0.2s'
-              }}
-              onFocus={(e) => e.target.style.borderColor = 'var(--primary)'}
-              onBlur={(e) => e.target.style.borderColor = 'var(--border)'}
-            />
-            {searchQuery && (
-              <span
-                className="material-icons"
-                onClick={() => setSearchQuery('')}
-                style={{ position: 'absolute', right: '0.4rem', fontSize: '0.9rem', color: 'var(--muted-foreground)', cursor: 'pointer' }}
-              >
-                close
-              </span>
-            )}
-          </div>
 
           {/* Product Count */}
           <span style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>
@@ -431,6 +405,12 @@ export default function FilterSort({ products = [], onFilterSortChange }) {
             <div style={chipStyle}>
               Price: Max ₹{parseFloat(priceRange.to).toLocaleString('en-IN')}
               <span className="material-icons" onClick={() => setPriceRange({ ...priceRange, to: '' })} style={closeIconStyle}>close</span>
+            </div>
+          )}
+          {searchQuery && (
+            <div style={chipStyle}>
+              Search: {searchQuery}
+              <span className="material-icons" onClick={() => router.push(pathname)} style={closeIconStyle}>close</span>
             </div>
           )}
           

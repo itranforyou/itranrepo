@@ -116,6 +116,14 @@ header {
   z-index: 1000;
 }
 
+.mobile-left-group {
+  display: none;
+}
+
+.search-desktop {
+  display: flex;
+}
+
 .hamburger {
   width: 24px;
   height: 2px;
@@ -267,7 +275,7 @@ header {
     margin-right: 0;
   }
   
-  .logo {
+  .logo-container {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
@@ -338,7 +346,19 @@ header {
     flex: 0 0 40px;
   }
 
-  .logo {
+  .mobile-left-group {
+    display: flex !important;
+    align-items: center;
+    gap: 0.5rem;
+    flex: 0 0 auto;
+    z-index: 1000;
+  }
+
+  .search-desktop {
+    display: none !important;
+  }
+
+  .logo-container {
     position: absolute !important;
     left: 0 !important;
     top: 0 !important;
@@ -353,7 +373,7 @@ header {
     z-index: 10;
   }
 
-  .logo img {
+  .logo-container > * {
     pointer-events: auto !important;
   }
 

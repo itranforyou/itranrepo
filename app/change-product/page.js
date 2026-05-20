@@ -280,8 +280,8 @@ export default function ChangeProductPage() {
     setEditingId(product.id);
     setFormData({
       name: product.name || '',
-      price: product.price?.toString().replace(/[^0-9.]/g, '') || '',
-      costPrice: product.costPrice?.toString().replace(/[^0-9.]/g, '') || '',
+      price: product.price?.toString().replace(/[^\d.]/g, '').replace(/^\.+/, '') || '',
+      costPrice: product.costPrice?.toString().replace(/[^\d.]/g, '').replace(/^\.+/, '') || '',
       isOffer: !!product.costPrice,
       category: product.category || 'Him Collection',
       description: product.description || product.desc || '',

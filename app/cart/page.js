@@ -122,7 +122,7 @@ export default function Cart() {
                   <div className="cart-item-row">
                     <div className="cart-item-info">
                       <div className="cart-item-image">
-                        <img src={item.image || item.images?.[0]} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={item.image || item.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       </div>
                       <div className="cart-item-details">
                         <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{item.name}</h3>

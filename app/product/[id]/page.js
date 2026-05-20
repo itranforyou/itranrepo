@@ -169,7 +169,7 @@ export default function ProductPage({ params }) {
                       opacity: i === imageIndex ? 1 : 0.6
                     }}
                   >
-                    <img src={img} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={img || fallbackImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </div>
                 ))}
               </div>
@@ -541,7 +541,7 @@ export default function ProductPage({ params }) {
               <Reveal key={p.id} delay={i * 0.1}>
                 <Link href={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                   <div style={{ aspectRatio: '4/5', overflow: 'hidden', marginBottom: '1.5rem', background: '#f5f5f5' }}>
-                    <img src={p.images?.[0] || p.image} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                    <img src={p.images?.[0] || p.image || fallbackImg} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }} />
                   </div>
                   <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', marginBottom: '0.5rem' }}>{p.name}</h4>
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.9rem' }}>
