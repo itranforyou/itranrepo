@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { addProduct, getProducts, updateProduct, deleteProduct } from '@/lib/products';
 import Reveal from '@/components/Reveal';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 
 export default function ChangeProductPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -24,6 +24,8 @@ export default function ChangeProductPage() {
   // States for Add/Edit
   const [formData, setFormData] = useState({
     name: '',
+    subName: '',
+    inspiredBy: '',
     price: '',
     costPrice: '',
     isOffer: false,
@@ -52,6 +54,31 @@ export default function ChangeProductPage() {
   const [editingRealmId, setEditingRealmId] = useState(null);
   const [realmData, setRealmData] = useState({ name: '', img: '', targetType: 'category', categorySlug: 'perfume-oil', productIds: [] });
   
+  // Gift Box Prices state
+  const [giftPrices, setGiftPrices] = useState({ price1: 1499, price2: 2699, price4: 4999, img1: '', img2: '', img4: '' });
+  const [isPricesSaving, setIsPricesSaving] = useState(false);
+
+  const handleSavePrices = async (e) => {
+    e.preventDefault();
+    setIsPricesSaving(true);
+    try {
+      await setDoc(doc(db, "settings", "gift_box_prices"), {
+        price1: Number(giftPrices.price1),
+        price2: Number(giftPrices.price2),
+        price4: Number(giftPrices.price4),
+        img1: giftPrices.img1 || '',
+        img2: giftPrices.img2 || '',
+        img4: giftPrices.img4 || '',
+      });
+      alert("Gift box prices and images updated successfully!");
+    } catch (err) {
+      console.error("Error saving gift box prices:", err);
+      alert("Failed to update.");
+    } finally {
+      setIsPricesSaving(false);
+    }
+  };
+
   // Inventory state
   const [inventory, setInventory] = useState([]);
   const [inventorySearch, setInventorySearch] = useState('');
@@ -66,7 +93,7 @@ export default function ChangeProductPage() {
     if (packagingOptions) setPackagingList(packagingOptions);
   }, [packagingOptions]);
 
-  const categories = ['Him', 'Her', 'Unisex', 'Car Diffuser', 'Home Diffuser', 'Dhoop Sticks'];
+  const categories = ['Him', 'Her', 'Unisex', 'Car Diffuser', 'Home Diffuser', 'Dhoop Sticks', 'Luxury Gift Fragrances'];
 
   const addUrlField = () => setUrlInputs([...urlInputs, '']);
   const removeUrlField = (index) => setUrlInputs(urlInputs.filter((_, i) => i !== index));
@@ -144,6 +171,19 @@ export default function ChangeProductPage() {
         setRealms(realmsData);
       });
 
+      // Fetch gift box prices
+      const fetchPrices = async () => {
+        try {
+          const docSnap = await getDoc(doc(db, "settings", "gift_box_prices"));
+          if (docSnap.exists()) {
+            setGiftPrices(docSnap.data());
+          }
+        } catch (e) {
+          console.error("Error fetching gift box prices:", e);
+        }
+      };
+      fetchPrices();
+
       return () => {
         unsubscribe();
         unsubscribeContact();
@@ -189,6 +229,8 @@ export default function ChangeProductPage() {
   const resetForm = () => {
     setFormData({
       name: '',
+      subName: '',
+      inspiredBy: '',
       price: '',
       costPrice: '',
       isOffer: false,
@@ -280,6 +322,8 @@ export default function ChangeProductPage() {
     setEditingId(product.id);
     setFormData({
       name: product.name || '',
+      subName: product.subName || '',
+      inspiredBy: product.inspiredBy || '',
       price: product.price?.toString().replace(/[^\d.]/g, '').replace(/^\.+/, '') || '',
       costPrice: product.costPrice?.toString().replace(/[^\d.]/g, '').replace(/^\.+/, '') || '',
       isOffer: !!product.costPrice,
@@ -493,6 +537,22 @@ export default function ChangeProductPage() {
           >
             REALMS ({realms.length})
           </button>
+          <button 
+            onClick={() => setActiveTab('gift-prices')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'gift-prices' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            GIFT BOX PRICES
+          </button>
         </div>
 
         {activeTab === 'add' ? (
@@ -515,6 +575,17 @@ export default function ChangeProductPage() {
                 <div>
                   <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Product Name</label>
                   <input type="text" required value={formData.name || ''} onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Sub Name <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: '0.65rem', color: '#888' }}>(optional)</span></label>
+                    <input type="text" value={formData.subName || ''} onChange={(e) => setFormData({...formData, subName: e.target.value})} placeholder="e.g. Royal Oud" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                  </div>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Inspired By <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: '0.65rem', color: '#888' }}>(optional)</span></label>
+                    <input type="text" value={formData.inspiredBy || ''} onChange={(e) => setFormData({...formData, inspiredBy: e.target.value})} placeholder="e.g. Creed Aventus" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                  </div>
                 </div>
 
                 <div style={{ background: '#fcfcfc', padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
@@ -560,20 +631,16 @@ export default function ChangeProductPage() {
 
                 <div style={{ background: '#fcfcfc', padding: '1.5rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <label className="label-caps" style={{ fontSize: '0.7rem' }}>Fragrance Notes (Multiple)</label>
+                    <label className="label-caps" style={{ fontSize: '0.7rem' }}>Fragrance Notes</label>
                     <button type="button" onClick={addNoteField} style={{ background: 'var(--foreground)', color: 'var(--background)', border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.6rem', cursor: 'pointer' }} className="label-caps">+ Add Note</button>
                   </div>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {(Array.isArray(formData.notes) ? formData.notes : []).map((note, index) => (
-                      <div key={index} style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'flex-end', background: '#fff', padding: '1rem', border: '1px solid #eee' }}>
-                        <div style={{ flex: '1 1 150px' }}>
+                      <div key={index} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', background: '#fff', padding: '1rem', border: '1px solid #eee' }}>
+                        <div style={{ flex: 1 }}>
                           <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Note Name</label>
                           <input type="text" value={note.name} onChange={(e) => updateNoteField(index, 'name', e.target.value)} placeholder="e.g. Oud" style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)' }} />
-                        </div>
-                        <div style={{ flex: '2 1 200px' }}>
-                          <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Note Image URL</label>
-                          <input type="url" value={note.image} onChange={(e) => updateNoteField(index, 'image', e.target.value)} placeholder="https://..." style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)' }} />
                         </div>
                         <button type="button" onClick={() => removeNoteField(index)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '0.55rem', cursor: 'pointer', height: '38px', flexShrink: 0 }}>×</button>
                       </div>
@@ -955,6 +1022,98 @@ export default function ChangeProductPage() {
                   <p className="label-caps">No curated realms found.</p>
                 </div>
               )}
+            </div>
+          </Reveal>
+        ) : activeTab === 'gift-prices' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', maxWidth: '600px', margin: '0 auto' }}>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1.5rem' }}>Gift Box Prices Configuration</h2>
+              <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', marginBottom: '1.5rem' }}>
+                Set the bundle prices for customer-curated gift boxes. These prices populate the interactive builder page in real time.
+              </p>
+              <form onSubmit={handleSavePrices} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '1rem' }}>
+                  <label className="label-caps" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--primary)' }}>Only 1 Fragrance Box</label>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Price (₹)</label>
+                      <input 
+                        type="number" 
+                        required 
+                        value={giftPrices.price1 || ''} 
+                        onChange={(e) => setGiftPrices({...giftPrices, price1: e.target.value})} 
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
+                      />
+                    </div>
+                    <div style={{ flex: '2 1 300px' }}>
+                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Box Image URL</label>
+                      <input 
+                        type="url" 
+                        value={giftPrices.img1 || ''} 
+                        onChange={(e) => setGiftPrices({...giftPrices, img1: e.target.value})} 
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
+                        placeholder="e.g. https://..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '1rem' }}>
+                  <label className="label-caps" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--primary)' }}>Two Fragrances Box</label>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Price (₹)</label>
+                      <input 
+                        type="number" 
+                        required 
+                        value={giftPrices.price2 || ''} 
+                        onChange={(e) => setGiftPrices({...giftPrices, price2: e.target.value})} 
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
+                      />
+                    </div>
+                    <div style={{ flex: '2 1 300px' }}>
+                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Box Image URL</label>
+                      <input 
+                        type="url" 
+                        value={giftPrices.img2 || ''} 
+                        onChange={(e) => setGiftPrices({...giftPrices, img2: e.target.value})} 
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
+                        placeholder="e.g. https://..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '1.5rem' }}>
+                  <label className="label-caps" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--primary)' }}>Four Fragrances Box</label>
+                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                    <div style={{ flex: '1 1 200px' }}>
+                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Price (₹)</label>
+                      <input 
+                        type="number" 
+                        required 
+                        value={giftPrices.price4 || ''} 
+                        onChange={(e) => setGiftPrices({...giftPrices, price4: e.target.value})} 
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
+                      />
+                    </div>
+                    <div style={{ flex: '2 1 300px' }}>
+                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Box Image URL</label>
+                      <input 
+                        type="url" 
+                        value={giftPrices.img4 || ''} 
+                        onChange={(e) => setGiftPrices({...giftPrices, img4: e.target.value})} 
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
+                        placeholder="e.g. https://..."
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn-primary label-caps" style={{ padding: '1rem', width: '100%' }} disabled={isPricesSaving}>
+                  {isPricesSaving ? 'SAVING...' : 'SAVE CONFIGURATION'}
+                </button>
+              </form>
             </div>
           </Reveal>
         ) : (

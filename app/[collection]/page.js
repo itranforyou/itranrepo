@@ -82,6 +82,14 @@ const COLLECTION_MAP = {
     image: 'https://images.unsplash.com/photo-1602928294241-7662c19e5d41?auto=format&fit=crop&q=80&w=2000',
     category: 'Mohak',
     label: 'Dhoop Sticks'
+  },
+  'luxury-gift-fragrances': {
+    title: 'Luxury Gift Fragrances',
+    subtitle: 'Exquisite signature blends designed to be the perfect gesture of love and appreciation.',
+    image: 'https://images.unsplash.com/photo-1594035910387-fea47794261f?auto=format&fit=crop&q=80&w=2000',
+    category: 'Gift Fragrance',
+    label: 'Signature Gestures',
+    isSuper: false
   }
 };
 
@@ -108,6 +116,12 @@ export default function CollectionPage({ params }) {
     return products.filter(p => {
       const pCat = (p.category || '').toLowerCase();
       
+      // Luxury Gift Fragrances will only show products assigned to that category (e.g. 'Luxury Gift Fragrances')
+      if (collectionKey === 'luxury-gift-fragrances') {
+        const targetCat = config.category.toLowerCase();
+        return pCat === targetCat || pCat.includes(targetCat) || targetCat.includes(pCat);
+      }
+
       if (config.isSuper) {
         let belongsToSuper = false;
         if (collectionKey === 'perfume-oil') belongsToSuper = pCat.includes('him') || pCat.includes('her') || pCat.includes('unisex') || pCat.includes('perfume');

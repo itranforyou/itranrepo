@@ -153,6 +153,16 @@ export default function ProductCard({ product, delay = 0 }) {
             }}>
               {product.name}
             </h3>
+            {product.subName && (
+              <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginTop: '0.2rem', lineHeight: 1.3 }}>
+                {product.subName}
+              </div>
+            )}
+            {product.inspiredBy && (
+              <div style={{ fontSize: '0.65rem', color: 'var(--secondary)', fontStyle: 'italic', marginTop: '0.15rem', letterSpacing: '0.02em' }}>
+                Inspired by {product.inspiredBy}
+              </div>
+            )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.2rem' }}>
             {product.costPrice ? (

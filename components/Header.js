@@ -10,6 +10,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
+  const [isPerfumeOilOpen, setIsPerfumeOilOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [hoveredCollection, setHoveredCollection] = useState(null);
@@ -19,12 +20,20 @@ export default function Header() {
   const router = useRouter();
   const profileRef = useRef(null);
   const searchRef = useRef(null);
+  const perfumeOilRef = useRef(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const shopCollections = [
-    { name: 'PERFUME OIL', slug: 'perfume-oil' },
     { name: 'DIFFUSERS', slug: 'diffusers' },
     { name: 'DHOOP STICKS', slug: 'dhoop-sticks' },
+    { name: 'LUXURY GIFT FRAGRANCES', slug: 'luxury-gift-fragrances' },
+    { name: 'LUXURY GIFT SETS', slug: 'luxury-gift-sets' },
+  ];
+
+  const perfumeOilCategories = [
+    { name: 'HIM', slug: 'him' },
+    { name: 'HER', slug: 'her' },
+    { name: 'UNISEX', slug: 'unisex' },
   ];
 
   useEffect(() => {
@@ -51,9 +60,12 @@ export default function Header() {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setIsSearchOpen(false);
       }
+      if (perfumeOilRef.current && !perfumeOilRef.current.contains(event.target)) {
+        setIsPerfumeOilOpen(false);
+      }
     };
 
-    if (isProfileOpen || isSearchOpen) {
+    if (isProfileOpen || isSearchOpen || isPerfumeOilOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
@@ -68,7 +80,7 @@ export default function Header() {
       document.removeEventListener('mousedown', handleClickOutside);
       document.body.classList.remove('menu-active');
     };
-  }, [isProfileOpen, isMenuOpen]);
+  }, [isProfileOpen, isMenuOpen, isSearchOpen, isPerfumeOilOpen]);
 
   const cartCount = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const iconColor = 'var(--foreground)';
@@ -137,15 +149,52 @@ export default function Header() {
           Home
         </Link>
 
+        {/* Perfume Oil Dropdown */}
+        <div
+          className={`nav-dropdown ${isPerfumeOilOpen ? 'active' : ''}`}
+          ref={perfumeOilRef}
+          onMouseEnter={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsPerfumeOilOpen(true); }}
+          onMouseLeave={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsPerfumeOilOpen(false); }}
+        >
+          <div
+            className={`nav-link-item ${perfumeOilCategories.some(cat => pathname === `/${cat.slug}`) ? 'active' : ''}`}
+            style={{
+              color: perfumeOilCategories.some(cat => pathname === `/${cat.slug}`) ? 'var(--primary)' : ''
+            }}
+            onClick={() => { if (typeof window !== 'undefined' && window.innerWidth <= 768) setIsPerfumeOilOpen(!isPerfumeOilOpen); }}
+          >
+            <span>Perfume Oil</span>
+            <span className="material-icons" style={{ fontSize: '18px', transition: 'transform 0.3s', transform: isPerfumeOilOpen ? 'rotate(180deg)' : 'none' }}>expand_more</span>
+          </div>
+
+          <div className="nav-dropdown-content">
+            {perfumeOilCategories.map((cat) => (
+              <Link
+                key={cat.slug}
+                href={`/${cat.slug}`}
+                onClick={() => { setIsPerfumeOilOpen(false); setIsMenuOpen(false); }}
+                className="dropdown-link"
+                style={{ 
+                  color: pathname === `/${cat.slug}` ? 'var(--primary)' : '',
+                  textTransform: 'uppercase'
+                }}
+              >
+                {cat.name}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Shop Dropdown */}
         <div
           className={`nav-dropdown ${isShopOpen ? 'active' : ''}`}
           onMouseEnter={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsShopOpen(true); }}
           onMouseLeave={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsShopOpen(false); }}
         >
           <div
-            className={`nav-link-item ${shopCollections.some(col => !col.isHeader && pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'active' : ''}`}
+            className={`nav-link-item ${shopCollections.some(col => !col.isHeader && pathname === `/${col.slug}`) ? 'active' : ''}`}
             style={{
-              color: shopCollections.some(col => !col.isHeader && pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`)) ? 'var(--primary)' : ''
+              color: shopCollections.some(col => !col.isHeader && pathname === `/${col.slug}`) ? 'var(--primary)' : ''
             }}
             onClick={() => { if (typeof window !== 'undefined' && window.innerWidth <= 768) setIsShopOpen(!isShopOpen); }}
           >
@@ -154,15 +203,14 @@ export default function Header() {
           </div>
 
           <div className="nav-dropdown-content">
-            {shopCollections.map((col, idx) => (
+            {shopCollections.map((col) => (
               <Link
                 key={col.slug}
-                href={col.slug === 'all-products' ? '/all-products' : `/${col.slug}`}
+                href={`/${col.slug}`}
                 onClick={() => { setIsShopOpen(false); setIsMenuOpen(false); }}
                 className="dropdown-link"
                 style={{ 
-                  color: pathname === (col.slug === 'all-products' ? '/all-products' : `/${col.slug}`) ? 'var(--primary)' : '',
-                  paddingLeft: '1.5rem',
+                  color: pathname === `/${col.slug}` ? 'var(--primary)' : '',
                   textTransform: 'uppercase'
                 }}
               >

@@ -135,7 +135,7 @@ export default function Cart() {
                           </div>
                         )}
 
-                        {!isEditing && (
+                        {!isEditing && !['Gift Set', 'Luxury Gift Fragrances'].includes(item.category) && (
                           <div style={{ marginTop: '1rem' }}>
                             {item.giftOptions?.isGift ? (
                               <div>

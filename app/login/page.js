@@ -236,9 +236,9 @@ export default function Login() {
 
             <div style={{ marginTop: '2.5rem', paddingTop: '2rem', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
               <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>
-                {isRegister ? 'Already have an account?' : 'New to Scented Silence?'}
+                {isRegister ? 'Already have an account?' : 'New to Itran?'}
                 <button onClick={() => setIsRegister(!isRegister)} style={{ background: 'none', border: 'none', color: 'var(--primary)', marginLeft: '0.5rem', cursor: 'pointer', fontWeight: 600 }}>
-                  {isRegister ? 'Sign In' : 'Create One'}
+                  {isRegister ? 'Sign In' : 'Create New'}
                 </button>
               </p>
             </div>

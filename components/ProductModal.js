@@ -166,7 +166,11 @@ export default function ProductModal() {
                   <span className="material-icons">add</span>
                 </button>
                 <div className="accordion-content">
-                  <p>Apply to pulse points—wrists, neck, and behind the ears.</p>
+                  <p style={{ marginBottom: '0.5rem' }}>As a highly concentrated perfume oil, we recommend applying it primarily onto clothing (cuffs, collar, or inner layers) for a magnificent and long-lasting trail.</p>
+                  <p style={{ fontSize: '0.8rem', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 500 }}>
+                    <span className="material-icons" style={{ fontSize: '0.95rem' }}>warning</span>
+                    Safety: Avoid using directly on highly sensitive body areas. We advise performing a small patch test first if applying to skin.
+                  </p>
                 </div>
               </div>
               <div className={`accordion-item ${activeAccordion === 2 ? 'active' : ''}`}>

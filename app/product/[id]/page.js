@@ -199,9 +199,20 @@ export default function ProductPage({ params }) {
                 )}
               </div>
               
-              <h1 style={{ fontSize: '3.5rem', marginBottom: '1.5rem', fontFamily: 'var(--font-serif)', lineHeight: 1.1 }}>
+              <h1 style={{ fontSize: '3.5rem', marginBottom: '0.5rem', fontFamily: 'var(--font-serif)', lineHeight: 1.1 }}>
                 {product.name}
               </h1>
+
+              {product.subName && (
+                <div style={{ fontSize: '1.1rem', color: 'var(--muted-foreground)', marginBottom: '0.4rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
+                  {product.subName}
+                </div>
+              )}
+              {product.inspiredBy && (
+                <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', letterSpacing: '0.05em', marginBottom: '1.5rem' }}>
+                  Inspired by <strong>{product.inspiredBy}</strong>
+                </div>
+              )}
               
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '2.5rem' }}>
                 <div style={{ fontSize: '1.75rem', color: product.costPrice ? '#991b1b' : 'var(--muted-foreground)', fontWeight: product.costPrice ? 600 : 300 }}>
@@ -232,40 +243,32 @@ export default function ProductPage({ params }) {
 
               {product.notes && Array.isArray(product.notes) && product.notes.length > 0 && (
                 <div style={{ marginBottom: '3rem' }}>
-                  <div className="label-caps" style={{ fontSize: '0.65rem', color: 'var(--primary)', marginBottom: '0.5rem', letterSpacing: '0.1em' }}>Fragrance Ritual Notes</div>
-                  <p style={{ fontSize: '0.7rem', color: '#888', marginBottom: '1.5rem' }}>Select your primary note preference</p>
-                  <div style={{ display: 'flex', gap: '1.5rem', overflowX: 'auto', paddingBottom: '1rem', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {product.notes.map((note, idx) => {
-                      const isSelected = selectedNote === note.name;
-                      return (
-                        <div 
-                          key={idx} 
-                          onClick={() => toggleNoteSelection(note.name)}
-                          style={{ flex: '0 0 120px', textAlign: 'center', cursor: 'pointer' }}
-                        >
-                          <div style={{ 
-                            width: '120px', 
-                            height: '120px', 
-                            background: isSelected ? 'rgba(141, 75, 0, 0.05)' : '#fcfcfc', 
-                            border: isSelected ? '2px solid var(--primary)' : '1px solid var(--border)', 
-                            borderRadius: '50%', 
-                            overflow: 'hidden', 
-                            marginBottom: '0.75rem', 
-                            padding: '10px',
-                            transition: 'all 0.3s ease',
-                            position: 'relative'
-                          }}>
-                            <img src={note.image || 'https://via.placeholder.com/100'} alt={note.name} style={{ width: '100%', height: '100%', objectFit: 'contain', mixBlendMode: 'multiply', opacity: isSelected ? 1 : 0.7 }} />
-                            {isSelected && (
-                              <div style={{ position: 'absolute', top: '5px', right: '5px', background: 'var(--primary)', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <span className="material-icons" style={{ fontSize: '12px', color: '#fff' }}>check</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="label-caps" style={{ fontSize: '0.6rem', color: isSelected ? 'var(--primary)' : 'var(--foreground)', fontWeight: isSelected ? 700 : 600 }}>{note.name}</div>
-                        </div>
-                      );
-                    })}
+                  <div className="label-caps" style={{ fontSize: '0.65rem', color: 'var(--primary)', marginBottom: '1.25rem', letterSpacing: '0.1em' }}>Fragrance Notes</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
+                    {product.notes.map((note, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: '0.5rem 1.25rem',
+                          border: '1px solid var(--border)',
+                          background: 'rgba(212, 175, 55, 0.04)',
+                          borderRadius: '30px',
+                          fontSize: '0.7rem',
+                          letterSpacing: '0.12em',
+                          textTransform: 'uppercase',
+                          fontWeight: 600,
+                          color: 'var(--foreground)',
+                          userSelect: 'none',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.02)',
+                        }}
+                      >
+                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', display: 'inline-block' }}></span>
+                        {note.name}
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -404,7 +407,11 @@ export default function ProductPage({ params }) {
                     <span className="material-icons" style={{ transition: 'transform 0.3s ease', transform: activeAccordion === 1 ? 'rotate(45deg)' : 'rotate(0deg)', fontSize: '1.4rem' }}>add</span>
                   </button>
                   <div className="accordion-content">
-                    <p>Apply to pulse points—wrists, neck, and behind the ears. For a longer-lasting trail, mist over clothing or hair.</p>
+                    <p style={{ marginBottom: '0.75rem' }}>As a highly concentrated perfume oil, we recommend applying it primarily onto clothing (cuffs, collar, or inner layers) for a magnificent and long-lasting trail.</p>
+                    <p style={{ fontSize: '0.85rem', color: '#b91c1c', display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 500 }}>
+                      <span className="material-icons" style={{ fontSize: '1rem' }}>warning</span>
+                      Safety: Avoid using directly on highly sensitive body areas. We advise performing a small patch test first if applying to the skin.
+                    </p>
                   </div>
                 </div>
                 <div className={`accordion-item ${activeAccordion === 2 ? 'active' : ''}`} style={{ borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
