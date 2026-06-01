@@ -17,12 +17,7 @@ export default function ProductPage({ params }) {
   const [activeAccordion, setActiveAccordion] = useState(0);
   const [reviews, setReviews] = useState([]);
   const [reviewForm, setReviewForm] = useState({ name: '', rating: 5, comment: '' });
-  const { packagingOptions } = useAppContext();
-  const [selectedPackaging, setSelectedPackaging] = useState(null);
-  const [giftOptions, setGiftOptions] = useState({
-    isGift: false,
-    message: ''
-  });
+
   const [selectedNote, setSelectedNote] = useState(null);
   const [quantity, setQuantity] = useState(1);
 
@@ -181,7 +176,9 @@ export default function ProductPage({ params }) {
             <Reveal>
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                 <div className="label-caps" style={{ color: 'var(--primary)', letterSpacing: '0.2em', fontSize: '0.7rem' }}>
-                  {product.category?.replace(' Collection', '')}
+                  {product.category === 'Gift'
+                    ? `GIFT FOR ${(product.giftFor === 'Him' ? 'MEN' : product.giftFor === 'Her' ? 'WOMEN' : product.giftFor || 'UNISEX').toUpperCase()}`
+                    : product.category?.replace(' Collection', '')}
                 </div>
                 {product.isBestSeller && (
                   <div style={{ fontSize: '0.6rem', padding: '0.25rem 0.5rem', background: 'var(--foreground)', color: 'var(--background)', letterSpacing: '0.1em' }}>
@@ -203,12 +200,12 @@ export default function ProductPage({ params }) {
                 {product.name}
               </h1>
 
-              {product.subName && (
+              {product.category !== 'Gift' && product.subName && (
                 <div style={{ fontSize: '1.1rem', color: 'var(--muted-foreground)', marginBottom: '0.4rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic' }}>
                   {product.subName}
                 </div>
               )}
-              {product.inspiredBy && (
+              {product.category !== 'Gift' && product.inspiredBy && (
                 <div style={{ fontSize: '0.75rem', color: 'var(--secondary)', letterSpacing: '0.05em', marginBottom: '1.5rem' }}>
                   Inspired by <strong>{product.inspiredBy}</strong>
                 </div>
@@ -228,7 +225,7 @@ export default function ProductPage({ params }) {
                     {discountPercentage}% OFF
                   </div>
                 )}
-                {product.size && (
+                {product.category !== 'Gift' && product.size && (
                   <div style={{ marginLeft: 'auto', border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.75rem' }} className="label-caps">
                     {['Incense Sticks', 'Dhoop Sticks'].includes(product.category)
                       ? `Sets of ${product.size}` 
@@ -241,7 +238,7 @@ export default function ProductPage({ params }) {
                 {product.desc}
               </p>
 
-              {product.notes && Array.isArray(product.notes) && product.notes.length > 0 && (
+              {product.category !== 'Gift' && product.notes && Array.isArray(product.notes) && product.notes.length > 0 && (
                 <div style={{ marginBottom: '3rem' }}>
                   <div className="label-caps" style={{ fontSize: '0.65rem', color: 'var(--primary)', marginBottom: '1.25rem', letterSpacing: '0.1em' }}>Fragrance Notes</div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
@@ -273,65 +270,7 @@ export default function ProductPage({ params }) {
                 </div>
               )}
 
-              {/* GIFT PACKAGING OPTIONS */}
-              <div style={{ marginBottom: '3rem', padding: '2rem', border: '1px solid var(--border)', background: '#fff' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.5rem' }}>
-                  <input 
-                    type="checkbox" 
-                    id="isGift" 
-                    checked={giftOptions.isGift} 
-                    onChange={(e) => {
-                      const isGift = e.target.checked;
-                      setGiftOptions({...giftOptions, isGift});
-                      if (!isGift) setSelectedPackaging(null);
-                    }} 
-                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                  />
-                  <label htmlFor="isGift" className="label-caps" style={{ fontSize: '0.8rem', cursor: 'pointer', fontWeight: 600 }}>This is a Gift</label>
-                </div>
 
-                {giftOptions.isGift && (
-                  <Reveal>
-                    <div style={{ marginTop: '2rem' }}>
-                      <div className="label-caps" style={{ fontSize: '0.7rem', color: 'var(--primary)', marginBottom: '1rem', letterSpacing: '0.1em' }}>Select Packaging</div>
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                        {packagingOptions.map((opt) => (
-                          <div 
-                            key={opt.id}
-                            onClick={() => setSelectedPackaging(selectedPackaging?.id === opt.id ? null : opt)}
-                            style={{ 
-                              padding: '1rem', 
-                              border: selectedPackaging?.id === opt.id ? '2px solid var(--primary)' : '1px solid var(--border)',
-                              background: selectedPackaging?.id === opt.id ? 'rgba(141, 75, 0, 0.03)' : 'transparent',
-                              cursor: 'pointer',
-                              textAlign: 'center',
-                              transition: 'all 0.3s ease',
-                              position: 'relative'
-                            }}
-                          >
-                            <img src={opt.image || null} alt="" style={{ width: '100%', height: '80px', objectFit: 'contain', marginBottom: '0.75rem' }} />
-                            <div className="label-caps" style={{ fontSize: '0.65rem', marginBottom: '0.25rem' }}>{opt.name}</div>
-                            <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>+₹{opt.price}</div>
-                            {selectedPackaging?.id === opt.id && (
-                              <div style={{ position: 'absolute', top: '5px', right: '5px' }}>
-                                <span className="material-icons" style={{ fontSize: '1.2rem', color: 'var(--primary)' }}>check_circle</span>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="label-caps" style={{ fontSize: '0.7rem', color: 'var(--primary)', marginBottom: '1rem', letterSpacing: '0.1em' }}>Gift Message (Optional)</div>
-                      <textarea 
-                        placeholder="Write a silent message to be delivered with the scent..."
-                        value={giftOptions.message}
-                        onChange={(e) => setGiftOptions({...giftOptions, message: e.target.value})}
-                        style={{ width: '100%', padding: '1rem', border: '1px solid var(--border)', background: 'transparent', resize: 'none', height: '100px', fontSize: '0.9rem' }}
-                      />
-                    </div>
-                  </Reveal>
-                )}
-              </div>
 
                <div style={{ display: 'flex', gap: '1rem', marginBottom: '3rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', border: '1px solid var(--border)', background: '#fff', opacity: product.inStock === false ? 0.5 : 1 }}>
@@ -357,9 +296,7 @@ export default function ProductPage({ params }) {
                       return;
                     }
                     const extraData = {
-                      ...giftOptions,
-                      selectedNote: selectedNote,
-                      packaging: selectedPackaging
+                      selectedNote: selectedNote
                     };
                     addToCart(product, extraData, quantity);
                   }}

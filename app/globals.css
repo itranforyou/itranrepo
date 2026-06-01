@@ -228,6 +228,51 @@ header {
   padding-left: 3rem;
 }
 
+/* Submenu Display & Desktop Styling */
+.desktop-submenu-item {
+  display: block;
+}
+
+.mobile-submenu-item {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .dropdown-submenu {
+    position: relative;
+  }
+  .dropdown-submenu-content {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    background: rgba(10, 10, 10, 0.95);
+    min-width: 200px;
+    padding: 1rem 0;
+    box-shadow: 20px 20px 40px rgba(0, 0, 0, 0.4);
+    z-index: 110;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateX(10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .dropdown-submenu:hover .dropdown-submenu-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(0);
+  }
+  .dropdown-submenu .submenu-arrow {
+    transition: transform 0.3s ease;
+  }
+  .dropdown-submenu:hover .submenu-arrow {
+    transform: translateX(3px);
+    color: var(--primary);
+  }
+}
+
 
 .header-actions {
   display: flex;
@@ -484,7 +529,7 @@ header {
   }
 
   .nav-dropdown.active .nav-dropdown-content {
-    max-height: 400px;
+    max-height: 600px;
     background: rgba(0, 0, 0, 0.02);
     margin-top: 0;
     border-radius: 8px;
@@ -508,6 +553,27 @@ header {
     background: transparent;
     padding-left: 2rem;
     /* Remove desktop hover shift on mobile */
+  }
+
+  .desktop-submenu-item {
+    display: none;
+  }
+
+  .mobile-submenu-item {
+    display: block;
+  }
+
+  .mobile-sub-link {
+    font-size: 0.8rem !important;
+    padding: 0.4rem 1.5rem !important;
+    color: #888 !important;
+    text-align: center;
+  }
+
+  .mobile-sub-link:hover {
+    color: var(--primary) !important;
+    background: transparent !important;
+    padding-left: 1.5rem !important;
   }
 
 

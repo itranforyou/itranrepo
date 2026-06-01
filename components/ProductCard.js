@@ -139,7 +139,9 @@ export default function ProductCard({ product, delay = 0 }) {
         <div className="product-details" style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', alignItems: 'flex-start' }}>
           <div style={{ width: '100%' }}>
             <div style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: '0.2rem' }}>
-              {product.category?.replace(' Collection', '')}
+              {product.category === 'Gift'
+                ? `GIFT FOR ${(product.giftFor === 'Him' ? 'MEN' : product.giftFor === 'Her' ? 'WOMEN' : product.giftFor || 'UNISEX').toUpperCase()}`
+                : product.category?.replace(' Collection', '')}
             </div>
             <h3 style={{ 
               fontSize: '1rem', 
@@ -153,12 +155,12 @@ export default function ProductCard({ product, delay = 0 }) {
             }}>
               {product.name}
             </h3>
-            {product.subName && (
+            {product.category !== 'Gift' && product.subName && (
               <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginTop: '0.2rem', lineHeight: 1.3 }}>
                 {product.subName}
               </div>
             )}
-            {product.inspiredBy && (
+            {product.category !== 'Gift' && product.inspiredBy && (
               <div style={{ fontSize: '0.65rem', color: 'var(--secondary)', fontStyle: 'italic', marginTop: '0.15rem', letterSpacing: '0.02em' }}>
                 Inspired by {product.inspiredBy}
               </div>
@@ -173,7 +175,7 @@ export default function ProductCard({ product, delay = 0 }) {
             ) : (
               <span style={{ color: '#8B4513', fontWeight: 600, fontSize: '0.95rem' }}>{product.price}</span>
             )}
-            {product.size && (
+            {product.category !== 'Gift' && product.size && (
               <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontWeight: 600, marginLeft: 'auto', borderLeft: '1px solid #eee', paddingLeft: '0.6rem' }} className="label-caps">
                 {['Incense Sticks', 'Dhoop Sticks', 'Sandali', 'Mohak'].includes(product.category)
                   ? `Sets of ${product.size}` 

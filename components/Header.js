@@ -10,7 +10,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [isPerfumeOilOpen, setIsPerfumeOilOpen] = useState(false);
+  const [isMobilePerfumeOilOpen, setIsMobilePerfumeOilOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [hoveredCollection, setHoveredCollection] = useState(null);
@@ -20,20 +20,21 @@ export default function Header() {
   const router = useRouter();
   const profileRef = useRef(null);
   const searchRef = useRef(null);
-  const perfumeOilRef = useRef(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const shopCollections = [
+    { 
+      name: 'PERFUME OIL', 
+      slug: 'perfume-oil',
+      subcategories: [
+        { name: 'HIM', slug: 'him' },
+        { name: 'HER', slug: 'her' },
+        { name: 'UNISEX', slug: 'unisex' },
+      ]
+    },
     { name: 'DIFFUSERS', slug: 'diffusers' },
     { name: 'DHOOP STICKS', slug: 'dhoop-sticks' },
-    { name: 'LUXURY GIFT FRAGRANCES', slug: 'luxury-gift-fragrances' },
-    { name: 'LUXURY GIFT SETS', slug: 'luxury-gift-sets' },
-  ];
-
-  const perfumeOilCategories = [
-    { name: 'HIM', slug: 'him' },
-    { name: 'HER', slug: 'her' },
-    { name: 'UNISEX', slug: 'unisex' },
+    { name: 'GIFTS', slug: 'gift' },
   ];
 
   useEffect(() => {
@@ -51,6 +52,13 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close mobile submenu when Shop is closed
+  useEffect(() => {
+    if (!isShopOpen) {
+      setIsMobilePerfumeOilOpen(false);
+    }
+  }, [isShopOpen]);
+
   // Handle Outside Click for Profile & Menu State for Back Button
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -60,12 +68,9 @@ export default function Header() {
       if (searchRef.current && !searchRef.current.contains(event.target)) {
         setIsSearchOpen(false);
       }
-      if (perfumeOilRef.current && !perfumeOilRef.current.contains(event.target)) {
-        setIsPerfumeOilOpen(false);
-      }
     };
 
-    if (isProfileOpen || isSearchOpen || isPerfumeOilOpen) {
+    if (isProfileOpen || isSearchOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
@@ -80,7 +85,7 @@ export default function Header() {
       document.removeEventListener('mousedown', handleClickOutside);
       document.body.classList.remove('menu-active');
     };
-  }, [isProfileOpen, isMenuOpen, isSearchOpen, isPerfumeOilOpen]);
+  }, [isProfileOpen, isMenuOpen, isSearchOpen]);
 
   const cartCount = cart.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const iconColor = 'var(--foreground)';
@@ -149,42 +154,6 @@ export default function Header() {
           Home
         </Link>
 
-        {/* Perfume Oil Dropdown */}
-        <div
-          className={`nav-dropdown ${isPerfumeOilOpen ? 'active' : ''}`}
-          ref={perfumeOilRef}
-          onMouseEnter={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsPerfumeOilOpen(true); }}
-          onMouseLeave={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsPerfumeOilOpen(false); }}
-        >
-          <div
-            className={`nav-link-item ${perfumeOilCategories.some(cat => pathname === `/${cat.slug}`) ? 'active' : ''}`}
-            style={{
-              color: perfumeOilCategories.some(cat => pathname === `/${cat.slug}`) ? 'var(--primary)' : ''
-            }}
-            onClick={() => { if (typeof window !== 'undefined' && window.innerWidth <= 768) setIsPerfumeOilOpen(!isPerfumeOilOpen); }}
-          >
-            <span>Perfume Oil</span>
-            <span className="material-icons" style={{ fontSize: '18px', transition: 'transform 0.3s', transform: isPerfumeOilOpen ? 'rotate(180deg)' : 'none' }}>expand_more</span>
-          </div>
-
-          <div className="nav-dropdown-content">
-            {perfumeOilCategories.map((cat) => (
-              <Link
-                key={cat.slug}
-                href={`/${cat.slug}`}
-                onClick={() => { setIsPerfumeOilOpen(false); setIsMenuOpen(false); }}
-                className="dropdown-link"
-                style={{ 
-                  color: pathname === `/${cat.slug}` ? 'var(--primary)' : '',
-                  textTransform: 'uppercase'
-                }}
-              >
-                {cat.name}
-              </Link>
-            ))}
-          </div>
-        </div>
-
         {/* Shop Dropdown */}
         <div
           className={`nav-dropdown ${isShopOpen ? 'active' : ''}`}
@@ -192,9 +161,9 @@ export default function Header() {
           onMouseLeave={() => { if (typeof window !== 'undefined' && window.innerWidth > 768) setIsShopOpen(false); }}
         >
           <div
-            className={`nav-link-item ${shopCollections.some(col => !col.isHeader && pathname === `/${col.slug}`) ? 'active' : ''}`}
+            className={`nav-link-item ${shopCollections.some(col => pathname === `/${col.slug}` || (col.subcategories && col.subcategories.some(sub => pathname === `/${sub.slug}`))) ? 'active' : ''}`}
             style={{
-              color: shopCollections.some(col => !col.isHeader && pathname === `/${col.slug}`) ? 'var(--primary)' : ''
+              color: shopCollections.some(col => pathname === `/${col.slug}` || (col.subcategories && col.subcategories.some(sub => pathname === `/${sub.slug}`))) ? 'var(--primary)' : ''
             }}
             onClick={() => { if (typeof window !== 'undefined' && window.innerWidth <= 768) setIsShopOpen(!isShopOpen); }}
           >
@@ -203,20 +172,128 @@ export default function Header() {
           </div>
 
           <div className="nav-dropdown-content">
-            {shopCollections.map((col) => (
-              <Link
-                key={col.slug}
-                href={`/${col.slug}`}
-                onClick={() => { setIsShopOpen(false); setIsMenuOpen(false); }}
-                className="dropdown-link"
-                style={{ 
-                  color: pathname === `/${col.slug}` ? 'var(--primary)' : '',
-                  textTransform: 'uppercase'
-                }}
-              >
-                {col.name}
-              </Link>
-            ))}
+            {shopCollections.map((col) => {
+              if (col.subcategories) {
+                return (
+                  <div key={col.slug} className="dropdown-submenu-container">
+                    {/* Desktop View */}
+                    <div className="desktop-submenu-item">
+                      <div className="dropdown-submenu">
+                        <Link
+                          href={`/${col.slug}`}
+                          onClick={() => { setIsShopOpen(false); setIsMenuOpen(false); }}
+                          className="dropdown-link"
+                          style={{ 
+                            color: pathname === `/${col.slug}` || col.subcategories.some(sub => pathname === `/${sub.slug}`) ? 'var(--primary)' : '',
+                            textTransform: 'uppercase',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            paddingRight: '1.5rem'
+                          }}
+                        >
+                          <span>{col.name}</span>
+                          <span className="material-icons submenu-arrow" style={{ fontSize: '16px' }}>chevron_right</span>
+                        </Link>
+                        <div className="dropdown-submenu-content">
+                          {col.subcategories.map((sub) => (
+                            <Link
+                              key={sub.slug}
+                              href={`/${sub.slug}`}
+                              onClick={() => { setIsShopOpen(false); setIsMenuOpen(false); }}
+                              className="dropdown-link"
+                              style={{ 
+                                color: pathname === `/${sub.slug}` ? 'var(--primary)' : '',
+                                textTransform: 'uppercase'
+                              }}
+                            >
+                              {sub.name}
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Mobile View */}
+                    <div className="mobile-submenu-item">
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', position: 'relative' }}>
+                        <Link
+                          href={`/${col.slug}`}
+                          onClick={() => { setIsShopOpen(false); setIsMenuOpen(false); }}
+                          className="dropdown-link"
+                          style={{ 
+                            color: pathname === `/${col.slug}` || col.subcategories.some(sub => pathname === `/${sub.slug}`) ? 'var(--primary)' : '',
+                            textTransform: 'uppercase',
+                            paddingRight: '3.5rem'
+                          }}
+                        >
+                          {col.name}
+                        </Link>
+                        <span 
+                          className="material-icons" 
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsMobilePerfumeOilOpen(!isMobilePerfumeOilOpen);
+                          }}
+                          style={{ 
+                            position: 'absolute',
+                            right: '2rem',
+                            fontSize: '20px', 
+                            cursor: 'pointer',
+                            color: '#444',
+                            transition: 'transform 0.3s', 
+                            transform: isMobilePerfumeOilOpen ? 'rotate(180deg)' : 'none',
+                            padding: '0.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                        >
+                          expand_more
+                        </span>
+                      </div>
+                      <div className={`mobile-submenu-content ${isMobilePerfumeOilOpen ? 'open' : ''}`} style={{
+                        maxHeight: isMobilePerfumeOilOpen ? '200px' : '0',
+                        overflow: 'hidden',
+                        transition: 'max-height 0.3s ease-in-out',
+                        background: 'rgba(0, 0, 0, 0.04)'
+                      }}>
+                        {col.subcategories.map((sub) => (
+                          <Link
+                            key={sub.slug}
+                            href={`/${sub.slug}`}
+                            onClick={() => { setIsShopOpen(false); setIsMenuOpen(false); }}
+                            className="dropdown-link mobile-sub-link"
+                            style={{ 
+                              color: pathname === `/${sub.slug}` ? 'var(--primary)' : '',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {sub.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                );
+              }
+
+              return (
+                <Link
+                  key={col.slug}
+                  href={`/${col.slug}`}
+                  onClick={() => { setIsShopOpen(false); setIsMenuOpen(false); }}
+                  className="dropdown-link"
+                  style={{ 
+                    color: pathname === `/${col.slug}` ? 'var(--primary)' : '',
+                    textTransform: 'uppercase'
+                  }}
+                >
+                  {col.name}
+                </Link>
+              );
+            })}
           </div>
         </div>
 

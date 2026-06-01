@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { addProduct, getProducts, updateProduct, deleteProduct } from '@/lib/products';
 import Reveal from '@/components/Reveal';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function ChangeProductPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -29,55 +29,28 @@ export default function ChangeProductPage() {
     price: '',
     costPrice: '',
     isOffer: false,
-    category: 'Him Collection',
+    category: 'Him',
     description: '',
-    notes: [], // Changed to array of objects {name, image}
+    notes: [],
     size: '',
     isBestSeller: false,
-    inStock: true
+    inStock: true,
+    giftSize: 1,
+    giftFor: 'Him',
+    giftProducts: []
   });
   const [urlInputs, setUrlInputs] = useState(['']);
   const [editingId, setEditingId] = useState(null);
+  const [giftProductSearch, setGiftProductSearch] = useState('');
   
-  // Packaging state
-  const [packagingData, setPackagingData] = useState({
-    name: '',
-    price: '',
-    enabled: true
-  });
-  const [packagingImageUrl, setPackagingImageUrl] = useState('');
-  const [editingPackId, setEditingPackId] = useState(null);
-  const [packagingList, setPackagingList] = useState([]);
+
   
   // Realms state
   const [realms, setRealms] = useState([]);
   const [editingRealmId, setEditingRealmId] = useState(null);
   const [realmData, setRealmData] = useState({ name: '', img: '', targetType: 'category', categorySlug: 'perfume-oil', productIds: [] });
   
-  // Gift Box Prices state
-  const [giftPrices, setGiftPrices] = useState({ price1: 1499, price2: 2699, price4: 4999, img1: '', img2: '', img4: '' });
-  const [isPricesSaving, setIsPricesSaving] = useState(false);
 
-  const handleSavePrices = async (e) => {
-    e.preventDefault();
-    setIsPricesSaving(true);
-    try {
-      await setDoc(doc(db, "settings", "gift_box_prices"), {
-        price1: Number(giftPrices.price1),
-        price2: Number(giftPrices.price2),
-        price4: Number(giftPrices.price4),
-        img1: giftPrices.img1 || '',
-        img2: giftPrices.img2 || '',
-        img4: giftPrices.img4 || '',
-      });
-      alert("Gift box prices and images updated successfully!");
-    } catch (err) {
-      console.error("Error saving gift box prices:", err);
-      alert("Failed to update.");
-    } finally {
-      setIsPricesSaving(false);
-    }
-  };
 
   // Inventory state
   const [inventory, setInventory] = useState([]);
@@ -87,13 +60,9 @@ export default function ChangeProductPage() {
   const [message, setMessage] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('Checking...');
 
-  const { packagingOptions } = require('@/context/AppContext').useAppContext();
-  
-  useEffect(() => {
-    if (packagingOptions) setPackagingList(packagingOptions);
-  }, [packagingOptions]);
 
-  const categories = ['Him', 'Her', 'Unisex', 'Car Diffuser', 'Home Diffuser', 'Dhoop Sticks', 'Luxury Gift Fragrances'];
+
+  const categories = ['Him', 'Her', 'Unisex', 'Car Diffuser', 'Home Diffuser', 'Dhoop Sticks', 'Gift'];
 
   const addUrlField = () => setUrlInputs([...urlInputs, '']);
   const removeUrlField = (index) => setUrlInputs(urlInputs.filter((_, i) => i !== index));
@@ -171,18 +140,7 @@ export default function ChangeProductPage() {
         setRealms(realmsData);
       });
 
-      // Fetch gift box prices
-      const fetchPrices = async () => {
-        try {
-          const docSnap = await getDoc(doc(db, "settings", "gift_box_prices"));
-          if (docSnap.exists()) {
-            setGiftPrices(docSnap.data());
-          }
-        } catch (e) {
-          console.error("Error fetching gift box prices:", e);
-        }
-      };
-      fetchPrices();
+
 
       return () => {
         unsubscribe();
@@ -234,16 +192,20 @@ export default function ChangeProductPage() {
       price: '',
       costPrice: '',
       isOffer: false,
-      category: 'Him Collection',
+      category: 'Him',
       description: '',
       notes: [],
       size: '',
       isBestSeller: false,
-      inStock: true
+      inStock: true,
+      giftSize: 1,
+      giftFor: 'Him',
+      giftProducts: []
     });
     setUrlInputs(['']);
     setEditingId(null);
     setMessage('');
+    setGiftProductSearch('');
   };
 
   const handleSubmit = async (e) => {
@@ -280,43 +242,7 @@ export default function ChangeProductPage() {
     }
   };
 
-  const handlePackagingSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    const { addPackagingOption, updatePackagingOption } = require('@/lib/packaging');
-    try {
-      const data = {
-        ...packagingData,
-        price: parseInt(packagingData.price),
-        image: packagingImageUrl
-      };
-      if (editingPackId) {
-        await updatePackagingOption(editingPackId, data, null);
-        setMessage('SUCCESS: Packaging updated!');
-      } else {
-        await addPackagingOption(data, null);
-        setMessage('SUCCESS: Packaging added!');
-      }
-      setPackagingData({ name: '', price: '', enabled: true });
-      setPackagingImageUrl('');
-      setEditingPackId(null);
-    } catch (err) {
-      setMessage('ERROR: ' + err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const deletePackaging = async (id) => {
-    if (!confirm('Delete this packaging?')) return;
-    const { deletePackagingOption } = require('@/lib/packaging');
-    try {
-      await deletePackagingOption(id);
-      alert('Deleted');
-    } catch (err) {
-      alert(err.message);
-    }
-  };
 
   const handleEdit = (product) => {
     setEditingId(product.id);
@@ -327,14 +253,19 @@ export default function ChangeProductPage() {
       price: product.price?.toString().replace(/[^\d.]/g, '').replace(/^\.+/, '') || '',
       costPrice: product.costPrice?.toString().replace(/[^\d.]/g, '').replace(/^\.+/, '') || '',
       isOffer: !!product.costPrice,
-      category: product.category || 'Him Collection',
+      category: product.category || 'Him',
       description: product.description || product.desc || '',
       notes: Array.isArray(product.notes) ? product.notes : [],
       size: product.size || '',
       isBestSeller: product.isBestSeller || false,
-      inStock: product.inStock !== false
+      inStock: product.inStock !== false,
+      giftSize: product.giftSize || 1,
+      giftFor: product.giftFor || 'Him',
+      giftProducts: Array.isArray(product.giftProducts) ? product.giftProducts : []
     });
-    setUrlInputs(product.images && product.images.length > 0 ? product.images : ['']);    setActiveTab('add');
+    setUrlInputs(product.images && product.images.length > 0 ? product.images : ['']);
+    setGiftProductSearch('');
+    setActiveTab('add');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -473,22 +404,7 @@ export default function ChangeProductPage() {
           >
             INVENTORY ({inventory.length})
           </button>
-          <button 
-            onClick={() => setActiveTab('packaging')}
-            style={{ 
-              flex: '1 1 150px', 
-              padding: '0.75rem 1rem', 
-              background: activeTab === 'packaging' ? '#fff' : 'transparent', 
-              border: 'none', 
-              borderRadius: '6px', 
-              cursor: 'pointer', 
-              transition: 'all 0.3s',
-              fontSize: '0.65rem'
-            }}
-            className="label-caps"
-          >
-            GIFT PACKAGING
-          </button>
+
           <button 
             onClick={() => setActiveTab('enquiries')}
             style={{ 
@@ -537,22 +453,7 @@ export default function ChangeProductPage() {
           >
             REALMS ({realms.length})
           </button>
-          <button 
-            onClick={() => setActiveTab('gift-prices')}
-            style={{ 
-              flex: '1 1 150px', 
-              padding: '0.75rem 1rem', 
-              background: activeTab === 'gift-prices' ? '#fff' : 'transparent', 
-              border: 'none', 
-              borderRadius: '6px', 
-              cursor: 'pointer', 
-              transition: 'all 0.3s',
-              fontSize: '0.65rem'
-            }}
-            className="label-caps"
-          >
-            GIFT BOX PRICES
-          </button>
+
         </div>
 
         {activeTab === 'add' ? (
@@ -577,16 +478,18 @@ export default function ChangeProductPage() {
                   <input type="text" required value={formData.name || ''} onChange={(e) => setFormData({...formData, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                  <div>
-                    <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Sub Name <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: '0.65rem', color: '#888' }}>(optional)</span></label>
-                    <input type="text" value={formData.subName || ''} onChange={(e) => setFormData({...formData, subName: e.target.value})} placeholder="e.g. Royal Oud" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                {formData.category !== 'Gift' && (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Sub Name <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: '0.65rem', color: '#888' }}>(optional)</span></label>
+                      <input type="text" value={formData.subName || ''} onChange={(e) => setFormData({...formData, subName: e.target.value})} placeholder="e.g. Royal Oud" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Inspired By <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: '0.65rem', color: '#888' }}>(optional)</span></label>
+                      <input type="text" value={formData.inspiredBy || ''} onChange={(e) => setFormData({...formData, inspiredBy: e.target.value})} placeholder="e.g. Creed Aventus" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
                   </div>
-                  <div>
-                    <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Inspired By <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, fontSize: '0.65rem', color: '#888' }}>(optional)</span></label>
-                    <input type="text" value={formData.inspiredBy || ''} onChange={(e) => setFormData({...formData, inspiredBy: e.target.value})} placeholder="e.g. Creed Aventus" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
-                  </div>
-                </div>
+                )}
 
                 <div style={{ background: '#fcfcfc', padding: '1rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
                   <div style={{ display: 'flex', gap: '2rem', marginBottom: '1rem' }}>
@@ -615,54 +518,160 @@ export default function ChangeProductPage() {
                 </div>
 
                 <div style={{ display: 'flex', gap: '1rem' }}>
-
                   <div style={{ flex: 1 }}>
                     <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Category</label>
-                    <select value={formData.category || 'Him Collection'} onChange={(e) => setFormData({...formData, category: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff' }}>
+                    <select value={formData.category || 'Him'} onChange={(e) => setFormData({...formData, category: e.target.value, giftSize: 1, giftFor: 'Him', giftProducts: []})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff' }}>
                       {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
                     </select>
                   </div>
                 </div>
+
+                {/* Gift Set Configuration — visible only when Gift category is selected */}
+                {formData.category === 'Gift' && (
+                  <div style={{ background: 'linear-gradient(135deg, #fdf6ef, #fffaf5)', border: '1px solid #e8d5c0', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid #e8d5c0', paddingBottom: '0.75rem' }}>
+                      <span style={{ fontSize: '1.1rem' }}>🎁</span>
+                      <span className="label-caps" style={{ fontSize: '0.7rem', fontWeight: 700, color: '#8b5e3c' }}>Gift Set Configuration</span>
+                    </div>
+
+                    {/* Gift Size */}
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.75rem', color: '#666' }}>Number of Perfumes in Set</label>
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        {[1, 2, 4].map(size => (
+                          <label key={size} style={{ cursor: 'pointer', padding: '0.6rem 1.25rem', border: `2px solid ${formData.giftSize === size ? '#8b5e3c' : '#ddd'}`, borderRadius: '8px', background: formData.giftSize === size ? '#8b5e3c' : '#fff', color: formData.giftSize === size ? '#fff' : '#555', fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.2s', userSelect: 'none' }}>
+                            <input type="radio" name="giftSize" value={size} checked={formData.giftSize === size} onChange={() => setFormData({...formData, giftSize: size, giftProducts: []})} style={{ display: 'none' }} />
+                            Set of {size}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Gift For */}
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.75rem', color: '#666' }}>Gift For</label>
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        {['Him', 'Her', 'Unisex'].map(opt => (
+                          <label key={opt} style={{ cursor: 'pointer', padding: '0.6rem 1.25rem', border: `2px solid ${formData.giftFor === opt ? '#8b5e3c' : '#ddd'}`, borderRadius: '8px', background: formData.giftFor === opt ? '#8b5e3c' : '#fff', color: formData.giftFor === opt ? '#fff' : '#555', fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.2s', userSelect: 'none' }}>
+                            <input type="radio" name="giftFor" value={opt} checked={formData.giftFor === opt} onChange={() => setFormData({...formData, giftFor: opt})} style={{ display: 'none' }} />
+                            {opt}
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Product Selection */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                        <label className="label-caps" style={{ fontSize: '0.65rem', color: '#666' }}>Select Perfumes for this Gift Set</label>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '20px', background: formData.giftProducts.length >= formData.giftSize ? '#dcfce7' : '#fef3c7', color: formData.giftProducts.length >= formData.giftSize ? '#166534' : '#92400e' }}>
+                          {formData.giftProducts.length} / {formData.giftSize} selected
+                        </span>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Search products by name..."
+                        value={giftProductSearch}
+                        onChange={(e) => setGiftProductSearch(e.target.value)}
+                        style={{ width: '100%', padding: '0.65rem 0.75rem', border: '1px solid #ddd', borderRadius: '8px', marginBottom: '0.5rem', fontSize: '0.85rem', boxSizing: 'border-box' }}
+                      />
+                      <div style={{ maxHeight: '220px', overflowY: 'auto', border: '1px solid #e0e0e0', borderRadius: '8px', background: '#fff' }}>
+                        {inventory
+                          .filter(p => p.category !== 'Gift' && (p.name || '').toLowerCase().includes(giftProductSearch.toLowerCase()))
+                          .map(p => {
+                            const isSelected = formData.giftProducts.some(gp => gp.id === p.id);
+                            const isDisabled = !isSelected && formData.giftProducts.length >= formData.giftSize;
+                            return (
+                              <div
+                                key={p.id}
+                                onClick={() => {
+                                  if (isDisabled) return;
+                                  if (isSelected) {
+                                    setFormData({...formData, giftProducts: formData.giftProducts.filter(gp => gp.id !== p.id)});
+                                  } else {
+                                    setFormData({...formData, giftProducts: [...formData.giftProducts, { id: p.id, name: p.name, image: p.images?.[0] || '', price: p.price }]});
+                                  }
+                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.6rem 0.75rem', borderBottom: '1px solid #f5f5f5', cursor: isDisabled ? 'not-allowed' : 'pointer', opacity: isDisabled ? 0.4 : 1, background: isSelected ? '#f0fdf4' : 'transparent', transition: 'background 0.15s' }}
+                              >
+                                <div style={{ width: '18px', height: '18px', borderRadius: '4px', border: `2px solid ${isSelected ? '#166534' : '#ccc'}`, background: isSelected ? '#166534' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+                                  {isSelected && <span style={{ color: '#fff', fontSize: '11px', lineHeight: 1 }}>✓</span>}
+                                </div>
+                                <img src={p.images?.[0] || 'https://via.placeholder.com/36'} alt="" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} />
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div style={{ fontSize: '0.83rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                                  <div style={{ fontSize: '0.65rem', color: '#999', marginTop: '1px' }}>{p.category} · {p.price}</div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        {inventory.filter(p => p.category !== 'Gift' && (p.name || '').toLowerCase().includes(giftProductSearch.toLowerCase())).length === 0 && (
+                          <p style={{ textAlign: 'center', padding: '2rem', color: '#aaa', fontSize: '0.8rem', margin: 0 }}>No products found.</p>
+                        )}
+                      </div>
+
+                      {/* Selected Products Preview */}
+                      {formData.giftProducts.length > 0 && (
+                        <div style={{ marginTop: '0.75rem' }}>
+                          <label className="label-caps" style={{ fontSize: '0.6rem', color: '#888', display: 'block', marginBottom: '0.5rem' }}>Selected:</label>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            {formData.giftProducts.map(gp => (
+                              <div key={gp.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '20px', padding: '0.25rem 0.6rem 0.25rem 0.4rem', fontSize: '0.75rem' }}>
+                                <img src={gp.image || 'https://via.placeholder.com/20'} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
+                                <span style={{ color: '#166534', fontWeight: 500 }}>{gp.name}</span>
+                                <button type="button" onClick={() => setFormData({...formData, giftProducts: formData.giftProducts.filter(p => p.id !== gp.id)})} style={{ background: 'none', border: 'none', color: '#991b1b', cursor: 'pointer', padding: 0, lineHeight: 1, fontSize: '0.85rem' }}>×</button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Description</label>
                   <textarea required value={formData.description || ''} onChange={(e) => setFormData({...formData, description: e.target.value})} rows={3} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', resize: 'none' }} />
                 </div>
 
-                <div style={{ background: '#fcfcfc', padding: '1.5rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-                    <label className="label-caps" style={{ fontSize: '0.7rem' }}>Fragrance Notes</label>
-                    <button type="button" onClick={addNoteField} style={{ background: 'var(--foreground)', color: 'var(--background)', border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.6rem', cursor: 'pointer' }} className="label-caps">+ Add Note</button>
-                  </div>
-                  
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    {(Array.isArray(formData.notes) ? formData.notes : []).map((note, index) => (
-                      <div key={index} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', background: '#fff', padding: '1rem', border: '1px solid #eee' }}>
-                        <div style={{ flex: 1 }}>
-                          <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Note Name</label>
-                          <input type="text" value={note.name} onChange={(e) => updateNoteField(index, 'name', e.target.value)} placeholder="e.g. Oud" style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)' }} />
+                {formData.category !== 'Gift' && (
+                  <div style={{ background: '#fcfcfc', padding: '1.5rem', border: '1px solid var(--border)', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                      <label className="label-caps" style={{ fontSize: '0.7rem' }}>Fragrance Notes</label>
+                      <button type="button" onClick={addNoteField} style={{ background: 'var(--foreground)', color: 'var(--background)', border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.6rem', cursor: 'pointer' }} className="label-caps">+ Add Note</button>
+                    </div>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      {(Array.isArray(formData.notes) ? formData.notes : []).map((note, index) => (
+                        <div key={index} style={{ display: 'flex', gap: '1rem', alignItems: 'flex-end', background: '#fff', padding: '1rem', border: '1px solid #eee' }}>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Note Name</label>
+                            <input type="text" value={note.name} onChange={(e) => updateNoteField(index, 'name', e.target.value)} placeholder="e.g. Oud" style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)' }} />
+                          </div>
+                          <button type="button" onClick={() => removeNoteField(index)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '0.55rem', cursor: 'pointer', height: '38px', flexShrink: 0 }}>×</button>
                         </div>
-                        <button type="button" onClick={() => removeNoteField(index)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '0.55rem', cursor: 'pointer', height: '38px', flexShrink: 0 }}>×</button>
-                      </div>
-                    ))}
-                    {(!formData.notes || formData.notes.length === 0) && (
-                      <p style={{ fontSize: '0.7rem', color: '#888', textAlign: 'center' }}>No fragrance notes added yet.</p>
-                    )}
+                      ))}
+                      {(!formData.notes || formData.notes.length === 0) && (
+                        <p style={{ fontSize: '0.7rem', color: '#888', textAlign: 'center' }}>No fragrance notes added yet.</p>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
-                <div style={{ width: '150px' }}>
-                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>
-                    {['Incense Sticks', 'Dhoop Sticks'].includes(formData.category) ? 'Quantity (Set of)' : 'Size (ml)'}
-                  </label>
-                  <input 
-                    type="text" 
-                    value={formData.size || ''} 
-                    onChange={(e) => setFormData({...formData, size: e.target.value})} 
-                    placeholder={['Incense Sticks', 'Dhoop Sticks'].includes(formData.category) ? 'e.g. 100' : 'e.g. 100ml'} 
-                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
-                  />
-                </div>
+                {formData.category !== 'Gift' && (
+                  <div style={{ width: '150px' }}>
+                    <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>
+                      {['Incense Sticks', 'Dhoop Sticks'].includes(formData.category) ? 'Quantity (Set of)' : 'Size (ml)'}
+                    </label>
+                    <input 
+                      type="text" 
+                      value={formData.size || ''} 
+                      onChange={(e) => setFormData({...formData, size: e.target.value})} 
+                      placeholder={['Incense Sticks', 'Dhoop Sticks'].includes(formData.category) ? 'e.g. 100' : 'e.g. 100ml'} 
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
+                    />
+                  </div>
+                )}
 
                 <div>
                   <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Product Images (URLs)</label>
@@ -709,57 +718,6 @@ export default function ChangeProductPage() {
                   </button>
                 </div>
               </form>
-            </div>
-          </Reveal>
-        ) : activeTab === 'packaging' ? (
-          <Reveal>
-            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '3rem' }}>
-              <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', marginBottom: '2rem' }}>{editingPackId ? 'Edit Packaging' : 'Add Packaging'}</h1>
-              {message && (
-                <div style={{ padding: '1rem', marginBottom: '2rem', background: message.includes('ERROR') ? '#fee2e2' : '#f0fdf4', color: message.includes('ERROR') ? '#991b1b' : '#166534', fontSize: '0.85rem' }}>
-                  {message}
-                </div>
-              )}
-              <form onSubmit={handlePackagingSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div>
-                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Packaging Name</label>
-                  <input type="text" required value={packagingData.name} onChange={(e) => setPackagingData({...packagingData, name: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
-                </div>
-                <div>
-                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Price (₹)</label>
-                  <input type="number" required value={packagingData.price} onChange={(e) => setPackagingData({...packagingData, price: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
-                </div>
-                <div>
-                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Preview Image URL</label>
-                  <input type="url" placeholder="Paste image link here" value={packagingImageUrl} onChange={(e) => setPackagingImageUrl(e.target.value)} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <input type="checkbox" checked={packagingData.enabled} onChange={(e) => setPackagingData({...packagingData, enabled: e.target.checked})} />
-                  <label className="label-caps" style={{ fontSize: '0.7rem' }}>Enable this option</label>
-                </div>
-                <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                  {editingPackId && <button type="button" onClick={() => { setEditingPackId(null); setPackagingData({ name: '', price: '', enabled: true }); setPackagingImageUrl(''); }} className="label-caps" style={{ flex: '1 1 120px', padding: '1rem', border: '1px solid var(--border)', background: 'none' }}>Cancel</button>}
-                  <button type="submit" className="btn-primary label-caps" style={{ flex: '2 1 200px', padding: '1rem' }} disabled={loading}>
-                    {loading ? 'SAVING...' : (editingPackId ? 'UPDATE PACKAGING' : 'ADD PACKAGING')}
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '1rem' }}>
-              {packagingList.map(pack => (
-                <div key={pack.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: '1rem', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                  <img src={pack.image || 'https://via.placeholder.com/150'} alt="" style={{ width: '100%', height: '140px', objectFit: 'cover', marginBottom: '1rem' }} />
-                  <div>
-                    <h3 className="label-caps" style={{ fontSize: '0.75rem', marginBottom: '0.25rem', lineHeight: 1.3 }}>{pack.name}</h3>
-                    <p style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.9rem' }}>₹{pack.price}</p>
-                  </div>
-                  <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', marginTop: '1rem', flexWrap: 'wrap' }}>
-                    <button onClick={() => { setEditingPackId(pack.id); setPackagingData({ name: pack.name, price: pack.price, enabled: pack.enabled }); setPackagingImageUrl(pack.image || ''); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #000', cursor: 'pointer', paddingBottom: '2px' }}>EDIT</button>
-                    <button onClick={() => deletePackaging(pack.id)} className="label-caps" style={{ fontSize: '0.6rem', border: 'none', background: 'none', borderBottom: '1px solid #991b1b', color: '#991b1b', cursor: 'pointer', paddingBottom: '2px' }}>DELETE</button>
-                  </div>
-                </div>
-              ))}
             </div>
           </Reveal>
         ) : activeTab === 'enquiries' ? (
@@ -1022,98 +980,6 @@ export default function ChangeProductPage() {
                   <p className="label-caps">No curated realms found.</p>
                 </div>
               )}
-            </div>
-          </Reveal>
-        ) : activeTab === 'gift-prices' ? (
-          <Reveal>
-            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', maxWidth: '600px', margin: '0 auto' }}>
-              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.75rem', marginBottom: '1.5rem' }}>Gift Box Prices Configuration</h2>
-              <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', marginBottom: '1.5rem' }}>
-                Set the bundle prices for customer-curated gift boxes. These prices populate the interactive builder page in real time.
-              </p>
-              <form onSubmit={handleSavePrices} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '1rem' }}>
-                  <label className="label-caps" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--primary)' }}>Only 1 Fragrance Box</label>
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 200px' }}>
-                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Price (₹)</label>
-                      <input 
-                        type="number" 
-                        required 
-                        value={giftPrices.price1 || ''} 
-                        onChange={(e) => setGiftPrices({...giftPrices, price1: e.target.value})} 
-                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
-                      />
-                    </div>
-                    <div style={{ flex: '2 1 300px' }}>
-                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Box Image URL</label>
-                      <input 
-                        type="url" 
-                        value={giftPrices.img1 || ''} 
-                        onChange={(e) => setGiftPrices({...giftPrices, img1: e.target.value})} 
-                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
-                        placeholder="e.g. https://..."
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '1rem' }}>
-                  <label className="label-caps" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--primary)' }}>Two Fragrances Box</label>
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 200px' }}>
-                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Price (₹)</label>
-                      <input 
-                        type="number" 
-                        required 
-                        value={giftPrices.price2 || ''} 
-                        onChange={(e) => setGiftPrices({...giftPrices, price2: e.target.value})} 
-                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
-                      />
-                    </div>
-                    <div style={{ flex: '2 1 300px' }}>
-                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Box Image URL</label>
-                      <input 
-                        type="url" 
-                        value={giftPrices.img2 || ''} 
-                        onChange={(e) => setGiftPrices({...giftPrices, img2: e.target.value})} 
-                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
-                        placeholder="e.g. https://..."
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ borderBottom: '1px solid #f0f0f0', paddingBottom: '1.5rem' }}>
-                  <label className="label-caps" style={{ fontSize: '0.75rem', display: 'block', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--primary)' }}>Four Fragrances Box</label>
-                  <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1 1 200px' }}>
-                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Price (₹)</label>
-                      <input 
-                        type="number" 
-                        required 
-                        value={giftPrices.price4 || ''} 
-                        onChange={(e) => setGiftPrices({...giftPrices, price4: e.target.value})} 
-                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
-                      />
-                    </div>
-                    <div style={{ flex: '2 1 300px' }}>
-                      <label style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }} className="label-caps">Box Image URL</label>
-                      <input 
-                        type="url" 
-                        value={giftPrices.img4 || ''} 
-                        onChange={(e) => setGiftPrices({...giftPrices, img4: e.target.value})} 
-                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
-                        placeholder="e.g. https://..."
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <button type="submit" className="btn-primary label-caps" style={{ padding: '1rem', width: '100%' }} disabled={isPricesSaving}>
-                  {isPricesSaving ? 'SAVING...' : 'SAVE CONFIGURATION'}
-                </button>
-              </form>
             </div>
           </Reveal>
         ) : (
