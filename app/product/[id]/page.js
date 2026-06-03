@@ -177,7 +177,7 @@ export default function ProductPage({ params }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
                 <div className="label-caps" style={{ color: 'var(--primary)', letterSpacing: '0.2em', fontSize: '0.7rem' }}>
                   {product.category === 'Gift'
-                    ? `GIFT FOR ${(product.giftFor === 'Him' ? 'MEN' : product.giftFor === 'Her' ? 'WOMEN' : product.giftFor || 'UNISEX').toUpperCase()}`
+                    ? `GIFT SET OF ${product.giftSize || product.giftProducts?.length || 1}`
                     : product.category?.replace(' Collection', '')}
                 </div>
                 {product.isBestSeller && (
@@ -232,11 +232,46 @@ export default function ProductPage({ params }) {
                       : (product.size.toString().toLowerCase().endsWith('ml') ? product.size : `${product.size}ml`)}
                   </div>
                 )}
+                {product.category === 'Gift' && (
+                  <div style={{ marginLeft: 'auto', border: '1px solid var(--border)', padding: '0.4rem 1rem', fontSize: '0.75rem' }} className="label-caps">
+                    Set of {product.giftSize || product.giftProducts?.length || 1}
+                  </div>
+                )}
               </div>
 
               <p style={{ lineHeight: 1.9, marginBottom: '2rem', color: 'var(--muted-foreground)', fontSize: '1.1rem' }}>
                 {product.desc}
               </p>
+
+              {product.category === 'Gift' && Array.isArray(product.giftProducts) && product.giftProducts.length > 0 && (
+                <div style={{ marginBottom: '3rem' }}>
+                  <div className="label-caps" style={{ fontSize: '0.65rem', color: 'var(--primary)', marginBottom: '1.25rem', letterSpacing: '0.1em' }}>
+                    INCLUDED IN THIS SET ({product.giftSize || product.giftProducts.length} ITTARS)
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '1.25rem' }}>
+                    {product.giftProducts.map((item, idx) => (
+                      <Link 
+                        key={item.id || idx} 
+                        href={`/product/${item.id}`}
+                        style={{ textDecoration: 'none', color: 'inherit', display: 'flex', flexDirection: 'column', gap: '0.5rem', cursor: 'pointer', alignItems: 'center' }}
+                      >
+                        <div style={{ width: '100%', aspectRatio: '1', overflow: 'hidden', background: '#f5f5f5', border: '1px solid var(--border)', borderRadius: '4px' }}>
+                          <img 
+                            src={item.image || 'https://via.placeholder.com/150'} 
+                            alt={item.name} 
+                            style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.3s' }} 
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+                            onMouseOut={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                          />
+                        </div>
+                        <div style={{ fontSize: '0.75rem', fontWeight: 500, lineHeight: 1.3, textAlign: 'center', color: 'var(--foreground)' }}>
+                          {item.name}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {product.category !== 'Gift' && product.notes && Array.isArray(product.notes) && product.notes.length > 0 && (
                 <div style={{ marginBottom: '3rem' }}>

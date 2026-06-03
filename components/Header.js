@@ -40,7 +40,7 @@ export default function Header() {
       subcategories: [
         { name: 'HIM', slug: 'gift-him' },
         { name: 'HER', slug: 'gift-her' },
-        { name: 'UNISEX', slug: 'gift-unisex' },
+        { name: 'COUPLE', slug: 'gift-couple' },
       ]
     },
   ];

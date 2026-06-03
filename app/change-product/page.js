@@ -260,7 +260,7 @@ export default function ChangeProductPage() {
       isBestSeller: product.isBestSeller || false,
       inStock: product.inStock !== false,
       giftSize: product.giftSize || 1,
-      giftFor: product.giftFor || 'Him',
+      giftFor: product.giftFor === 'Unisex' ? 'Couple' : product.giftFor || 'Him',
       giftProducts: Array.isArray(product.giftProducts) ? product.giftProducts : []
     });
     setUrlInputs(product.images && product.images.length > 0 ? product.images : ['']);
@@ -551,7 +551,7 @@ export default function ChangeProductPage() {
                     <div>
                       <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.75rem', color: '#666' }}>Gift For</label>
                       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-                        {['Him', 'Her', 'Unisex'].map(opt => (
+                        {['Him', 'Her', 'Couple'].map(opt => (
                           <label key={opt} style={{ cursor: 'pointer', padding: '0.6rem 1.25rem', border: `2px solid ${formData.giftFor === opt ? '#8b5e3c' : '#ddd'}`, borderRadius: '8px', background: formData.giftFor === opt ? '#8b5e3c' : '#fff', color: formData.giftFor === opt ? '#fff' : '#555', fontSize: '0.8rem', fontWeight: 700, transition: 'all 0.2s', userSelect: 'none' }}>
                             <input type="radio" name="giftFor" value={opt} checked={formData.giftFor === opt} onChange={() => setFormData({...formData, giftFor: opt})} style={{ display: 'none' }} />
                             {opt}

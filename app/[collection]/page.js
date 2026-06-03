@@ -76,7 +76,7 @@ const COLLECTION_MAP = {
     category: 'Gift',
     label: 'Gift Collection',
     isSuper: true,
-    subcategories: ['ALL GIFTS', 'HIM', 'HER', 'UNISEX']
+    subcategories: ['ALL GIFTS', 'HIM', 'HER', 'COUPLE']
   },
   'gift-him': {
     title: 'Gifts For Him',
@@ -94,13 +94,21 @@ const COLLECTION_MAP = {
     label: 'Gift Collection',
     giftFor: 'Her'
   },
-  'gift-unisex': {
-    title: 'Unisex Gifts',
-    subtitle: 'Harmonious fragrance sets designed for everyone. Universally loved and curated for distinct impressions.',
+  'gift-couple': {
+    title: 'Couple Gifts',
+    subtitle: 'Harmonious fragrance sets designed for couples. Curated with love for distinct and shared impressions.',
     image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=2000',
     category: 'Gift',
     label: 'Gift Collection',
-    giftFor: 'Unisex'
+    giftFor: 'Couple'
+  },
+  'gift-unisex': {
+    title: 'Couple Gifts',
+    subtitle: 'Harmonious fragrance sets designed for couples. Curated with love for distinct and shared impressions.',
+    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=2000',
+    category: 'Gift',
+    label: 'Gift Collection',
+    giftFor: 'Couple'
   },
   'sandali': {
     title: 'Sandali',
@@ -155,7 +163,12 @@ export default function CollectionPage({ params }) {
 
         // Gift collection: filter by giftFor field
         if (collectionKey === 'gift') {
-          return (p.giftFor || '').toLowerCase() === filter.toLowerCase();
+          const f = filter.toLowerCase();
+          const targetGiftFor = (p.giftFor || '').toLowerCase();
+          if (f === 'couple') {
+            return targetGiftFor === 'couple' || targetGiftFor === 'unisex';
+          }
+          return targetGiftFor === f;
         }
         
         return pCat.includes(filter.toLowerCase().replace(' diffuser', '')); // 'car diffuser' vs 'car', though includes handles it mostly
@@ -164,7 +177,12 @@ export default function CollectionPage({ params }) {
         const matchesCategory = pCat.includes(targetCat) || targetCat.includes(pCat);
         if (!matchesCategory) return false;
         if (config.giftFor) {
-          return (p.giftFor || '').toLowerCase() === config.giftFor.toLowerCase();
+          const targetGiftFor = (p.giftFor || '').toLowerCase();
+          const configGiftFor = config.giftFor.toLowerCase();
+          if (configGiftFor === 'couple') {
+            return targetGiftFor === 'couple' || targetGiftFor === 'unisex';
+          }
+          return targetGiftFor === configGiftFor;
         }
         return true;
       }

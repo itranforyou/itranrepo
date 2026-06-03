@@ -140,7 +140,7 @@ export default function ProductCard({ product, delay = 0 }) {
           <div style={{ width: '100%' }}>
             <div style={{ fontSize: '0.65rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: '0.2rem' }}>
               {product.category === 'Gift'
-                ? `GIFT FOR ${(product.giftFor === 'Him' ? 'MEN' : product.giftFor === 'Her' ? 'WOMEN' : product.giftFor || 'UNISEX').toUpperCase()}`
+                ? `GIFT SET OF ${product.giftSize || product.giftProducts?.length || 1}`
                 : product.category?.replace(' Collection', '')}
             </div>
             <h3 style={{ 
@@ -150,19 +150,23 @@ export default function ProductCard({ product, delay = 0 }) {
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              minHeight: '2.5rem',
               lineHeight: 1.25
             }}>
               {product.name}
             </h3>
-            {product.category !== 'Gift' && product.subName && (
-              <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginTop: '0.2rem', lineHeight: 1.3 }}>
-                {product.subName}
+            {product.category === 'Gift' && Array.isArray(product.giftProducts) && product.giftProducts.length > 0 && (
+              <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginTop: '0.1rem', lineHeight: 1.3, fontStyle: 'italic' }}>
+                Contains: {product.giftProducts.map(gp => gp.name).join(', ')}
               </div>
             )}
             {product.category !== 'Gift' && product.inspiredBy && (
-              <div style={{ fontSize: '0.65rem', color: 'var(--secondary)', fontStyle: 'italic', marginTop: '0.15rem', letterSpacing: '0.02em' }}>
+              <div style={{ fontSize: '0.65rem', color: 'var(--secondary)', fontStyle: 'italic', marginTop: '0.1rem', letterSpacing: '0.02em' }}>
                 Inspired by {product.inspiredBy}
+              </div>
+            )}
+            {product.category !== 'Gift' && product.subName && (
+              <div style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginTop: '0.1rem', lineHeight: 1.3 }}>
+                {product.subName}
               </div>
             )}
           </div>
