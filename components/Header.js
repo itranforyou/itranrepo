@@ -10,7 +10,7 @@ export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
-  const [isMobilePerfumeOilOpen, setIsMobilePerfumeOilOpen] = useState(false);
+  const [openMobileSubmenus, setOpenMobileSubmenus] = useState({});
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deletePassword, setDeletePassword] = useState('');
   const [hoveredCollection, setHoveredCollection] = useState(null);
@@ -34,7 +34,15 @@ export default function Header() {
     },
     { name: 'DIFFUSERS', slug: 'diffusers' },
     { name: 'DHOOP STICKS', slug: 'dhoop-sticks' },
-    { name: 'GIFTS', slug: 'gift' },
+    { 
+      name: 'GIFTS', 
+      slug: 'gift',
+      subcategories: [
+        { name: 'HIM', slug: 'gift-him' },
+        { name: 'HER', slug: 'gift-her' },
+        { name: 'UNISEX', slug: 'gift-unisex' },
+      ]
+    },
   ];
 
   useEffect(() => {
@@ -55,7 +63,7 @@ export default function Header() {
   // Close mobile submenu when Shop is closed
   useEffect(() => {
     if (!isShopOpen) {
-      setIsMobilePerfumeOilOpen(false);
+      setOpenMobileSubmenus({});
     }
   }, [isShopOpen]);
 
@@ -234,7 +242,10 @@ export default function Header() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            setIsMobilePerfumeOilOpen(!isMobilePerfumeOilOpen);
+                            setOpenMobileSubmenus(prev => ({
+                              ...prev,
+                              [col.slug]: !prev[col.slug]
+                            }));
                           }}
                           style={{ 
                             position: 'absolute',
@@ -243,7 +254,7 @@ export default function Header() {
                             cursor: 'pointer',
                             color: '#444',
                             transition: 'transform 0.3s', 
-                            transform: isMobilePerfumeOilOpen ? 'rotate(180deg)' : 'none',
+                            transform: openMobileSubmenus[col.slug] ? 'rotate(180deg)' : 'none',
                             padding: '0.5rem',
                             display: 'flex',
                             alignItems: 'center',
@@ -253,8 +264,8 @@ export default function Header() {
                           expand_more
                         </span>
                       </div>
-                      <div className={`mobile-submenu-content ${isMobilePerfumeOilOpen ? 'open' : ''}`} style={{
-                        maxHeight: isMobilePerfumeOilOpen ? '200px' : '0',
+                      <div className={`mobile-submenu-content ${openMobileSubmenus[col.slug] ? 'open' : ''}`} style={{
+                        maxHeight: openMobileSubmenus[col.slug] ? '200px' : '0',
                         overflow: 'hidden',
                         transition: 'max-height 0.3s ease-in-out',
                         background: 'rgba(0, 0, 0, 0.04)'

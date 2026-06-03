@@ -78,6 +78,30 @@ const COLLECTION_MAP = {
     isSuper: true,
     subcategories: ['ALL GIFTS', 'HIM', 'HER', 'UNISEX']
   },
+  'gift-him': {
+    title: 'Gifts For Him',
+    subtitle: 'Curated fragrance gifts designed for the modern man. Bold, architectural scents wrapped with premium presentation.',
+    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=2000',
+    category: 'Gift',
+    label: 'Gift Collection',
+    giftFor: 'Him'
+  },
+  'gift-her': {
+    title: 'Gifts For Her',
+    subtitle: 'Ethereal and premium fragrance collections for her. A thoughtful gesture of luxury and elegance.',
+    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=2000',
+    category: 'Gift',
+    label: 'Gift Collection',
+    giftFor: 'Her'
+  },
+  'gift-unisex': {
+    title: 'Unisex Gifts',
+    subtitle: 'Harmonious fragrance sets designed for everyone. Universally loved and curated for distinct impressions.',
+    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?auto=format&fit=crop&q=80&w=2000',
+    category: 'Gift',
+    label: 'Gift Collection',
+    giftFor: 'Unisex'
+  },
   'sandali': {
     title: 'Sandali',
     subtitle: 'Hand-rolled sticks of pure devotion. Infuse your space with the timeless aroma of sacred sandalwood and natural resins.',
@@ -137,7 +161,12 @@ export default function CollectionPage({ params }) {
         return pCat.includes(filter.toLowerCase().replace(' diffuser', '')); // 'car diffuser' vs 'car', though includes handles it mostly
       } else {
         const targetCat = config.category.toLowerCase();
-        return pCat.includes(targetCat) || targetCat.includes(pCat);
+        const matchesCategory = pCat.includes(targetCat) || targetCat.includes(pCat);
+        if (!matchesCategory) return false;
+        if (config.giftFor) {
+          return (p.giftFor || '').toLowerCase() === config.giftFor.toLowerCase();
+        }
+        return true;
       }
     });
   }, [products, filter, config, collectionKey]);
