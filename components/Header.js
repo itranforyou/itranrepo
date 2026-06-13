@@ -321,7 +321,7 @@ export default function Header() {
         <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/contact' ? 'var(--primary)' : '' }}>Contact</Link>
         <Link href="/our-story" className={`nav-link ${pathname === '/our-story' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/our-story' ? 'var(--primary)' : '' }}>Our Story</Link>
         <Link href="/blog" className={`nav-link ${pathname?.startsWith('/blog') ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname?.startsWith('/blog') ? 'var(--primary)' : '' }}>Journal</Link>
-        <Link href="/track-order" className={`nav-link ${pathname === '/track-order' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/track-order' ? 'var(--primary)' : '' }}>Track Your Order</Link>
+        <Link href="/track-order" className={`nav-link ${pathname === '/track-order' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/track-order' ? 'var(--primary)' : '' }}>Track Order</Link>
       </nav>
 
       <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>

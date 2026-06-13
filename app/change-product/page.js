@@ -4,12 +4,22 @@ import { useState, useEffect } from 'react';
 import { addProduct, getProducts, updateProduct, deleteProduct } from '@/lib/products';
 import Reveal from '@/components/Reveal';
 import { db } from '@/lib/firebase';
-import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 
 export default function ChangeProductPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [adminCreds, setAdminCreds] = useState({ id: '', pass: '' });
   const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', 'packaging', or 'enquiries'
+
+  // Orders and settings state
+  const [orders, setOrders] = useState([]);
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderFilter, setOrderFilter] = useState('All');
+  const [upiIdSetting, setUpiIdSetting] = useState('itranforyou06@okaxis');
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  const fmtINR = (amount) =>
+    '₹' + Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
   
   // Enquiries state
   const [enquiries, setEnquiries] = useState([]);
@@ -140,12 +150,34 @@ export default function ChangeProductPage() {
         setRealms(realmsData);
       });
 
+      // Real-time listener for orders
+      const qOrders = query(collection(db, 'orders'));
+      const unsubscribeOrders = onSnapshot(qOrders, (snapshot) => {
+        const orderData = snapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        setOrders(orderData);
+      }, (err) => console.error("Error fetching orders:", err));
 
+      // Fetch payment settings
+      const fetchPaymentSettings = async () => {
+        try {
+          const settingsSnap = await getDoc(doc(db, "settings", "payment"));
+          if (settingsSnap.exists() && settingsSnap.data().upiId) {
+            setUpiIdSetting(settingsSnap.data().upiId);
+          }
+        } catch (err) {
+          console.error("Error fetching payment settings:", err);
+        }
+      };
+      fetchPaymentSettings();
 
       return () => {
         unsubscribe();
         unsubscribeContact();
         unsubscribeRealms();
+        unsubscribeOrders();
       };
     }
   }, [isAuthenticated]);
@@ -181,6 +213,39 @@ export default function ChangeProductPage() {
       await deleteDoc(doc(db, 'bulkEnquiries', id));
     } catch (err) {
       alert('Delete failed: ' + err.message);
+    }
+  };
+
+  const updateOrderStatus = async (orderDocId, newStatus) => {
+    try {
+      await updateDoc(doc(db, 'orders', orderDocId), { orderStatus: newStatus });
+      alert('Order status updated successfully');
+    } catch (err) {
+      alert('Failed to update status: ' + err.message);
+    }
+  };
+
+  const deleteOrder = async (orderDocId) => {
+    if (!confirm('Are you sure you want to permanently delete this order?')) return;
+    try {
+      await deleteDoc(doc(db, 'orders', orderDocId));
+      alert('Order deleted successfully');
+    } catch (err) {
+      alert('Failed to delete order: ' + err.message);
+    }
+  };
+
+
+  const handleSavePaymentSettings = async (e) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      await setDoc(doc(db, 'settings', 'payment'), { upiId: upiIdSetting }, { merge: true });
+      alert('UPI ID saved successfully!');
+    } catch (err) {
+      alert('Failed to save settings: ' + err.message);
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -452,6 +517,22 @@ export default function ChangeProductPage() {
             className="label-caps"
           >
             REALMS ({realms.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('orders')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'orders' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            ORDERS ({orders.length})
           </button>
 
         </div>
@@ -980,6 +1061,157 @@ export default function ChangeProductPage() {
                   <p className="label-caps">No curated realms found.</p>
                 </div>
               )}
+            </div>
+          </Reveal>
+        ) : activeTab === 'orders' ? (
+          <Reveal>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+              {/* Payment Settings Card */}
+              <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
+                <h2 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>Payment Settings</h2>
+                <form onSubmit={handleSavePaymentSettings} style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 300px' }}>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem' }}>Global Merchant UPI ID</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={upiIdSetting} 
+                      onChange={(e) => setUpiIdSetting(e.target.value.trim())} 
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
+                      placeholder="e.g. merchant@okaxis" 
+                    />
+                  </div>
+                  <button type="submit" className="btn-primary label-caps" style={{ padding: '0.9rem 2rem' }} disabled={savingSettings}>
+                    {savingSettings ? 'SAVING...' : 'SAVE SETTINGS'}
+                  </button>
+                </form>
+              </div>
+
+              {/* Orders Management */}
+              <div>
+                <h2 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>Manage Orders</h2>
+                
+                {/* Search and Filter */}
+                <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+                  <div style={{ flex: '1 1 300px' }}>
+                    <input 
+                      type="text" 
+                      placeholder="Search by Order ID, UTR Number, or Customer Name..." 
+                      value={orderSearch}
+                      onChange={(e) => setOrderSearch(e.target.value)}
+                      style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem' }} 
+                    />
+                  </div>
+                  <div style={{ flex: '1 1 200px' }}>
+                    <select 
+                      value={orderFilter} 
+                      onChange={(e) => setOrderFilter(e.target.value)}
+                      style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem', background: '#fff' }}
+                    >
+                      <option value="All">All Statuses</option>
+                      <option value="Pending Verification">Pending Verification</option>
+                      <option value="Paid">Paid</option>
+                      <option value="Processing">Processing</option>
+                      <option value="Shipped">Shipped</option>
+                      <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Orders List */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                  {orders
+                    .filter(order => {
+                      const matchesSearch = 
+                        order.orderId?.toLowerCase().includes(orderSearch.toLowerCase()) || 
+                        order.utrNumber?.toLowerCase().includes(orderSearch.toLowerCase()) || 
+                        order.customerDetails?.name?.toLowerCase().includes(orderSearch.toLowerCase());
+                      const matchesFilter = orderFilter === 'All' || order.orderStatus === orderFilter;
+                      return matchesSearch && matchesFilter;
+                    })
+                    .map((order) => {
+                      const orderDateStr = order.orderDate?.seconds 
+                        ? new Date(order.orderDate.seconds * 1000).toLocaleString() 
+                        : (order.orderDate ? new Date(order.orderDate).toLocaleString() : 'Pending');
+
+                      return (
+                        <div key={order.id || order.orderId} style={{ background: '#fff', border: '1px solid var(--border)', padding: 'var(--spacing-gutter)' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid #f0f0f0', paddingBottom: '1rem' }}>
+                            <div>
+                              <h3 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', margin: 0 }}>Order {order.orderId}</h3>
+                              <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', marginTop: '0.25rem' }}>{orderDateStr}</p>
+                            </div>
+                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              <span className="label-caps" style={{ fontSize: '0.65rem', color: '#888' }}>Change Status:</span>
+                              <select 
+                                value={order.orderStatus} 
+                                onChange={(e) => updateOrderStatus(order.id || order.orderId, e.target.value)}
+                                style={{ padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', background: '#fff' }}
+                              >
+                                <option value="Pending Verification">Pending Verification</option>
+                                <option value="Paid">Paid</option>
+                                <option value="Processing">Processing</option>
+                                <option value="Shipped">Shipped</option>
+                                <option value="Delivered">Delivered</option>
+                                <option value="Cancelled">Cancelled</option>
+                              </select>
+                              <button 
+                                onClick={() => deleteOrder(order.id || order.orderId)} 
+                                style={{ padding: '0.5rem', color: '#991b1b', border: 'none', background: 'none', cursor: 'pointer' }} 
+                                className="material-icons"
+                                title="Delete Order"
+                              >
+                                delete_outline
+                              </button>
+
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2rem', marginBottom: '1.5rem' }}>
+                            {/* Customer Details */}
+                            <div>
+                              <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#888' }}>Customer Details</label>
+                              <p style={{ fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>
+                                <strong>{order.customerDetails?.name}</strong><br />
+                                Phone: {order.customerDetails?.phone}<br />
+                                Email: {order.customerDetails?.email}<br />
+                                Address: {order.customerDetails?.address}, {order.customerDetails?.city}, {order.customerDetails?.state} - {order.customerDetails?.zip}
+                              </p>
+                            </div>
+
+                            {/* Transaction Info */}
+                            <div>
+                              <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#888' }}>Transaction Info</label>
+                              <p style={{ fontSize: '0.9rem', margin: 0 }}>
+                                <strong>Payment Method:</strong> {order.paymentMethod}<br />
+                                <strong>UTR Number:</strong> <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{order.utrNumber}</span><br />
+                                <strong>Total Amount:</strong> {fmtINR(order.totalAmount)}
+                              </p>
+                            </div>
+
+                            {/* Products */}
+                            <div>
+                              <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#888' }}>Ordered Products</label>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                {order.orderedProducts?.map((p, pIdx) => (
+                                  <div key={pIdx} style={{ fontSize: '0.85rem' }}>
+                                    • {p.name} <span style={{ color: '#666' }}>x{p.quantity}</span> ({p.price})
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  {orders.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: '5rem', background: '#fff', border: '1px dashed var(--border)' }}>
+                      <p className="label-caps">No orders placed yet.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             </div>
           </Reveal>
         ) : (

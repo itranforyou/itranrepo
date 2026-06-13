@@ -1,19 +1,69 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import Link from 'next/link';
+import { db } from '@/lib/firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
+
+const fmtINR = (amount) =>
+  '₹' + Number(amount).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 
 export default function OrdersPage() {
   const router = useRouter();
-  const { isLoggedIn, loading } = useAppContext();
+  const { isLoggedIn, loading: authLoading, user } = useAppContext();
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
-  // Simulated orders for now
-  const orders = [
-    { id: 'SS-98234', date: 'April 28, 2026', total: 'Rs. 4,398.00', status: 'In Transit', items: ['Oud of Silence', 'Midnight Jasmine'] },
-    { id: 'SS-97112', date: 'March 15, 2026', total: 'Rs. 2,199.00', status: 'Delivered', items: ['Spiritual Mist'] }
-  ];
+  useEffect(() => {
+    if (!isLoggedIn || !user?.uid) {
+      setLoadingOrders(false);
+      return;
+    }
+
+    const q = query(
+      collection(db, 'orders'),
+      where('userId', '==', user.uid)
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const fetchedOrders = snapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id: data.orderId || doc.id,
+          rawDate: data.orderDate?.seconds ? data.orderDate.seconds * 1000 : (data.orderDate ? new Date(data.orderDate).getTime() : 0),
+          date: data.orderDate?.seconds 
+            ? new Date(data.orderDate.seconds * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) 
+            : (data.orderDate ? new Date(data.orderDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'Pending'),
+          total: data.totalAmount,
+          status: data.orderStatus,
+          items: data.orderedProducts?.map(p => p.name) || []
+        };
+      });
+
+      // Sort by date descending
+      fetchedOrders.sort((a, b) => b.rawDate - a.rawDate);
+      setOrders(fetchedOrders);
+      setLoadingOrders(false);
+    }, (error) => {
+      console.error("Error fetching orders:", error);
+      setLoadingOrders(false);
+    });
+
+    return () => unsubscribe();
+  }, [isLoggedIn, user]);
+
+  if (authLoading || loadingOrders) {
+    return (
+      <div style={{ paddingTop: '150px', textAlign: 'center', minHeight: '80vh' }}>
+        <Reveal>
+          <p className="label-caps">Curating your order history...</p>
+        </Reveal>
+      </div>
+    );
+  }
 
   if (!isLoggedIn) {
     return (
@@ -62,12 +112,24 @@ export default function OrdersPage() {
                     <div className="label-caps" style={{ fontSize: '0.65rem', color: '#888', marginBottom: '0.5rem' }}>Status</div>
                     <div style={{ color: order.status === 'Delivered' ? '#166534' : 'var(--primary)', fontWeight: 600 }}>{order.status}</div>
                   </div>
+                  <div>
+                    <div className="label-caps" style={{ fontSize: '0.65rem', color: '#888', marginBottom: '0.5rem' }}>Total</div>
+                    <div>{fmtINR(order.total)}</div>
+                  </div>
                   <div style={{ textAlign: 'right' }}>
                     <Link href={`/track-order?id=${order.id}`} className="btn-primary label-caps" style={{ padding: '0.75rem 1.5rem', fontSize: '0.6rem' }}>TRACK</Link>
                   </div>
                 </div>
               </Reveal>
             ))}
+            {orders.length === 0 && (
+              <Reveal>
+                <div style={{ textAlign: 'center', padding: '4rem', border: '1px dashed var(--border)' }}>
+                  <p style={{ color: 'var(--muted-foreground)' }}>You have not placed any orders yet.</p>
+                  <Link href="/all-products" className="btn-primary label-caps" style={{ marginTop: '2rem', display: 'inline-block' }}>Shop Collections</Link>
+                </div>
+              </Reveal>
+            )}
           </div>
         </div>
       </section>
