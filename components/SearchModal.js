@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
+import { isVideoUrl } from '@/lib/products';
 
 export default function SearchModal() {
   const { isSearchOpen, setIsSearchOpen, setSelectedProduct, products } = useAppContext();
@@ -63,7 +64,11 @@ export default function SearchModal() {
               </div>
               {suggestions.map(p => (
                 <div key={p.id} className="search-result-item" style={{ cursor: 'pointer' }} onClick={() => handleOpenProduct(p)}>
-                  <img src={p.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={p.name} />
+                  {isVideoUrl(p.images?.[0]) ? (
+                    <video src={p.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline autoPlay loop />
+                  ) : (
+                    <img src={p.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={p.name} />
+                  )}
                   <div className="item-info">
                     <h4>{p.name}</h4>
                     <div className="price">{p.price}</div>
@@ -75,7 +80,11 @@ export default function SearchModal() {
             results.length > 0 ? (
               results.map(p => (
                 <div key={p.id} className="search-result-item" style={{ cursor: 'pointer' }} onClick={() => handleOpenProduct(p)}>
-                  <img src={p.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={p.name} />
+                  {isVideoUrl(p.images?.[0]) ? (
+                    <video src={p.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline autoPlay loop />
+                  ) : (
+                    <img src={p.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={p.name} />
+                  )}
                   <div className="item-info">
                     <div style={{ fontSize: '0.6rem', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--muted-foreground)', marginBottom: '2px' }}>{p.category}</div>
                     <h4 style={{ margin: 0, fontSize: '0.95rem' }}>{p.name}</h4>

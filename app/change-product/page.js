@@ -1,20 +1,30 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { addProduct, getProducts, updateProduct, deleteProduct } from '@/lib/products';
+import { addProduct, getProducts, updateProduct, deleteProduct, isVideoUrl } from '@/lib/products';
 import Reveal from '@/components/Reveal';
-import { db } from '@/lib/firebase';
+import { db, auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
 
 export default function ChangeProductPage() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [adminCreds, setAdminCreds] = useState({ id: '', pass: '' });
+  // Firebase Auth state — replaces hardcoded credentials
+  const [adminUser, setAdminUser] = useState(null);      // Firebase User object when verified
+  const [authLoading, setAuthLoading] = useState(true);  // true while onAuthStateChanged resolves
+  const [authError, setAuthError] = useState('');        // login error message
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginLoading, setLoginLoading] = useState(false);
+
   const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', 'packaging', or 'enquiries'
 
   // Orders and settings state
   const [orders, setOrders] = useState([]);
   const [orderSearch, setOrderSearch] = useState('');
   const [orderFilter, setOrderFilter] = useState('All');
+  const [paymentFilter, setPaymentFilter] = useState('All');
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [upiIdSetting, setUpiIdSetting] = useState('itranforyou06@okaxis');
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -97,13 +107,54 @@ export default function ChangeProductPage() {
     setFormData({...formData, notes: newNotes});
   };
 
-  const handleAdminLogin = (e) => {
+  /**
+   * Firebase Auth login — no credentials in source code.
+   * After sign-in, calls /api/admin/verify to confirm the UID
+   * exists in the Firestore `admins` collection with role === 'admin'.
+   */
+  const handleAdminLogin = async (e) => {
     e.preventDefault();
-    if (adminCreds.id === 'admin' && adminCreds.pass === 'ittar@2026') {
-      setIsAuthenticated(true);
-    } else {
-      alert('Invalid Credentials');
+    setAuthError('');
+    setLoginLoading(true);
+    try {
+      // 1. Sign in with Firebase Authentication
+      const credential = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      const idToken = await credential.user.getIdToken();
+
+      // 2. Server-side role verification — secret key never touches the browser
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idToken }),
+      });
+      const data = await res.json();
+
+      if (!data.authorized) {
+        // Not in the admins collection — sign them out immediately
+        await signOut(auth);
+        setAuthError('Access denied. This account is not authorised as admin.');
+      }
+      // If authorized, onAuthStateChanged will set adminUser automatically
+    } catch (err) {
+      // Map Firebase error codes to friendly messages
+      const friendlyErrors = {
+        'auth/invalid-credential': 'Incorrect email or password.',
+        'auth/user-not-found': 'No account found with this email.',
+        'auth/wrong-password': 'Incorrect password.',
+        'auth/invalid-email': 'Please enter a valid email address.',
+        'auth/too-many-requests': 'Too many attempts. Please try again later.',
+      };
+      setAuthError(friendlyErrors[err.code] || 'Login failed. Please try again.');
+    } finally {
+      setLoginLoading(false);
     }
+  };
+
+  const handleAdminLogout = async () => {
+    await signOut(auth);
+    setAdminUser(null);
+    setLoginEmail('');
+    setLoginPassword('');
   };
 
   const fetchInventory = async () => {
@@ -116,71 +167,102 @@ export default function ChangeProductPage() {
     }
   };
 
+  /**
+   * Resolve Firebase Auth session on mount.
+   * onAuthStateChanged fires immediately if a session exists (page refresh)
+   * or after login. We then verify the UID against the `admins` collection.
+   */
   useEffect(() => {
-    if (isAuthenticated) {
-      fetchInventory();
-      
-      // Real-time listener for enquiries
-      const q = query(collection(db, 'bulkEnquiries'), orderBy('createdAt', 'desc'));
-      const unsubscribe = onSnapshot(q, (snapshot) => {
-        const enquiryData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setEnquiries(enquiryData);
-      });
-
-      // Real-time listener for contact enquiries
-      const qContact = query(collection(db, 'contactEnquiries'), orderBy('createdAt', 'desc'));
-      const unsubscribeContact = onSnapshot(qContact, (snapshot) => {
-        const contactData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setContactEnquiries(contactData);
-      });
-
-      // Real-time listener for realms
-      const qRealms = query(collection(db, 'realms'), orderBy('createdAt', 'asc'));
-      const unsubscribeRealms = onSnapshot(qRealms, (snapshot) => {
-        const realmsData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setRealms(realmsData);
-      });
-
-      // Real-time listener for orders
-      const qOrders = query(collection(db, 'orders'));
-      const unsubscribeOrders = onSnapshot(qOrders, (snapshot) => {
-        const orderData = snapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-        setOrders(orderData);
-      }, (err) => console.error("Error fetching orders:", err));
-
-      // Fetch payment settings
-      const fetchPaymentSettings = async () => {
+    const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        // Re-verify role every time the auth state changes
         try {
-          const settingsSnap = await getDoc(doc(db, "settings", "payment"));
-          if (settingsSnap.exists() && settingsSnap.data().upiId) {
-            setUpiIdSetting(settingsSnap.data().upiId);
+          const adminSnap = await getDoc(doc(db, 'admins', firebaseUser.uid));
+          if (adminSnap.exists() && adminSnap.data()?.role === 'admin') {
+            setAdminUser(firebaseUser);
+          } else {
+            // Firebase user exists but is not an admin — sign out
+            await signOut(auth);
+            setAdminUser(null);
           }
-        } catch (err) {
-          console.error("Error fetching payment settings:", err);
+        } catch {
+          setAdminUser(null);
         }
-      };
-      fetchPaymentSettings();
+      } else {
+        setAdminUser(null);
+      }
+      setAuthLoading(false);
+    });
 
-      return () => {
-        unsubscribe();
-        unsubscribeContact();
-        unsubscribeRealms();
-        unsubscribeOrders();
-      };
-    }
-  }, [isAuthenticated]);
+    return () => unsubscribeAuth();
+  }, []);
+
+  // Load all admin data once the verified admin session is established
+  useEffect(() => {
+    if (!adminUser) return;
+
+    fetchInventory();
+
+    // Real-time listener for enquiries
+    const q = query(collection(db, 'bulkEnquiries'), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const enquiryData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setEnquiries(enquiryData);
+    });
+
+    // Real-time listener for contact enquiries
+    const qContact = query(collection(db, 'contactEnquiries'), orderBy('createdAt', 'desc'));
+    const unsubscribeContact = onSnapshot(qContact, (snapshot) => {
+      const contactData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setContactEnquiries(contactData);
+    });
+
+    // Real-time listener for realms
+    const qRealms = query(collection(db, 'realms'), orderBy('createdAt', 'asc'));
+    const unsubscribeRealms = onSnapshot(qRealms, (snapshot) => {
+      const realmsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setRealms(realmsData);
+    });
+
+    // Real-time listener for orders
+    const qOrders = query(collection(db, 'orders'));
+    const unsubscribeOrders = onSnapshot(qOrders, (snapshot) => {
+      const orderData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setOrders(orderData);
+    }, (err) => console.error('Error fetching orders:', err));
+
+    // Fetch payment settings
+    const fetchPaymentSettings = async () => {
+      try {
+        const settingsSnap = await getDoc(doc(db, 'settings', 'payment'));
+        if (settingsSnap.exists() && settingsSnap.data().upiId) {
+          setUpiIdSetting(settingsSnap.data().upiId);
+        }
+      } catch (err) {
+        console.error('Error fetching payment settings:', err);
+      }
+    };
+    fetchPaymentSettings();
+
+    return () => {
+      unsubscribe();
+      unsubscribeContact();
+      unsubscribeRealms();
+      unsubscribeOrders();
+    };
+  }, [adminUser]);
 
   const updateContactStatus = async (id, newStatus) => {
     try {
@@ -232,6 +314,14 @@ export default function ChangeProductPage() {
       alert('Order deleted successfully');
     } catch (err) {
       alert('Failed to delete order: ' + err.message);
+    }
+  };
+
+  const updatePaymentStatus = async (orderDocId, newPaymentStatus) => {
+    try {
+      await updateDoc(doc(db, 'orders', orderDocId), { paymentStatus: newPaymentStatus });
+    } catch (err) {
+      alert('Failed to update payment status: ' + err.message);
     }
   };
 
@@ -398,7 +488,18 @@ export default function ChangeProductPage() {
     return matchesSearch && matchesFilter;
   });
 
-  if (!isAuthenticated) {
+  // Show a blank screen while Firebase resolves the existing session
+  if (authLoading) {
+    return (
+      <div style={{ paddingTop: '150px', minHeight: '100vh', background: '#faf9f7', display: 'flex', justifyContent: 'center', alignItems: 'flex-start' }}>
+        <div style={{ textAlign: 'center', paddingTop: '4rem' }}>
+          <p className="label-caps" style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)' }}>Verifying session...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!adminUser) {
     return (
       <div style={{ paddingTop: '150px', minHeight: '100vh', background: '#faf9f7', display: 'flex', justifyContent: 'center' }}>
         <div className="container" style={{ maxWidth: '400px' }}>
@@ -407,14 +508,70 @@ export default function ChangeProductPage() {
               <h1 style={{ fontSize: '1.5rem', marginBottom: '2rem', fontFamily: 'var(--font-serif)' }}>Admin Access</h1>
               <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', textAlign: 'left' }}>
                 <div>
-                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem' }}>Admin ID</label>
-                  <input type="text" required value={adminCreds.id} onChange={(e) => setAdminCreds({...adminCreds, id: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem' }}>Email</label>
+                  <input
+                    type="email"
+                    required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }}
+                    autoComplete="email"
+                  />
                 </div>
                 <div>
                   <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem' }}>Password</label>
-                  <input type="password" required value={adminCreds.pass} onChange={(e) => setAdminCreds({...adminCreds, pass: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', paddingRight: '2.5rem' }}
+                      autoComplete="current-password"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '0.5rem',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--muted-foreground)',
+                        padding: '0.25rem'
+                      }}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? (
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                          <line x1="1" y1="1" x2="23" y2="23"></line>
+                        </svg>
+                      ) : (
+                        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
-                <button type="submit" className="btn-primary label-caps" style={{ width: '100%', padding: '1rem' }}>Enter Dashboard</button>
+                {authError && (
+                  <p style={{ fontSize: '0.8rem', color: '#991b1b', margin: 0, padding: '0.75rem', background: '#fef2f2', border: '1px solid #fecaca' }}>
+                    {authError}
+                  </p>
+                )}
+                <button
+                  type="submit"
+                  className="btn-primary label-caps"
+                  style={{ width: '100%', padding: '1rem' }}
+                  disabled={loginLoading}
+                >
+                  {loginLoading ? 'Verifying...' : 'Enter Dashboard'}
+                </button>
               </form>
             </div>
           </Reveal>
@@ -426,7 +583,21 @@ export default function ChangeProductPage() {
   return (
     <div style={{ paddingTop: '120px', minHeight: '100vh', background: '#faf9f7', paddingBottom: '100px' }}>
       <div className="container" style={{ maxWidth: '1000px', padding: '0 var(--spacing-gutter)' }}>
-        
+
+        {/* Admin session bar */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+          <span style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)' }} className="label-caps">
+            {adminUser?.email}
+          </span>
+          <button
+            onClick={handleAdminLogout}
+            className="label-caps"
+            style={{ fontSize: '0.6rem', padding: '0.4rem 1rem', background: 'none', border: '1px solid var(--border)', cursor: 'pointer', borderRadius: '4px' }}
+          >
+            Sign Out
+          </button>
+        </div>
+
         {/* Tab Selection */}
         <div style={{ 
           display: 'flex', 
@@ -678,7 +849,11 @@ export default function ChangeProductPage() {
                                 <div style={{ width: '18px', height: '18px', borderRadius: '4px', border: `2px solid ${isSelected ? '#166534' : '#ccc'}`, background: isSelected ? '#166534' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
                                   {isSelected && <span style={{ color: '#fff', fontSize: '11px', lineHeight: 1 }}>✓</span>}
                                 </div>
-                                <img src={p.images?.[0] || 'https://via.placeholder.com/36'} alt="" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} />
+                                {isVideoUrl(p.images?.[0]) ? (
+                                  <video src={p.images[0]} style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} muted playsInline />
+                                ) : (
+                                  <img src={p.images?.[0] || 'https://via.placeholder.com/36'} alt="" style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} />
+                                )}
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                   <div style={{ fontSize: '0.83rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
                                   <div style={{ fontSize: '0.65rem', color: '#999', marginTop: '1px' }}>{p.category} · {p.price}</div>
@@ -698,7 +873,11 @@ export default function ChangeProductPage() {
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                             {formData.giftProducts.map(gp => (
                               <div key={gp.id} style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '20px', padding: '0.25rem 0.6rem 0.25rem 0.4rem', fontSize: '0.75rem' }}>
-                                <img src={gp.image || 'https://via.placeholder.com/20'} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
+                                {isVideoUrl(gp.image) ? (
+                                  <video src={gp.image} style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} muted playsInline />
+                                ) : (
+                                  <img src={gp.image || 'https://via.placeholder.com/20'} alt="" style={{ width: '20px', height: '20px', borderRadius: '50%', objectFit: 'cover' }} />
+                                )}
                                 <span style={{ color: '#166534', fontWeight: 500 }}>{gp.name}</span>
                                 <button type="button" onClick={() => setFormData({...formData, giftProducts: formData.giftProducts.filter(p => p.id !== gp.id)})} style={{ background: 'none', border: 'none', color: '#991b1b', cursor: 'pointer', padding: 0, lineHeight: 1, fontSize: '0.85rem' }}>×</button>
                               </div>
@@ -755,17 +934,17 @@ export default function ChangeProductPage() {
                 )}
 
                 <div>
-                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Product Images (URLs)</label>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Product Media (Image / Video URLs)</label>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {urlInputs.map((url, index) => (
                       <div key={index} style={{ display: 'flex', gap: '0.5rem' }}>
-                        <input type="url" placeholder="Image URL" value={url || ''} onChange={(e) => updateUrlField(index, e.target.value)} style={{ flex: 1, padding: '0.75rem', border: '1px solid var(--border)' }} />
+                        <input type="url" placeholder="Media URL (Image or Video .mp4, .webm, etc.)" value={url || ''} onChange={(e) => updateUrlField(index, e.target.value)} style={{ flex: 1, padding: '0.75rem', border: '1px solid var(--border)' }} />
                         {urlInputs.length > 1 && (
                           <button type="button" onClick={() => removeUrlField(index)} style={{ background: '#fee2e2', color: '#991b1b', border: 'none', padding: '0.5rem', cursor: 'pointer' }}>×</button>
                         )}
                       </div>
                     ))}
-                    <button type="button" onClick={addUrlField} style={{ background: 'none', border: '1px dashed var(--border)', padding: '0.75rem', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">+ Add Image URL</button>
+                    <button type="button" onClick={addUrlField} style={{ background: 'none', border: '1px dashed var(--border)', padding: '0.75rem', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">+ Add Media URL</button>
                   </div>
                 </div>
 
@@ -1066,55 +1245,78 @@ export default function ChangeProductPage() {
         ) : activeTab === 'orders' ? (
           <Reveal>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
-              {/* Payment Settings Card */}
-              <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
-                <h2 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>Payment Settings</h2>
-                <form onSubmit={handleSavePaymentSettings} style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                  <div style={{ flex: '1 1 300px' }}>
-                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem' }}>Global Merchant UPI ID</label>
-                    <input 
-                      type="text" 
-                      required 
-                      value={upiIdSetting} 
-                      onChange={(e) => setUpiIdSetting(e.target.value.trim())} 
-                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} 
-                      placeholder="e.g. merchant@okaxis" 
-                    />
+
+              {/* Razorpay Dashboard Statistics */}
+              {(() => {
+                const paidOrders = orders.filter(o => o.paymentStatus === 'Paid');
+                const failedOrders = orders.filter(o => o.paymentStatus === 'Failed');
+                const pendingOrders = orders.filter(o => !o.paymentStatus || o.paymentStatus === 'Pending');
+                const totalRevenue = paidOrders.reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+                const today = new Date().toDateString();
+                const todayRevenue = paidOrders
+                  .filter(o => {
+                    const d = o.orderDate?.seconds ? new Date(o.orderDate.seconds * 1000) : (o.orderDate ? new Date(o.orderDate) : null);
+                    return d && d.toDateString() === today;
+                  })
+                  .reduce((sum, o) => sum + (Number(o.totalAmount) || 0), 0);
+                const stats = [
+                  { label: 'Total Orders', value: orders.length, color: '#000' },
+                  { label: 'Paid Orders', value: paidOrders.length, color: '#166534' },
+                  { label: 'Failed Payments', value: failedOrders.length, color: '#991b1b' },
+                  { label: 'Total Revenue', value: fmtINR(totalRevenue), color: 'var(--primary)' },
+                  { label: "Today's Revenue", value: fmtINR(todayRevenue), color: '#1d4ed8' },
+                ];
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '1rem' }}>
+                    {stats.map((stat, i) => (
+                      <div key={i} style={{ background: '#fff', border: '1px solid var(--border)', padding: '1.5rem', textAlign: 'center' }}>
+                        <div className="label-caps" style={{ fontSize: '0.6rem', color: '#888', marginBottom: '0.5rem' }}>{stat.label}</div>
+                        <div style={{ fontSize: '1.5rem', fontWeight: 700, color: stat.color, fontFamily: 'var(--font-serif)' }}>{stat.value}</div>
+                      </div>
+                    ))}
                   </div>
-                  <button type="submit" className="btn-primary label-caps" style={{ padding: '0.9rem 2rem' }} disabled={savingSettings}>
-                    {savingSettings ? 'SAVING...' : 'SAVE SETTINGS'}
-                  </button>
-                </form>
-              </div>
+                );
+              })()}
 
               {/* Orders Management */}
               <div>
                 <h2 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>Manage Orders</h2>
-                
+
                 {/* Search and Filter */}
                 <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
                   <div style={{ flex: '1 1 300px' }}>
-                    <input 
-                      type="text" 
-                      placeholder="Search by Order ID, UTR Number, or Customer Name..." 
+                    <input
+                      type="text"
+                      placeholder="Search by Order ID, Payment ID, Customer Name or Phone..."
                       value={orderSearch}
                       onChange={(e) => setOrderSearch(e.target.value)}
-                      style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem' }} 
+                      style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem' }}
                     />
                   </div>
-                  <div style={{ flex: '1 1 200px' }}>
-                    <select 
-                      value={orderFilter} 
+                  <div style={{ flex: '1 1 180px' }}>
+                    <select
+                      value={orderFilter}
                       onChange={(e) => setOrderFilter(e.target.value)}
                       style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem', background: '#fff' }}
                     >
-                      <option value="All">All Statuses</option>
-                      <option value="Pending Verification">Pending Verification</option>
-                      <option value="Paid">Paid</option>
+                      <option value="All">All Order Statuses</option>
                       <option value="Processing">Processing</option>
                       <option value="Shipped">Shipped</option>
                       <option value="Delivered">Delivered</option>
                       <option value="Cancelled">Cancelled</option>
+                    </select>
+                  </div>
+                  <div style={{ flex: '1 1 180px' }}>
+                    <select
+                      value={paymentFilter}
+                      onChange={(e) => setPaymentFilter(e.target.value)}
+                      style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem', background: '#fff' }}
+                    >
+                      <option value="All">All Payments</option>
+                      <option value="Paid">Paid</option>
+                      <option value="Pending">Pending</option>
+                      <option value="Failed">Failed</option>
+                      <option value="Refunded">Refunded</option>
                     </select>
                   </div>
                 </div>
@@ -1123,85 +1325,181 @@ export default function ChangeProductPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
                   {orders
                     .filter(order => {
-                      const matchesSearch = 
-                        order.orderId?.toLowerCase().includes(orderSearch.toLowerCase()) || 
-                        order.utrNumber?.toLowerCase().includes(orderSearch.toLowerCase()) || 
-                        order.customerDetails?.name?.toLowerCase().includes(orderSearch.toLowerCase());
-                      const matchesFilter = orderFilter === 'All' || order.orderStatus === orderFilter;
-                      return matchesSearch && matchesFilter;
+                      const q = orderSearch.toLowerCase();
+                      const matchesSearch =
+                        order.orderId?.toLowerCase().includes(q) ||
+                        order.razorpayPaymentId?.toLowerCase().includes(q) ||
+                        order.razorpayOrderId?.toLowerCase().includes(q) ||
+                        order.utrNumber?.toLowerCase().includes(q) ||
+                        order.customerDetails?.name?.toLowerCase().includes(q) ||
+                        order.customerDetails?.phone?.toLowerCase().includes(q);
+                      const matchesOrder = orderFilter === 'All' || order.orderStatus === orderFilter;
+                      const matchesPayment = paymentFilter === 'All' || (order.paymentStatus || 'Pending') === paymentFilter;
+                      return matchesSearch && matchesOrder && matchesPayment;
+                    })
+                    .sort((a, b) => {
+                      const da = a.orderDate?.seconds ? a.orderDate.seconds * 1000 : (a.orderDate ? new Date(a.orderDate).getTime() : 0);
+                      const db2 = b.orderDate?.seconds ? b.orderDate.seconds * 1000 : (b.orderDate ? new Date(b.orderDate).getTime() : 0);
+                      return db2 - da;
                     })
                     .map((order) => {
-                      const orderDateStr = order.orderDate?.seconds 
-                        ? new Date(order.orderDate.seconds * 1000).toLocaleString() 
+                      const orderDocId = order.id || order.orderId;
+                      const orderDateStr = order.orderDate?.seconds
+                        ? new Date(order.orderDate.seconds * 1000).toLocaleString()
                         : (order.orderDate ? new Date(order.orderDate).toLocaleString() : 'Pending');
+                      const isRazorpay = order.paymentMethod === 'Razorpay';
+                      const isExpanded = expandedOrderId === orderDocId;
+                      const pStatus = order.paymentStatus || (isRazorpay ? 'Paid' : 'Pending');
+                      const payStatusColors = {
+                        Paid: { bg: '#f0fdf4', color: '#166534', border: '#bbf7d0' },
+                        Pending: { bg: '#fff7ed', color: '#c2410c', border: '#fed7aa' },
+                        Failed: { bg: '#fef2f2', color: '#991b1b', border: '#fecaca' },
+                        Refunded: { bg: '#eff6ff', color: '#1d4ed8', border: '#bfdbfe' },
+                      };
+                      const pColors = payStatusColors[pStatus] || payStatusColors.Pending;
 
                       return (
-                        <div key={order.id || order.orderId} style={{ background: '#fff', border: '1px solid var(--border)', padding: 'var(--spacing-gutter)' }}>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid #f0f0f0', paddingBottom: '1rem' }}>
-                            <div>
-                              <h3 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', margin: 0 }}>Order {order.orderId}</h3>
-                              <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', marginTop: '0.25rem' }}>{orderDateStr}</p>
+                        <div key={orderDocId} style={{ background: '#fff', border: '1px solid var(--border)' }}>
+                          {/* Order Header Row */}
+                          <div style={{ padding: 'var(--spacing-gutter)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                <h3 style={{ fontSize: '1.1rem', fontFamily: 'var(--font-serif)', margin: 0 }}>Order {order.orderId}</h3>
+                                {/* Payment Status Badge */}
+                                <span style={{ fontSize: '0.6rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '20px', background: pColors.bg, color: pColors.color, border: `1px solid ${pColors.border}`, letterSpacing: '0.05em' }} className="label-caps">
+                                  {pStatus}
+                                </span>
+                                {isRazorpay && (
+                                  <span style={{ fontSize: '0.6rem', fontWeight: 700, padding: '0.2rem 0.6rem', borderRadius: '20px', background: '#faf5ff', color: '#6d28d9', border: '1px solid #e9d5ff' }} className="label-caps">
+                                    Razorpay
+                                  </span>
+                                )}
+                              </div>
+                              <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', margin: 0 }}>
+                                {orderDateStr} &nbsp;·&nbsp; <strong>{order.customerDetails?.name}</strong> &nbsp;·&nbsp; {order.customerDetails?.phone}
+                              </p>
+                              <p style={{ fontSize: '0.8rem', margin: 0, color: '#555' }}>
+                                {fmtINR(order.totalAmount)} &nbsp;·&nbsp; {order.orderedProducts?.length || 0} item(s) &nbsp;·&nbsp; Status: <strong>{order.orderStatus}</strong>
+                              </p>
                             </div>
-                            <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                              <span className="label-caps" style={{ fontSize: '0.65rem', color: '#888' }}>Change Status:</span>
-                              <select 
-                                value={order.orderStatus} 
-                                onChange={(e) => updateOrderStatus(order.id || order.orderId, e.target.value)}
-                                style={{ padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', background: '#fff' }}
+
+                            <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                              {/* Order Status Selector */}
+                              <select
+                                value={order.orderStatus}
+                                onChange={(e) => updateOrderStatus(orderDocId, e.target.value)}
+                                style={{ padding: '0.45rem 0.6rem', fontSize: '0.72rem', border: '1px solid var(--border)', background: '#fff', borderRadius: '4px' }}
                               >
-                                <option value="Pending Verification">Pending Verification</option>
-                                <option value="Paid">Paid</option>
                                 <option value="Processing">Processing</option>
                                 <option value="Shipped">Shipped</option>
                                 <option value="Delivered">Delivered</option>
                                 <option value="Cancelled">Cancelled</option>
                               </select>
-                              <button 
-                                onClick={() => deleteOrder(order.id || order.orderId)} 
-                                style={{ padding: '0.5rem', color: '#991b1b', border: 'none', background: 'none', cursor: 'pointer' }} 
+                              {/* Expand / Collapse */}
+                              <button
+                                onClick={() => setExpandedOrderId(isExpanded ? null : orderDocId)}
+                                style={{ padding: '0.45rem 0.75rem', fontSize: '0.7rem', border: '1px solid var(--border)', background: isExpanded ? 'var(--foreground)' : '#fff', color: isExpanded ? 'var(--background)' : 'var(--foreground)', cursor: 'pointer', borderRadius: '4px' }}
+                                className="label-caps"
+                              >
+                                {isExpanded ? 'CLOSE' : 'VIEW'}
+                              </button>
+                              <button
+                                onClick={() => deleteOrder(orderDocId)}
+                                style={{ padding: '0.45rem', color: '#991b1b', border: 'none', background: 'none', cursor: 'pointer' }}
                                 className="material-icons"
                                 title="Delete Order"
                               >
                                 delete_outline
                               </button>
-
                             </div>
                           </div>
 
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2rem', marginBottom: '1.5rem' }}>
-                            {/* Customer Details */}
-                            <div>
-                              <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#888' }}>Customer Details</label>
-                              <p style={{ fontSize: '0.9rem', margin: 0, lineHeight: 1.5 }}>
-                                <strong>{order.customerDetails?.name}</strong><br />
-                                Phone: {order.customerDetails?.phone}<br />
-                                Email: {order.customerDetails?.email}<br />
-                                Address: {order.customerDetails?.address}, {order.customerDetails?.city}, {order.customerDetails?.state} - {order.customerDetails?.zip}
-                              </p>
-                            </div>
+                          {/* Expanded Order Detail */}
+                          {isExpanded && (
+                            <div style={{ borderTop: '1px solid var(--border)', padding: 'var(--spacing-gutter)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
 
-                            {/* Transaction Info */}
-                            <div>
-                              <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#888' }}>Transaction Info</label>
-                              <p style={{ fontSize: '0.9rem', margin: 0 }}>
-                                <strong>Payment Method:</strong> {order.paymentMethod}<br />
-                                <strong>UTR Number:</strong> <span style={{ color: 'var(--primary)', fontWeight: 600 }}>{order.utrNumber}</span><br />
-                                <strong>Total Amount:</strong> {fmtINR(order.totalAmount)}
-                              </p>
-                            </div>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '2rem' }}>
 
-                            {/* Products */}
-                            <div>
-                              <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#888' }}>Ordered Products</label>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                {order.orderedProducts?.map((p, pIdx) => (
-                                  <div key={pIdx} style={{ fontSize: '0.85rem' }}>
-                                    • {p.name} <span style={{ color: '#666' }}>x{p.quantity}</span> ({p.price})
+                                {/* Payment Information */}
+                                <div>
+                                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.75rem', color: '#888', borderBottom: '1px solid #f0f0f0', paddingBottom: '0.4rem' }}>Payment Information</label>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.85rem' }}>
+                                    <div><span style={{ color: '#888' }}>Method:</span> <strong>{order.paymentMethod || '—'}</strong></div>
+                                    {isRazorpay && (
+                                      <>
+                                        <div style={{ wordBreak: 'break-all' }}><span style={{ color: '#888' }}>Razorpay Order ID:</span><br /><span style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.78rem' }}>{order.razorpayOrderId || '—'}</span></div>
+                                        <div style={{ wordBreak: 'break-all' }}><span style={{ color: '#888' }}>Razorpay Payment ID:</span><br /><span style={{ color: 'var(--primary)', fontWeight: 600, fontSize: '0.78rem' }}>{order.razorpayPaymentId || '—'}</span></div>
+                                      </>
+                                    )}
+                                    {!isRazorpay && order.utrNumber && (
+                                      <div><span style={{ color: '#888' }}>UTR/Ref:</span> <strong style={{ color: 'var(--primary)' }}>{order.utrNumber}</strong></div>
+                                    )}
+                                    <div><span style={{ color: '#888' }}>Amount Paid:</span> <strong>{fmtINR(order.totalAmount)}</strong></div>
+                                    <div><span style={{ color: '#888' }}>Payment Date:</span> <strong style={{ fontSize: '0.78rem' }}>{orderDateStr}</strong></div>
+
+                                    {/* Payment Status Selector */}
+                                    <div style={{ marginTop: '0.5rem' }}>
+                                      <span className="label-caps" style={{ fontSize: '0.6rem', color: '#888', display: 'block', marginBottom: '0.35rem' }}>Payment Status</span>
+                                      <select
+                                        value={pStatus}
+                                        onChange={(e) => updatePaymentStatus(orderDocId, e.target.value)}
+                                        style={{ width: '100%', padding: '0.45rem', fontSize: '0.78rem', border: '1px solid var(--border)', background: pColors.bg, color: pColors.color, borderRadius: '4px' }}
+                                      >
+                                        <option value="Pending">Pending</option>
+                                        <option value="Paid">Paid</option>
+                                        <option value="Failed">Failed</option>
+                                        <option value="Refunded">Refunded</option>
+                                      </select>
+                                    </div>
+
+                                    {/* Refund Info (read-only, for future use) */}
+                                    {order.refundId && (
+                                      <div style={{ marginTop: '0.5rem', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '0.75rem', borderRadius: '4px' }}>
+                                        <span className="label-caps" style={{ fontSize: '0.6rem', color: '#1d4ed8', display: 'block', marginBottom: '0.35rem' }}>Refund Details</span>
+                                        <div style={{ fontSize: '0.78rem' }}>
+                                          <div><span style={{ color: '#555' }}>Refund ID:</span> <strong>{order.refundId}</strong></div>
+                                          {order.refundAmount && <div><span style={{ color: '#555' }}>Refund Amount:</span> <strong>{fmtINR(order.refundAmount)}</strong></div>}
+                                          {order.refundDate && <div><span style={{ color: '#555' }}>Refund Date:</span> <strong>{new Date(order.refundDate).toLocaleDateString()}</strong></div>}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
-                                ))}
+                                </div>
+
+                                {/* Customer Information */}
+                                <div>
+                                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.75rem', color: '#888', borderBottom: '1px solid #f0f0f0', paddingBottom: '0.4rem' }}>Customer Information</label>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem', fontSize: '0.85rem' }}>
+                                    <div><span style={{ color: '#888' }}>Name:</span> <strong>{order.customerDetails?.name}</strong></div>
+                                    <div><span style={{ color: '#888' }}>Phone:</span> {order.customerDetails?.phone}</div>
+                                    <div><span style={{ color: '#888' }}>Email:</span> {order.customerDetails?.email}</div>
+                                    <div style={{ lineHeight: 1.5 }}>
+                                      <span style={{ color: '#888' }}>Address:</span><br />
+                                      {order.customerDetails?.address}, {order.customerDetails?.city},<br />
+                                      {order.customerDetails?.state} — {order.customerDetails?.zip}
+                                    </div>
+                                  </div>
+                                </div>
+
+                                {/* Order Information */}
+                                <div>
+                                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.75rem', color: '#888', borderBottom: '1px solid #f0f0f0', paddingBottom: '0.4rem' }}>Order Information</label>
+                                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    {order.orderedProducts?.map((p, pIdx) => (
+                                      <div key={pIdx} style={{ fontSize: '0.85rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f9f9f9', paddingBottom: '0.35rem' }}>
+                                        <span>• {p.name} <span style={{ color: '#888' }}>×{p.quantity}</span></span>
+                                        <span style={{ fontWeight: 600 }}>{p.price}</span>
+                                      </div>
+                                    ))}
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '2px solid #000', paddingTop: '0.5rem', marginTop: '0.25rem' }}>
+                                      <span className="label-caps" style={{ fontSize: '0.7rem', fontWeight: 700 }}>Total</span>
+                                      <span style={{ fontWeight: 700 }}>{fmtINR(order.totalAmount)}</span>
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
+                          )}
                         </div>
                       );
                     })}
@@ -1241,8 +1539,12 @@ export default function ChangeProductPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
               {filteredInventory.map((product) => (
                 <div key={product.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: '1.5rem', display: 'flex', gap: '1.5rem', position: 'relative' }}>
-                  <div style={{ width: '80px', height: '100px', background: '#f5f5f5' }}>
-                    <img src={product.image || product.images?.[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{ width: '80px', height: '100px', background: '#f5f5f5', position: 'relative' }}>
+                    {isVideoUrl(product.image || product.images?.[0]) ? (
+                      <video src={product.image || product.images?.[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline />
+                    ) : (
+                      <img src={product.image || product.images?.[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )}
                   </div>
                   <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                     <div>

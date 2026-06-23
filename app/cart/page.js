@@ -5,8 +5,23 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import { useAppContext } from '@/context/AppContext';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { isVideoUrl } from '@/lib/products';
+
+// Helper to dynamically load the Razorpay script
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (window.Razorpay) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.body.appendChild(script);
+  });
+};
 
 // Robust price parser — handles 'Rs. 1,499', '₹1499', '$185', raw numbers, etc.
 const parsePrice = (val) => {
@@ -41,11 +56,11 @@ export default function Cart() {
     state: '',
     zip: ''
   });
-  const [upiId, setUpiId] = useState('itranforyou06@okaxis');
-  const [utr, setUtr] = useState('');
   const [placedOrderId, setPlacedOrderId] = useState('');
+  const [placedPaymentId, setPlacedPaymentId] = useState('');
+  const [placedOrderAmount, setPlacedOrderAmount] = useState(0);
   const [isPlacing, setIsPlacing] = useState(false);
-  const [copyFeedback, setCopyFeedback] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
 
   // Pre-fill user details if logged in
   useEffect(() => {
@@ -57,18 +72,6 @@ export default function Cart() {
       }));
     }
   }, [user]);
-
-  // Fetch current UPI ID from admin settings when proceeding to payment
-  const fetchUpiId = async () => {
-    try {
-      const snap = await getDoc(doc(db, "settings", "payment"));
-      if (snap.exists() && snap.data().upiId) {
-        setUpiId(snap.data().upiId);
-      }
-    } catch (err) {
-      console.error("Error fetching UPI ID:", err);
-    }
-  };
 
   const updateQuantity = (index, delta) => {
     const newCart = [...cart];
@@ -111,73 +114,125 @@ export default function Cart() {
       alert("Please fill in all details before proceeding.");
       return;
     }
-    fetchUpiId();
     setCheckoutStep('payment');
   };
 
-  const handleCopyUpiId = () => {
-    navigator.clipboard.writeText(upiId);
-    setCopyFeedback(true);
-    setTimeout(() => setCopyFeedback(false), 2000);
-  };
-
-  const handlePlaceOrder = async () => {
-    if (!utr.trim()) {
-      alert("UPI Transaction Reference Number (UTR) is required.");
-      return;
-    }
-    if (utr.trim().length < 12) {
-      alert("UPI Transaction Reference Number (UTR) should be 12 digits.");
-      return;
-    }
+  const initializePayment = async () => {
     setIsPlacing(true);
+    setPaymentError('');
 
     try {
-      const generatedId = `SS-${Math.floor(10000 + Math.random() * 90000)}`;
-      const orderData = {
-        orderId: generatedId,
-        userId: user?.uid || null,
-        customerDetails: {
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error("Failed to load Razorpay SDK. Please check your internet connection.");
+      }
+
+      const res = await fetch('/api/payments/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: subtotal,
+          cart: cart.map(item => ({
+            id: item.id || null,
+            name: item.name || '',
+            price: item.price || '',
+            quantity: item.quantity || 1,
+            category: item.category || '',
+            image: item.image || item.images?.[0] || '',
+            giftOptions: item.giftOptions || null
+          })),
+          customerDetails: details
+        })
+      });
+
+      const orderData = await res.json();
+      if (!res.ok) {
+        throw new Error(orderData.error || "Failed to initiate payment");
+      }
+
+      const { razorpayOrderId, orderId, amount: calculatedAmount, keyId } = orderData;
+
+      const options = {
+        key: keyId,
+        amount: Math.round(calculatedAmount * 100),
+        currency: "INR",
+        name: "Ittar",
+        description: `Order Checkout ${orderId}`,
+        order_id: razorpayOrderId,
+        prefill: {
           name: details.name,
-          phone: details.phone,
           email: details.email,
-          address: details.address,
-          city: details.city,
-          state: details.state,
-          zip: details.zip
+          contact: details.phone,
         },
-        orderedProducts: cart.map(item => ({
-          id: item.id || null,
-          name: item.name || '',
-          price: item.price || '',
-          quantity: item.quantity || 1,
-          category: item.category || '',
-          image: item.image || item.images?.[0] || '',
-          giftOptions: item.giftOptions || null
-        })),
-        totalAmount: subtotal,
-        paymentMethod: 'UPI',
-        utrNumber: utr.trim(),
-        orderDate: new Date().toISOString(),
-        orderStatus: 'Pending Verification'
+        theme: {
+          color: "#000000",
+        },
+        handler: async function (response) {
+          setIsPlacing(true);
+          try {
+            const verifyRes = await fetch('/api/payments/verify-payment', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+                orderId: orderId,
+                userId: user?.uid || null,
+                customerDetails: details,
+                orderedProducts: cart,
+                totalAmount: calculatedAmount
+              })
+            });
+
+            const verifyData = await verifyRes.json();
+            if (!verifyRes.ok) {
+              throw new Error(verifyData.error || "Payment verification failed");
+            }
+
+            setCart([]);
+            localStorage.removeItem('cart');
+
+            setPlacedOrderId(orderId);
+            setPlacedPaymentId(response.razorpay_payment_id);
+            setPlacedOrderAmount(calculatedAmount);
+            setCheckoutStep('success');
+          } catch (verifyErr) {
+            console.error("Verification error:", verifyErr);
+            setPaymentError(verifyErr.message || "Could not verify payment signature.");
+          } finally {
+            setIsPlacing(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsPlacing(false);
+            setPaymentError("Payment was cancelled or closed. You can retry clicking the Pay Now button.");
+          }
+        }
       };
 
-      // Store order in Firestore
-      await setDoc(doc(db, 'orders', generatedId), orderData);
+      const paymentObject = new window.Razorpay(options);
+      
+      paymentObject.on('payment.failed', function (response) {
+        console.error("Payment failed event:", response.error);
+        setIsPlacing(false);
+        setPaymentError(response.error.description || "Payment transaction failed.");
+      });
 
-      // Clear Cart
-      setCart([]);
-      localStorage.removeItem('cart');
-
-      setPlacedOrderId(generatedId);
-      setCheckoutStep('success');
+      paymentObject.open();
     } catch (err) {
-      console.error("Order placement error:", err);
-      alert("Failed to place order. " + err.message);
-    } finally {
+      console.error("Payment initialization error:", err);
+      setPaymentError(err.message || "An unexpected error occurred while initiating payment.");
       setIsPlacing(false);
     }
   };
+
+  useEffect(() => {
+    if (checkoutStep === 'payment') {
+      initializePayment();
+    }
+  }, [checkoutStep]);
 
   // Render Success Page
   if (checkoutStep === 'success') {
@@ -190,8 +245,24 @@ export default function Cart() {
             <p style={{ color: 'var(--muted-foreground)', marginBottom: '1.5rem', fontSize: '1.1rem' }}>
               Thank you for your order. Your Order ID is <strong>{placedOrderId}</strong>.
             </p>
+            <div style={{ background: '#faf9f7', border: '1px solid var(--border)', padding: '1.5rem', borderRadius: '4px', maxWidth: '400px', margin: '0 auto 2.5rem auto', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div>
+                <span className="label-caps" style={{ fontSize: '0.65rem', color: '#888', display: 'block' }}>Payment ID</span>
+                <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{placedPaymentId}</span>
+              </div>
+              <div>
+                <span className="label-caps" style={{ fontSize: '0.65rem', color: '#888', display: 'block' }}>Amount Paid</span>
+                <span style={{ fontWeight: 600, fontSize: '0.95rem' }}>{fmtINR(placedOrderAmount || 0)}</span>
+              </div>
+              <div>
+                <span className="label-caps" style={{ fontSize: '0.65rem', color: '#888', display: 'block' }}>Status</span>
+                <span style={{ color: '#166534', fontWeight: 600, fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <span className="material-icons" style={{ fontSize: '1.1rem' }}>check_circle</span> Payment Successful
+                </span>
+              </div>
+            </div>
             <p style={{ color: 'var(--muted-foreground)', marginBottom: '3rem', fontSize: '0.95rem', lineHeight: 1.6 }}>
-              Your payment is currently <strong>Pending Verification</strong>. We will verify the transaction with your reference number (UTR) and process your order shortly.
+              Your order has been confirmed and is now being processed.
             </p>
             <div style={{ display: 'flex', gap: '1.5rem', justifyContent: 'center' }}>
               <Link href={`/track-order?id=${placedOrderId}`} className="btn-primary label-caps" style={{ padding: '1rem 2rem' }}>Track Order</Link>
@@ -203,9 +274,7 @@ export default function Cart() {
     );
   }
 
-  // QR Code URL based on payee and amount
-  const upiUrl = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Ittar&am=${subtotal}&cu=INR`;
-  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiUrl)}`;
+  // Razorpay integration requires no QR code URL calculation on client side
 
   return (
     <div style={{ paddingTop: '120px', paddingBottom: '8rem', position: 'relative' }}>
@@ -228,7 +297,7 @@ export default function Cart() {
           <h1 style={{ fontSize: '3rem', marginBottom: '4rem' }}>
             {checkoutStep === 'cart' && 'Your Shopping Bag'}
             {checkoutStep === 'details' && 'Shipping Information'}
-            {checkoutStep === 'payment' && 'Complete UPI Payment'}
+            {checkoutStep === 'payment' && 'Complete Payment'}
           </h1>
         </Reveal>
 
@@ -253,8 +322,12 @@ export default function Cart() {
                     <div key={index} className="cart-item-wrapper" style={{ padding: '2rem 0', borderBottom: '1px solid var(--border)' }}>
                       <div className="cart-item-row">
                         <div className="cart-item-info">
-                          <div className="cart-item-image">
-                            <img src={item.image || item.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          <div className="cart-item-image" style={{ position: 'relative', overflow: 'hidden' }}>
+                            {isVideoUrl(item.image || item.images?.[0]) ? (
+                              <video src={item.image || item.images?.[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline autoPlay loop />
+                            ) : (
+                              <img src={item.image || item.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            )}
                           </div>
                           <div className="cart-item-details">
                             <h3 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{item.name}</h3>
@@ -347,57 +420,49 @@ export default function Cart() {
             )}
 
             {checkoutStep === 'payment' && (
-              <div style={{ background: '#fff', padding: '3rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-                <div style={{ textAlign: 'center' }}>
-                  <p style={{ color: 'var(--muted-foreground)', marginBottom: '1.5rem', lineHeight: 1.5 }}>
-                    Open any UPI application (Google Pay, PhonePe, Paytm, BHIM) and scan the QR code below or copy the UPI ID to complete your payment of <strong>{fmtINR(subtotal)}</strong>.
-                  </p>
-                </div>
+              <div style={{ background: '#fff', padding: '3rem', border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: '2rem', textAlign: 'center' }}>
+                <span className="material-icons" style={{ fontSize: '4rem', color: 'var(--primary)', animation: isPlacing ? 'spin 2s linear infinite' : 'none' }}>
+                  {isPlacing ? 'sync' : 'payment'}
+                </span>
+                
+                <h2 style={{ fontSize: '1.75rem', fontFamily: 'var(--font-serif)', margin: 0 }}>
+                  {isPlacing ? 'Initiating Secure Payment...' : 'Payment Authentication'}
+                </h2>
 
-                {/* QR Code */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '1.5rem', border: '1px solid var(--border)', background: '#faf9f7', borderRadius: '4px', maxWidth: '300px', margin: '0 auto' }}>
-                  <img src={qrCodeUrl} alt="UPI QR Code" style={{ width: '200px', height: '200px' }} />
-                  <span className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--muted-foreground)', letterSpacing: '0.1em' }}>Scan QR Code to Pay</span>
-                </div>
+                <p style={{ color: 'var(--muted-foreground)', maxWidth: '400px', margin: '0 auto', lineHeight: 1.6, fontSize: '0.95rem' }}>
+                  {isPlacing 
+                    ? 'Please wait while we connect to Razorpay secure checkout. Do not reload or close this page.'
+                    : 'Click the button below to resume your payment checkout.'
+                  }
+                </p>
 
-                {/* UPI ID Details */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '400px', margin: '0 auto', width: '100%' }}>
-                  <label className="label-caps" style={{ fontSize: '0.65rem', color: '#888' }}>UPI ID</label>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', border: '1px solid var(--border)', padding: '0.75rem 1rem', background: '#fff', justifyContent: 'space-between' }}>
-                    <code style={{ fontSize: '0.95rem', color: 'var(--primary)', letterSpacing: '0.05em' }}>{upiId}</code>
-                    <button onClick={handleCopyUpiId} className="label-caps" style={{ background: 'var(--foreground)', color: 'var(--background)', border: 'none', padding: '0.4rem 0.8rem', fontSize: '0.6rem', cursor: 'pointer' }}>
-                      {copyFeedback ? 'COPIED!' : 'COPY ID'}
-                    </button>
+                {paymentError && (
+                  <div style={{ padding: '1rem', background: '#fee2e2', color: '#991b1b', fontSize: '0.85rem', maxWidth: '400px', margin: '0 auto', width: '100%' }}>
+                    {paymentError}
                   </div>
-                </div>
-
-                {/* UTR Reference Input */}
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: '2rem', maxWidth: '400px', margin: '0 auto', width: '100%' }}>
-                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.75rem', fontWeight: 600 }}>UPI Transaction Reference Number (UTR)</label>
-                  <input 
-                    type="text" 
-                    required
-                    placeholder="Enter 12-digit UTR / Reference number"
-                    value={utr}
-                    onChange={(e) => setUtr(e.target.value.replace(/[^0-9]/g, ''))}
-                    maxLength={12}
-                    style={{ width: '100%', padding: '1rem', border: '1px solid var(--border)', fontSize: '1rem', boxSizing: 'border-box' }} 
-                  />
-                  <p style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)', marginTop: '0.5rem', lineHeight: 1.4 }}>
-                    *You must enter the 12-digit UTR/Reference Number from your payment confirmation screen to submit the order.
-                  </p>
-                </div>
+                )}
 
                 <div style={{ display: 'flex', gap: '1rem', maxWidth: '400px', margin: '1rem auto 0 auto', width: '100%' }}>
-                  <button type="button" onClick={() => setCheckoutStep('details')} style={{ flex: 1, background: 'transparent', border: '1px solid var(--border)', padding: '1rem' }} className="label-caps">Back</button>
                   <button 
                     type="button" 
-                    onClick={handlePlaceOrder}
-                    disabled={!utr.trim() || utr.trim().length < 12 || isPlacing} 
-                    className="btn-primary label-caps" 
-                    style={{ flex: 2, padding: '1rem', opacity: (!utr.trim() || utr.trim().length < 12 || isPlacing) ? 0.5 : 1, cursor: (!utr.trim() || utr.trim().length < 12 || isPlacing) ? 'not-allowed' : 'pointer' }}
+                    onClick={() => {
+                      setPaymentError('');
+                      setCheckoutStep('details');
+                    }} 
+                    style={{ flex: 1, background: 'transparent', border: '1px solid var(--border)', padding: '1rem' }} 
+                    className="label-caps"
+                    disabled={isPlacing}
                   >
-                    {isPlacing ? 'PLACING...' : 'PLACE ORDER'}
+                    Back
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={initializePayment}
+                    disabled={isPlacing} 
+                    className="btn-primary label-caps" 
+                    style={{ flex: 2, padding: '1rem', opacity: isPlacing ? 0.5 : 1, cursor: isPlacing ? 'not-allowed' : 'pointer' }}
+                  >
+                    {isPlacing ? 'PROCESSING...' : 'PAY NOW'}
                   </button>
                 </div>
               </div>
@@ -440,12 +505,12 @@ export default function Cart() {
 
             {checkoutStep === 'payment' && (
               <button 
-                onClick={handlePlaceOrder}
-                disabled={!utr.trim() || utr.trim().length < 12 || isPlacing}
+                onClick={initializePayment}
+                disabled={isPlacing}
                 className="btn-primary label-caps" 
-                style={{ width: '100%', padding: '1.25rem', opacity: (!utr.trim() || utr.trim().length < 12 || isPlacing) ? 0.5 : 1, cursor: (!utr.trim() || utr.trim().length < 12 || isPlacing) ? 'not-allowed' : 'pointer' }}
+                style={{ width: '100%', padding: '1.25rem', opacity: isPlacing ? 0.5 : 1, cursor: isPlacing ? 'not-allowed' : 'pointer' }}
               >
-                {isPlacing ? 'PLACING...' : 'PLACE ORDER'}
+                {isPlacing ? 'PROCESSING...' : 'PAY NOW'}
               </button>
             )}
 

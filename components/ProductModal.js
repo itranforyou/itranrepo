@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
+import { isVideoUrl } from '@/lib/products';
 
 export default function ProductModal() {
   const { selectedProduct, setSelectedProduct, addToCart, products } = useAppContext();
@@ -24,7 +25,13 @@ export default function ProductModal() {
       let interval;
       if (selectedProduct.images && selectedProduct.images.length > 1) {
         interval = setInterval(() => {
-          setImageIndex(prev => (prev + 1) % selectedProduct.images.length);
+          setImageIndex(prev => {
+            const currentMedia = selectedProduct.images[prev];
+            if (isVideoUrl(currentMedia)) {
+              return prev; // Don't advance if the current media is a video
+            }
+            return (prev + 1) % selectedProduct.images.length;
+          });
         }, 4000);
       }
       
@@ -62,12 +69,25 @@ export default function ProductModal() {
         <div className="product-modal-main">
           <div className="product-modal-gallery">
             <div className="modal-gallery-container">
-              <img 
-                src={selectedProduct.images?.[imageIndex] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} 
-                alt={selectedProduct.name} 
-                id="modal-img" 
-                style={{ opacity: 1, transition: 'opacity 0.3s ease' }} 
-              />
+              {isVideoUrl(selectedProduct.images?.[imageIndex]) ? (
+                <video 
+                  src={selectedProduct.images[imageIndex]} 
+                  controls 
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline 
+                  id="modal-img" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', opacity: 1, transition: 'opacity 0.3s ease' }} 
+                />
+              ) : (
+                <img 
+                  src={selectedProduct.images?.[imageIndex] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} 
+                  alt={selectedProduct.name} 
+                  id="modal-img" 
+                  style={{ opacity: 1, transition: 'opacity 0.3s ease' }} 
+                />
+              )}
               <button className="gallery-nav prev" onClick={handlePrev}>
                 <span className="material-icons">chevron_left</span>
               </button>
@@ -230,8 +250,12 @@ export default function ProductModal() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: '3rem', maxWidth: '1000px', margin: '0 auto', justifyContent: 'center' }}>
               {recommendations.map(p => (
                 <div key={p.id} className="rec-item" style={{ textAlign: 'center', cursor: 'pointer', maxWidth: '220px', margin: '0 auto' }} onClick={() => setSelectedProduct(p)}>
-                  <div style={{ aspectRatio: '1', overflow: 'hidden', marginBottom: '1rem', border: '1px solid var(--border)' }}>
-                    <img src={p.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <div style={{ aspectRatio: '1', overflow: 'hidden', marginBottom: '1rem', border: '1px solid var(--border)', position: 'relative' }}>
+                    {isVideoUrl(p.images?.[0]) ? (
+                      <video src={p.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} autoPlay muted loop playsInline />
+                    ) : (
+                      <img src={p.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )}
                   </div>
                   <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '0.9rem', marginBottom: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {p.name}

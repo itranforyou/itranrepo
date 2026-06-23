@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { useAppContext } from '@/context/AppContext';
+import { isVideoUrl } from '@/lib/products';
 
 export default function ProductCard({ product, delay = 0 }) {
   const { addToCart, wishlist, toggleWishlist } = useAppContext();
@@ -63,12 +64,25 @@ export default function ProductCard({ product, delay = 0 }) {
         style={{ display: 'block', cursor: 'pointer', transitionDelay: `${delay}s`, textDecoration: 'none', color: 'inherit' }}
       >
         <div className="img-reveal-wrapper" style={{ aspectRatio: '4/5', marginBottom: '1.25rem', position: 'relative', overflow: 'hidden' }}>
-          <img 
-            src={product.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} 
-            alt={product.name} 
-            className={`img-reveal ${isLoaded ? 'loaded' : ''}`}
-            onLoad={() => setIsLoaded(true)}
-          />
+          {isVideoUrl(product.images?.[0]) ? (
+            <video
+              src={product.images[0]}
+              className={`img-reveal ${isLoaded ? 'loaded' : ''}`}
+              autoPlay
+              muted
+              loop
+              playsInline
+              onLoadedData={() => setIsLoaded(true)}
+              style={{ objectFit: 'cover', width: '100%', height: '100%', position: 'absolute', top: 0, left: 0 }}
+            />
+          ) : (
+            <img 
+              src={product.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} 
+              alt={product.name} 
+              className={`img-reveal ${isLoaded ? 'loaded' : ''}`}
+              onLoad={() => setIsLoaded(true)}
+            />
+          )}
           
           <div style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 2 }}>
             {product.inStock === false && (

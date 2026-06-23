@@ -7,6 +7,7 @@ import { db } from '@/lib/firebase';
 import { collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp } from 'firebase/firestore';
 import Reveal from '@/components/Reveal';
 import Link from 'next/link';
+import { isVideoUrl } from '@/lib/products';
 
 export default function ProductPage({ params }) {
   const { id } = use(params);
@@ -126,11 +127,23 @@ export default function ProductPage({ params }) {
           <div className="product-gallery-sticky" style={{ position: 'sticky', top: '120px', height: 'fit-content' }}>
             <Reveal>
               <div style={{ position: 'relative', aspectRatio: '4/5', background: '#f5f5f5', overflow: 'hidden' }}>
-                <img 
-                  src={mainImage} 
-                  alt={product.name} 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
+                {isVideoUrl(mainImage) ? (
+                  <video 
+                    src={mainImage}
+                    controls
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                ) : (
+                  <img 
+                    src={mainImage} 
+                    alt={product.name} 
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
+                )}
                 
                 {product.images?.length > 1 && (
                   <>
@@ -161,10 +174,20 @@ export default function ProductPage({ params }) {
                       flexShrink: 0, 
                       cursor: 'pointer', 
                       border: i === imageIndex ? '2px solid #000' : '1px solid var(--border)',
-                      opacity: i === imageIndex ? 1 : 0.6
+                      opacity: i === imageIndex ? 1 : 0.6,
+                      position: 'relative'
                     }}
                   >
-                    <img src={img || fallbackImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    {isVideoUrl(img) ? (
+                      <div style={{ width: '100%', height: '100%', position: 'relative', background: '#000' }}>
+                        <video src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline />
+                        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.2)' }}>
+                          <span className="material-icons" style={{ color: '#fff', fontSize: '1.5rem' }}>play_circle</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <img src={img || fallbackImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    )}
                   </div>
                 ))}
               </div>
@@ -519,8 +542,12 @@ export default function ProductPage({ params }) {
             {recommendations.map((p, i) => (
               <Reveal key={p.id} delay={i * 0.1}>
                 <Link href={`/product/${p.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
-                  <div style={{ aspectRatio: '4/5', overflow: 'hidden', marginBottom: '1.5rem', background: '#f5f5f5' }}>
-                    <img src={p.images?.[0] || p.image || fallbackImg} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                  <div style={{ aspectRatio: '4/5', overflow: 'hidden', marginBottom: '1.5rem', background: '#f5f5f5', position: 'relative' }}>
+                    {isVideoUrl(p.images?.[0] || p.image) ? (
+                      <video src={p.images?.[0] || p.image} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                    ) : (
+                      <img src={p.images?.[0] || p.image || fallbackImg} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', transition: 'transform 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }} />
+                    )}
                   </div>
                   <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.1rem', marginBottom: '0.5rem' }}>{p.name}</h4>
                   <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', fontSize: '0.9rem' }}>

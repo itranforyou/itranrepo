@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
+import { isVideoUrl } from '@/lib/products';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -413,7 +414,13 @@ export default function Header() {
                     {filteredProducts.length > 0 ? (
                       filteredProducts.map(p => (
                         <Link key={p.id} href={`/product/${p.id}`} onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <img src={p.images?.[0] || 'https://via.placeholder.com/60'} alt={p.name} style={{ width: '60px', height: '60px', objectFit: 'cover' }} />
+                          <div style={{ width: '60px', height: '60px', background: '#f5f5f5', flexShrink: 0, overflow: 'hidden', position: 'relative' }}>
+                            {isVideoUrl(p.images?.[0]) ? (
+                              <video src={p.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline autoPlay loop />
+                            ) : (
+                              <img src={p.images?.[0] || 'https://via.placeholder.com/60'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            )}
+                          </div>
                           <div>
                             <div style={{ fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.2rem' }}>{p.name}</div>
                             <div style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>₹{p.price}</div>
