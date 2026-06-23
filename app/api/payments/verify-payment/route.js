@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import crypto from "crypto";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
-import razorpay from "@/lib/razorpay";
+import { getRazorpayInstance } from "@/lib/razorpay";
 
 export async function POST(request) {
   try {
@@ -42,6 +42,7 @@ export async function POST(request) {
     }
 
     // 2. Fetch order details from Razorpay to verify the amount paid matches
+    const razorpay = getRazorpayInstance();
     const razorpayOrder = await razorpay.orders.fetch(razorpay_order_id);
     const expectedAmountPaise = Math.round(totalAmount * 100);
 

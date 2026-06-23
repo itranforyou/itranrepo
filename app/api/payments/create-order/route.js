@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import razorpay from "@/lib/razorpay";
+import { getRazorpayInstance } from "@/lib/razorpay";
 
 // Robust price parser — handles 'Rs. 1,499', '₹1499', '$185', raw numbers, etc.
 const parsePrice = (val) => {
@@ -48,6 +48,7 @@ export async function POST(request) {
       receipt: generatedId,
     };
 
+    const razorpay = getRazorpayInstance();
     const razorpayOrder = await razorpay.orders.create(options);
 
     const keyId = process.env.RAZORPAY_KEY_ID;
