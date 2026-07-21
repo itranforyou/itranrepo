@@ -126,25 +126,28 @@ export function AppProvider({ children }) {
   const addToCart = (product, options = null, quantity = 1) => {
     if (!isLoggedIn) { window.location.href = '/login'; return; }
     setCart(prev => {
-      const newCart = [...prev];
-      // Check for same product AND same note preference
-      const existing = newCart.find(item => 
+      // Find index instead of object to update immutably
+      const existingIndex = prev.findIndex(item => 
         item.id === product.id && 
-        item.giftOptions?.selectedNote === options?.selectedNote &&
-        item.giftOptions?.isGift === options?.isGift
+        (item.giftOptions?.selectedNote || null) === (options?.selectedNote || null) &&
+        (item.giftOptions?.isGift || false) === (options?.isGift || false)
       );
       
-      if (existing) {
-        existing.quantity = (existing.quantity || 1) + quantity;
+      if (existingIndex > -1) {
+        const newCart = [...prev];
+        newCart[existingIndex] = {
+          ...newCart[existingIndex],
+          quantity: (newCart[existingIndex].quantity || 1) + quantity
+        };
+        return newCart;
       } else {
-        newCart.push({ 
+        return [...prev, { 
           ...product, 
           quantity: quantity, 
           giftOptions: options,
           cartItemId: Date.now() + Math.random().toString(36).substr(2, 9)
-        });
+        }];
       }
-      return newCart;
     });
     setNotification(`${product.name} added to cart!`);
     setTimeout(() => setNotification(null), 3000);

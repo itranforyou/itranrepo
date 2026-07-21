@@ -5,9 +5,57 @@ import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
 import RealmTicker from '@/components/RealmTicker';
 import { useAppContext } from '@/context/AppContext';
+import { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function Home() {
   const { products } = useAppContext();
+  const [storyData, setStoryData] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'our-story'), (snap) => {
+      if (snap.exists()) {
+        setStoryData(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const defaultStory = {
+    mainHeading: "The Story Behind Itran",
+    subHeading: "At Itran, fragrance is more than just a scent — it’s a feeling, a memory, and a reflection of personality.",
+    description1: "My journey with perfume oils began long before Itran was created. I have always been deeply fascinated by fragrances — the way a single scent can create memories, spark emotions, and leave a lasting impression. Perfume oils stood out because of their richness and depth.",
+    description2: "Everything changed when a close friend visiting from Qatar gifted me a premium perfume oil. The fragrance lasted for hours, attracted compliments everywhere, and sparked a deep curiosity in me — why should such beautiful, luxury fragrances only come from abroad?",
+    ctaText: "Read The Full Story",
+    ctaLink: "/our-story",
+    image: "https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=1000",
+    cards: [
+      {
+        title: "Premium Quality",
+        description: "Artisanal formulation that feels incredibly luxurious, lasts all day, and remains accessible to true fragrance appreciators.",
+        icon: "eco",
+        displayOrder: 1,
+        active: true
+      },
+      {
+        title: "Proudly Handcrafted",
+        description: "We celebrate our country's deep connection, knowledge, and heritage of natural perfume oils and ittars.",
+        icon: "gavel",
+        displayOrder: 2,
+        active: true
+      },
+      {
+        title: "Your Scent Identity",
+        description: "A beautiful fragrance becomes a permanent part of your identity and the memories you leave behind.",
+        icon: "fingerprint",
+        displayOrder: 3,
+        active: true
+      }
+    ]
+  };
+
+  const story = storyData || defaultStory;
   
   const bestSellers = products.filter(p => p.isBestSeller).length > 0 
     ? products.filter(p => p.isBestSeller).slice(0, 4)
@@ -116,53 +164,64 @@ export default function Home() {
             {/* Section Heading */}
             <Reveal style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto 6rem' }}>
               <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1.25rem', letterSpacing: '0.25em', fontSize: '0.75rem' }}>Our Story</div>
-              <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', marginBottom: '2rem' }}>The Story Behind Itran</h2>
-              <p style={{ color: 'var(--foreground)', lineHeight: 1.9, fontSize: '1.2rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic', marginBottom: '2.5rem' }}>
-                At Itran, fragrance is more than just a scent — it’s a feeling, a memory, and a reflection of personality.
-              </p>
+              <h2 style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', marginBottom: '2rem' }}>{story.mainHeading}</h2>
+              {story.subHeading && (
+                <p style={{ color: 'var(--foreground)', lineHeight: 1.9, fontSize: '1.2rem', fontFamily: 'var(--font-serif)', fontStyle: 'italic', marginBottom: '2.5rem' }}>
+                  {story.subHeading}
+                </p>
+              )}
             </Reveal>
 
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '5rem', marginBottom: '7rem' }}>
-              <Reveal direction="right" className="img-reveal-wrapper" style={{ flex: '1 1 420px', maxWidth: '100%', height: '550px', maxHeight: '70vh' }}>
-                <img src="https://images.unsplash.com/photo-1616949755610-8c9bbc08f138?auto=format&fit=crop&q=80&w=1000" alt="Itran Journey" className="img-reveal loaded" />
-              </Reveal>
+              {story.image && (
+                <Reveal direction="right" className="img-reveal-wrapper" style={{ flex: '1 1 420px', maxWidth: '100%', height: '550px', maxHeight: '70vh' }}>
+                  <img src={story.image} alt={story.mainHeading} className="img-reveal loaded" />
+                </Reveal>
+              )}
               <Reveal direction="left" style={{ flex: '1 1 380px', maxWidth: '100%' }}>
                 <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1rem', fontSize: '0.7rem', letterSpacing: '0.2em' }}>The Spark</div>
                 <h3 style={{ fontSize: '2rem', marginBottom: '1.5rem', fontFamily: 'var(--font-serif)' }}>A Fascinating Obsession</h3>
                 <p style={{ color: 'var(--muted-foreground)', lineHeight: 1.9, marginBottom: '1.5rem' }}>
-                  My journey with perfume oils began long before Itran was created. I have always been deeply fascinated by fragrances — the way a single scent can create memories, spark emotions, and leave a lasting impression. Perfume oils stood out because of their richness and depth.
+                  {story.description1}
                 </p>
-                <p style={{ color: 'var(--muted-foreground)', lineHeight: 1.9, marginBottom: '1.5rem' }}>
-                  Everything changed when a close friend visiting from Qatar gifted me a premium perfume oil. The fragrance lasted for hours, attracted compliments everywhere, and sparked a deep curiosity in me — why should such beautiful, luxury fragrances only come from abroad?
-                </p>
+                {story.description2 && (
+                  <p style={{ color: 'var(--muted-foreground)', lineHeight: 1.9, marginBottom: '1.5rem' }}>
+                    {story.description2}
+                  </p>
+                )}
               </Reveal>
             </div>
 
             {/* Philosophy Strip */}
-            <div style={{ background: 'var(--muted)', padding: '5rem', display: 'flex', flexWrap: 'wrap', gap: '4rem', marginBottom: '7rem' }}>
-              <Reveal className="reveal-up" style={{ flex: '1 1 220px', textAlign: 'center' }}>
-                <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>eco</span>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>Premium Quality</h4>
-                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>Artisanal formulation that feels incredibly luxurious, lasts all day, and remains accessible to true fragrance appreciators.</p>
-              </Reveal>
-              <Reveal className="reveal-up" delay={0.1} style={{ flex: '1 1 220px', textAlign: 'center' }}>
-                <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>gavel</span>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>Proudly Handcrafted</h4>
-                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>We celebrate our country&apos;s deep connection, knowledge, and heritage of natural perfume oils and ittars.</p>
-              </Reveal>
-              <Reveal className="reveal-up" delay={0.2} style={{ flex: '1 1 220px', textAlign: 'center' }}>
-                <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>fingerprint</span>
-                <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>Your Scent Identity</h4>
-                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>A beautiful fragrance becomes a permanent part of your identity and the memories you leave behind.</p>
-              </Reveal>
-            </div>
+            {story.cards && story.cards.filter(c => c.active !== false).length > 0 && (
+              <div style={{ background: 'var(--muted)', padding: '5rem', display: 'flex', flexWrap: 'wrap', gap: '4rem', marginBottom: '7rem' }}>
+                {story.cards
+                  .filter(c => c.active !== false)
+                  .sort((a, b) => (Number(a.displayOrder) || 0) - (Number(b.displayOrder) || 0))
+                  .map((card, idx) => (
+                    <Reveal className="reveal-up" delay={idx * 0.1} style={{ flex: '1 1 220px', textAlign: 'center' }} key={idx}>
+                      {card.icon && (
+                        card.icon.startsWith('http') || card.icon.startsWith('/') ? (
+                          <img src={card.icon} alt="" style={{ width: '40px', height: '40px', objectFit: 'contain', marginBottom: '1.25rem', display: 'inline-block' }} />
+                        ) : (
+                          <span className="material-icons" style={{ fontSize: '2.5rem', color: 'var(--primary)', marginBottom: '1.25rem', display: 'block' }}>{card.icon}</span>
+                        )
+                      )}
+                      <h4 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.25rem', marginBottom: '0.75rem' }}>{card.title}</h4>
+                      <p style={{ color: 'var(--muted-foreground)', fontSize: '0.9rem', lineHeight: 1.8 }}>{card.description}</p>
+                    </Reveal>
+                  ))}
+              </div>
+            )}
 
             {/* CTA */}
-            <Reveal className="reveal-up" style={{ textAlign: 'center' }}>
-              <Link href="/our-story" style={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, padding: '1.125rem 3rem', background: 'var(--foreground)', color: 'var(--background)', textDecoration: 'none', fontSize: '0.75rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'var(--font-sans)', transition: 'all 0.3s ease' }}>
-                Read The Full Story <span className="material-icons" style={{ fontSize: '1rem', marginLeft: '0.75rem' }}>arrow_forward</span>
-              </Link>
-            </Reveal>
+            {story.ctaText && (
+              <Reveal className="reveal-up" style={{ textAlign: 'center' }}>
+                <Link href={story.ctaLink || '/our-story'} style={{ display: 'inline-flex', alignItems: 'center', gap: 0.75, padding: '1.125rem 3rem', background: 'var(--foreground)', color: 'var(--background)', textDecoration: 'none', fontSize: '0.75rem', letterSpacing: '0.2em', textTransform: 'uppercase', fontFamily: 'var(--font-sans)', transition: 'all 0.3s ease' }}>
+                  {story.ctaText} <span className="material-icons" style={{ fontSize: '1rem', marginLeft: '0.75rem' }}>arrow_forward</span>
+                </Link>
+              </Reveal>
+            )}
 
           </div>
         </section>

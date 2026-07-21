@@ -3,9 +3,10 @@
 import { useState, useEffect } from 'react';
 import { addProduct, getProducts, updateProduct, deleteProduct, isVideoUrl } from '@/lib/products';
 import Reveal from '@/components/Reveal';
-import { db, auth } from '@/lib/firebase';
+import { db, auth, storage } from '@/lib/firebase';
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 import { collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, addDoc, serverTimestamp, getDoc, setDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 export default function ChangeProductPage() {
   // Firebase Auth state — replaces hardcoded credentials
@@ -17,7 +18,25 @@ export default function ChangeProductPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loginLoading, setLoginLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', 'packaging', or 'enquiries'
+  const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', 'packaging', 'enquiries', or 'our-story'
+
+  // Our Story states
+  const [storyContent, setStoryContent] = useState({
+    mainHeading: '',
+    subHeading: '',
+    description1: '',
+    description2: '',
+    ctaText: '',
+    ctaLink: '',
+    image: '',
+    stats: [],
+    cards: []
+  });
+  const [storySaving, setStorySaving] = useState(false);
+  const [uploadingStoryImage, setUploadingStoryImage] = useState(false);
+  const [uploadingCardIcon, setUploadingCardIcon] = useState({});
+  const [newCard, setNewCard] = useState({ title: '', description: '', icon: 'eco', displayOrder: 1, active: true });
+  const [newStat, setNewStat] = useState({ number: '', label: '', icon: '' });
 
   // Orders and settings state
   const [orders, setOrders] = useState([]);
@@ -256,11 +275,30 @@ export default function ChangeProductPage() {
     };
     fetchPaymentSettings();
 
+    // Real-time listener for Our Story content
+    const unsubscribeStory = onSnapshot(doc(db, 'settings', 'our-story'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setStoryContent({
+          mainHeading: data.mainHeading || '',
+          subHeading: data.subHeading || '',
+          description1: data.description1 || '',
+          description2: data.description2 || '',
+          ctaText: data.ctaText || '',
+          ctaLink: data.ctaLink || '',
+          image: data.image || '',
+          stats: data.stats || [],
+          cards: data.cards || []
+        });
+      }
+    });
+
     return () => {
       unsubscribe();
       unsubscribeContact();
       unsubscribeRealms();
       unsubscribeOrders();
+      unsubscribeStory();
     };
   }, [adminUser]);
 
@@ -361,6 +399,209 @@ export default function ChangeProductPage() {
     setEditingId(null);
     setMessage('');
     setGiftProductSearch('');
+  };
+
+  const optimizeStoryImage = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const max_size = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > max_size) {
+              height *= max_size / width;
+              width = max_size;
+            }
+          } else {
+            if (height > max_size) {
+              width *= max_size / height;
+              height = max_size;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const optimized = new File([blob], file.name.substring(0, file.name.lastIndexOf('.')) + '.jpg', {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              resolve(optimized);
+            } else {
+              resolve(file);
+            }
+          }, 'image/jpeg', 0.85);
+        };
+        img.onerror = () => resolve(file);
+      };
+      reader.onerror = () => resolve(file);
+    });
+  };
+
+  const handleStoryImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+      alert('Error: Only JPG, PNG, and WEBP images are supported.');
+      return;
+    }
+
+    setUploadingStoryImage(true);
+    try {
+      const optimizedFile = await optimizeStoryImage(file);
+      const fileName = `${Date.now()}_ourstory_${optimizedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const storageRef = ref(storage, `our-story/${fileName}`);
+      const uploadResult = await uploadBytes(storageRef, optimizedFile);
+      const url = await getDownloadURL(uploadResult.ref);
+      setStoryContent(prev => ({ ...prev, image: url }));
+    } catch (err) {
+      alert('Failed to upload image: ' + err.message);
+    } finally {
+      setUploadingStoryImage(false);
+    }
+  };
+
+  const handleCardIconUpload = async (e, index) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+      alert('Error: Only JPG, PNG, and WEBP images are supported.');
+      return;
+    }
+
+    setUploadingCardIcon(prev => ({ ...prev, [index]: true }));
+    try {
+      const optimizedFile = await optimizeStoryImage(file);
+      const fileName = `${Date.now()}_cardicon_${optimizedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const storageRef = ref(storage, `our-story/icons/${fileName}`);
+      const uploadResult = await uploadBytes(storageRef, optimizedFile);
+      const url = await getDownloadURL(uploadResult.ref);
+      
+      if (index === 'new') {
+        setNewCard(prev => ({ ...prev, icon: url }));
+      } else {
+        const updatedCards = [...storyContent.cards];
+        updatedCards[index].icon = url;
+        setStoryContent(prev => ({ ...prev, cards: updatedCards }));
+      }
+    } catch (err) {
+      alert('Failed to upload card icon: ' + err.message);
+    } finally {
+      setUploadingCardIcon(prev => ({ ...prev, [index]: false }));
+    }
+  };
+
+  const handleAddCard = () => {
+    if (!newCard.title.trim() || !newCard.description.trim()) {
+      alert('Card title and description are required.');
+      return;
+    }
+    const cards = storyContent.cards || [];
+    const updatedCards = [...cards, { ...newCard, displayOrder: cards.length + 1 }];
+    setStoryContent({ ...storyContent, cards: updatedCards });
+    setNewCard({ title: '', description: '', icon: 'eco', displayOrder: updatedCards.length + 1, active: true });
+  };
+
+  const handleDeleteCard = (index) => {
+    const cards = storyContent.cards || [];
+    const updatedCards = cards.filter((_, idx) => idx !== index).map((c, idx) => ({ ...c, displayOrder: idx + 1 }));
+    setStoryContent({ ...storyContent, cards: updatedCards });
+  };
+
+  const handleToggleCardActive = (index) => {
+    const updatedCards = [...storyContent.cards];
+    updatedCards[index].active = !updatedCards[index].active;
+    setStoryContent({ ...storyContent, cards: updatedCards });
+  };
+
+  const moveCard = (index, direction) => {
+    const cards = storyContent.cards || [];
+    const updatedCards = [...cards];
+    if (direction === 'up' && index > 0) {
+      const temp = updatedCards[index];
+      updatedCards[index] = updatedCards[index - 1];
+      updatedCards[index - 1] = temp;
+    } else if (direction === 'down' && index < updatedCards.length - 1) {
+      const temp = updatedCards[index];
+      updatedCards[index] = updatedCards[index + 1];
+      updatedCards[index + 1] = temp;
+    }
+    updatedCards.forEach((c, idx) => {
+      c.displayOrder = idx + 1;
+    });
+    setStoryContent({ ...storyContent, cards: updatedCards });
+  };
+
+  const handleAddStat = () => {
+    if (!newStat.number.trim() || !newStat.label.trim()) {
+      alert('Statistic number and label are required.');
+      return;
+    }
+    const stats = storyContent.stats || [];
+    setStoryContent({ ...storyContent, stats: [...stats, newStat] });
+    setNewStat({ number: '', label: '', icon: '' });
+  };
+
+  const handleDeleteStat = (index) => {
+    const stats = storyContent.stats || [];
+    setStoryContent({ ...storyContent, stats: stats.filter((_, idx) => idx !== index) });
+  };
+
+  const moveStat = (index, direction) => {
+    const stats = storyContent.stats || [];
+    const updatedStats = [...stats];
+    if (direction === 'up' && index > 0) {
+      const temp = updatedStats[index];
+      updatedStats[index] = updatedStats[index - 1];
+      updatedStats[index - 1] = temp;
+    } else if (direction === 'down' && index < updatedStats.length - 1) {
+      const temp = updatedStats[index];
+      updatedStats[index] = updatedStats[index + 1];
+      updatedStats[index + 1] = temp;
+    }
+    setStoryContent({ ...storyContent, stats: updatedStats });
+  };
+
+  const handleSaveStory = async (e) => {
+    e.preventDefault();
+    if (!storyContent.mainHeading.trim()) {
+      alert('Error: Main Heading is required.');
+      return;
+    }
+    if (!storyContent.description1.trim()) {
+      alert('Error: Description Paragraph 1 is required.');
+      return;
+    }
+    if (!storyContent.image) {
+      alert('Error: Story Image is required.');
+      return;
+    }
+
+    setStorySaving(true);
+    try {
+      await setDoc(doc(db, 'settings', 'our-story'), storyContent);
+      alert('Our Story section updated successfully!');
+    } catch (err) {
+      alert('Failed to save story content: ' + err.message);
+    } finally {
+      setStorySaving(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -704,6 +945,22 @@ export default function ChangeProductPage() {
             className="label-caps"
           >
             ORDERS ({orders.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('our-story')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'our-story' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            OUR STORY
           </button>
 
         </div>
@@ -1510,6 +1767,261 @@ export default function ChangeProductPage() {
                   )}
                 </div>
               </div>
+            </div>
+          </Reveal>
+        ) : activeTab === 'our-story' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', margin: 0 }}>Manage Our Story Section</h1>
+                <div style={{ fontSize: '0.65rem', padding: '0.4rem 0.8rem', background: storySaving ? '#fffbeb' : '#f0fdf4', color: storySaving ? '#b45309' : '#166534', border: '1px solid currentColor', borderRadius: '20px', fontWeight: 600 }}>
+                  {storySaving ? 'SAVING...' : 'SYNCED'}
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveStory} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* SECTION CONTENT */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>1. Section Content</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Main Heading *</label>
+                      <input type="text" required value={storyContent.mainHeading || ''} onChange={(e) => setStoryContent({...storyContent, mainHeading: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Sub Heading (Optional)</label>
+                      <input type="text" value={storyContent.subHeading || ''} onChange={(e) => setStoryContent({...storyContent, subHeading: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Description Paragraph 1 *</label>
+                      <textarea required rows={4} value={storyContent.description1 || ''} onChange={(e) => setStoryContent({...storyContent, description1: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Description Paragraph 2 (Optional)</label>
+                      <textarea rows={4} value={storyContent.description2 || ''} onChange={(e) => setStoryContent({...storyContent, description2: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>CTA Button Text</label>
+                        <input type="text" value={storyContent.ctaText || ''} onChange={(e) => setStoryContent({...storyContent, ctaText: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>CTA Button Link</label>
+                        <input type="text" value={storyContent.ctaLink || ''} onChange={(e) => setStoryContent({...storyContent, ctaLink: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STORY IMAGE */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>2. Story Image *</h2>
+                  
+                  {storyContent.image && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', maxWidth: '300px', marginBottom: '1.5rem' }}>
+                      <img src={storyContent.image} alt="Story Preview" style={{ width: '100%', height: '200px', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                      <button type="button" onClick={() => setStoryContent({...storyContent, image: ''})} style={{ padding: '0.5rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">Remove/Clear Image</button>
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Option A: Paste Image URL Link</label>
+                      <input type="text" value={storyContent.image || ''} onChange={(e) => setStoryContent({...storyContent, image: e.target.value})} placeholder="e.g. https://images.unsplash.com/..." style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginTop: '0.5rem' }}>
+                      <span className="label-caps" style={{ fontSize: '0.65rem', color: '#888' }}>— OR —</span>
+                      <input type="file" accept="image/*" onChange={handleStoryImageUpload} style={{ display: 'none' }} id="story-image-upload" />
+                      <label htmlFor="story-image-upload" style={{ display: 'inline-block', padding: '0.6rem 1.25rem', border: '1px solid var(--border)', background: '#faf9f7', cursor: 'pointer', fontSize: '0.75rem' }} className="label-caps">
+                        {uploadingStoryImage ? 'UPLOADING...' : 'UPLOAD STORY IMAGE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* STORY STATISTICS */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>3. Story Statistics (Optional)</h2>
+                  
+                  {/* Current Stats List */}
+                  {storyContent.stats && storyContent.stats.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                      {storyContent.stats.map((stat, idx) => (
+                        <div key={idx} style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', padding: '0.75rem 1rem', background: '#faf9f7', border: '1px solid var(--border)' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+                            {stat.icon && <span className="material-icons" style={{ fontSize: '1.5rem', color: 'var(--primary)' }}>{stat.icon}</span>}
+                            <div>
+                              <strong style={{ fontSize: '1.1rem', fontFamily: 'var(--font-serif)' }}>{stat.number}</strong>
+                              <span style={{ marginLeft: '0.75rem', fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>{stat.label}</span>
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '0.5rem' }}>
+                            <button type="button" onClick={() => moveStat(idx, 'up')} disabled={idx === 0} style={{ padding: '0.25rem 0.5rem', background: '#fff', border: '1px solid var(--border)', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontSize: '0.8rem' }}>↑</button>
+                            <button type="button" onClick={() => moveStat(idx, 'down')} disabled={idx === storyContent.stats.length - 1} style={{ padding: '0.25rem 0.5rem', background: '#fff', border: '1px solid var(--border)', cursor: idx === storyContent.stats.length - 1 ? 'not-allowed' : 'pointer', fontSize: '0.8rem' }}>↓</button>
+                            <button type="button" onClick={() => handleDeleteStat(idx)} style={{ padding: '0.25rem 0.5rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', cursor: 'pointer', fontSize: '0.8rem' }}>Delete</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ color: 'var(--muted-foreground)', fontSize: '0.85rem', marginBottom: '1.5rem' }}>No statistics added yet.</p>
+                  )}
+
+                  {/* Add Stat Form */}
+                  <div style={{ padding: '1rem', background: '#faf9f7', border: '1px dashed var(--border)', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', alignItems: 'end' }}>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Number (e.g. 1887)</label>
+                      <input type="text" value={newStat.number || ''} onChange={(e) => setNewStat({...newStat, number: e.target.value})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Label (e.g. Year Founded)</label>
+                      <input type="text" value={newStat.label || ''} onChange={(e) => setNewStat({...newStat, label: e.target.value})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Icon (Optional, e.g. calendar_today)</label>
+                      <input type="text" value={newStat.icon || ''} onChange={(e) => setNewStat({...newStat, icon: e.target.value})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
+                    </div>
+                    <button type="button" onClick={handleAddStat} style={{ padding: '0.6rem', background: 'var(--foreground)', color: 'var(--background)', border: 'none', cursor: 'pointer', height: '37px' }} className="label-caps">Add Stat</button>
+                  </div>
+                </div>
+
+                {/* STORY CARDS */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>4. Story Cards (Philosophy Strip)</h2>
+
+                  {/* Current Cards List */}
+                  {storyContent.cards && storyContent.cards.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '2rem' }}>
+                      {storyContent.cards.map((card, idx) => (
+                        <div key={idx} style={{ padding: '1rem', border: '1px solid var(--border)', background: card.active !== false ? '#fff' : '#f5f5f5', display: 'flex', flexWrap: 'wrap', gap: '1.5rem', alignItems: 'flex-start' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'center' }}>
+                            <div style={{ width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#faf9f7', border: '1px solid var(--border)' }}>
+                              {card.icon ? (
+                                card.icon.startsWith('http') || card.icon.startsWith('/') ? (
+                                  <img src={card.icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                                ) : (
+                                  <span className="material-icons" style={{ fontSize: '1.5rem', color: 'var(--primary)' }}>{card.icon}</span>
+                                )
+                              ) : (
+                                <span style={{ fontSize: '0.8rem', color: '#999' }}>None</span>
+                              )}
+                            </div>
+                            <input type="file" accept="image/*" onChange={(e) => handleCardIconUpload(e, idx)} style={{ display: 'none' }} id={`card-icon-upload-${idx}`} />
+                            <label htmlFor={`card-icon-upload-${idx}`} style={{ padding: '0.2rem 0.5rem', border: '1px solid var(--border)', background: '#fff', fontSize: '0.55rem', cursor: 'pointer', textAlign: 'center' }} className="label-caps">
+                              {uploadingCardIcon[idx] ? 'UP...' : 'FILE'}
+                            </label>
+                          </div>
+                          
+                          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <div style={{ flex: 1 }}>
+                                <label className="label-caps" style={{ fontSize: '0.55rem', color: '#888' }}>Card Title</label>
+                                <input type="text" value={card.title || ''} onChange={(e) => {
+                                  const updated = [...storyContent.cards];
+                                  updated[idx].title = e.target.value;
+                                  setStoryContent({...storyContent, cards: updated});
+                                }} style={{ width: '100%', padding: '0.4rem', border: '1px solid var(--border)', fontSize: '0.9rem' }} />
+                              </div>
+                              <div>
+                                <label className="label-caps" style={{ fontSize: '0.55rem', color: '#888' }}>Icon (Name)</label>
+                                <input type="text" value={(card.icon && card.icon.startsWith('http')) ? '' : (card.icon || '')} placeholder="Icon name" onChange={(e) => {
+                                  const updated = [...storyContent.cards];
+                                  updated[idx].icon = e.target.value || 'eco';
+                                  setStoryContent({...storyContent, cards: updated});
+                                }} style={{ width: '120px', padding: '0.4rem', border: '1px solid var(--border)', fontSize: '0.9rem' }} />
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <div style={{ flex: 1 }}>
+                                <label className="label-caps" style={{ fontSize: '0.55rem', color: '#888' }}>— OR — Icon Image URL Link</label>
+                                <input type="text" value={(card.icon && card.icon.startsWith('http')) ? card.icon : ''} placeholder="e.g. https://..." onChange={(e) => {
+                                  const updated = [...storyContent.cards];
+                                  updated[idx].icon = e.target.value;
+                                  setStoryContent({...storyContent, cards: updated});
+                                }} style={{ width: '100%', padding: '0.4rem', border: '1px solid var(--border)', fontSize: '0.85rem' }} />
+                              </div>
+                            </div>
+                            <div>
+                              <label className="label-caps" style={{ fontSize: '0.55rem', color: '#888' }}>Short Description</label>
+                              <textarea rows={2} value={card.description || ''} onChange={(e) => {
+                                const updated = [...storyContent.cards];
+                                updated[idx].description = e.target.value;
+                                setStoryContent({...storyContent, cards: updated});
+                              }} style={{ width: '100%', padding: '0.4rem', border: '1px solid var(--border)', fontSize: '0.85rem', fontFamily: 'inherit' }} />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignSelf: 'stretch', justifyContent: 'space-between' }}>
+                            <span style={{ fontSize: '0.6rem', padding: '0.2rem 0.5rem', borderRadius: '10px', background: card.active !== false ? '#dcfce7' : '#fee2e2', color: card.active !== false ? '#166534' : '#991b1b', alignSelf: 'flex-end', fontWeight: 600 }} className="label-caps">
+                              {card.active !== false ? 'ACTIVE' : 'INACTIVE'}
+                            </span>
+                            <div style={{ display: 'flex', gap: '0.25rem' }}>
+                              <button type="button" onClick={() => moveCard(idx, 'up')} disabled={idx === 0} style={{ padding: '0.25rem 0.5rem', background: '#fff', border: '1px solid var(--border)', cursor: idx === 0 ? 'not-allowed' : 'pointer', fontSize: '0.7rem' }}>↑</button>
+                              <button type="button" onClick={() => moveCard(idx, 'down')} disabled={idx === storyContent.cards.length - 1} style={{ padding: '0.25rem 0.5rem', background: '#fff', border: '1px solid var(--border)', cursor: idx === storyContent.cards.length - 1 ? 'not-allowed' : 'pointer', fontSize: '0.7rem' }}>↓</button>
+                              <button type="button" onClick={() => handleToggleCardActive(idx)} style={{ padding: '0.25rem 0.5rem', background: '#fff', border: '1px solid var(--border)', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                                {card.active !== false ? 'Disable' : 'Enable'}
+                              </button>
+                              <button type="button" onClick={() => handleDeleteCard(idx)} style={{ padding: '0.25rem 0.5rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', cursor: 'pointer', fontSize: '0.7rem' }}>Delete</button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p style={{ color: 'var(--muted-foreground)', fontSize: '0.85rem', marginBottom: '2rem' }}>No cards added yet.</p>
+                  )}
+
+                  {/* Add Card Form */}
+                  <div style={{ padding: '1.5rem', background: '#faf9f7', border: '1px dashed var(--border)', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <h4 style={{ margin: 0, fontFamily: 'var(--font-serif)' }}>Add New Card</h4>
+                    
+                    <div style={{ gridTemplateColumns: '1fr 1fr', gap: '1rem', display: 'grid' }}>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Card Title</label>
+                        <input type="text" value={newCard.title || ''} onChange={(e) => setNewCard({...newCard, title: e.target.value})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Display Order</label>
+                        <input type="number" value={newCard.displayOrder || ''} onChange={(e) => setNewCard({...newCard, displayOrder: parseInt(e.target.value) || 1})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Short Description</label>
+                      <textarea rows={2} value={newCard.description || ''} onChange={(e) => setNewCard({...newCard, description: e.target.value})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff', fontFamily: 'inherit' }} />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Option A: Icon Name (e.g. eco, gavel, fingerprint)</label>
+                        <input type="text" value={(newCard.icon && newCard.icon.startsWith('http')) ? '' : (newCard.icon || '')} onChange={(e) => setNewCard({...newCard, icon: e.target.value || 'eco'})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} placeholder="eco" />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Option B: Paste Image Icon URL Link</label>
+                        <input type="text" value={(newCard.icon && newCard.icon.startsWith('http')) ? newCard.icon : ''} onChange={(e) => setNewCard({...newCard, icon: e.target.value})} placeholder="e.g. https://..." style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Option C: Custom Upload Icon</label>
+                        <input type="file" accept="image/*" onChange={(e) => handleCardIconUpload(e, 'new')} style={{ display: 'none' }} id="card-icon-upload" />
+                        <label htmlFor="card-icon-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.75rem' }} className="label-caps">
+                          {uploadingCardIcon['new'] ? 'UPLOADING...' : 'UPLOAD ICON FILE'}
+                        </label>
+                        {newCard.icon && newCard.icon.startsWith('http') && (
+                          <span style={{ fontSize: '0.65rem', color: '#166534', marginLeft: '1.25rem' }}>✓ Image URL is set</span>
+                        )}
+                      </div>
+                    </div>
+
+                    <button type="button" onClick={handleAddCard} style={{ padding: '0.75rem', background: 'var(--foreground)', color: 'var(--background)', border: 'none', cursor: 'pointer' }} className="label-caps">Add Card to List</button>
+                  </div>
+                </div>
+
+                {/* SAVE BUTTON */}
+                <button type="submit" disabled={storySaving || uploadingStoryImage} style={{ padding: '1.25rem', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} className="label-caps">
+                  {storySaving ? 'SAVING CHANGES...' : 'SAVE OUR STORY'}
+                </button>
+              </form>
             </div>
           </Reveal>
         ) : (

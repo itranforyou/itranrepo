@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { db } from "@/lib/firebase";
-import { doc, setDoc } from "firebase/firestore";
+import { getAdminServices } from "@/lib/firebaseAdmin";
 import { getRazorpayInstance } from "@/lib/razorpay";
 
 export async function POST(request) {
@@ -78,8 +77,9 @@ export async function POST(request) {
       paymentStatus: "Paid"
     };
 
-    // Store order in Firestore
-    await setDoc(doc(db, "orders", orderId), orderData);
+    // Store order in Firestore using Admin SDK
+    const { adminDb } = await getAdminServices();
+    await adminDb.collection("orders").doc(orderId).set(orderData);
 
     return NextResponse.json({
       success: true,

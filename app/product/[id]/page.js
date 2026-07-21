@@ -349,10 +349,7 @@ export default function ProductPage({ params }) {
                   disabled={product.inStock === false}
                   onClick={() => {
                     if (product.inStock === false) return;
-                    if (!selectedNote) {
-                      alert("Please select a fragrance note to continue.");
-                      return;
-                    }
+
                     const extraData = {
                       selectedNote: selectedNote
                     };
