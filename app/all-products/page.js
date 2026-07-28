@@ -1,17 +1,29 @@
 'use client';
 
-import { useState, useMemo, Suspense } from 'react';
+import { useState, useMemo, Suspense, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
 import { useAppContext } from '@/context/AppContext';
 import FilterSort from '@/components/FilterSort';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function AllProducts() {
   const router = useRouter();
   const { products } = useAppContext();
   const [filter, setFilter] = useState('ALL SCENTS');
   const [finalProducts, setFinalProducts] = useState([]);
+  const [heroImages, setHeroImages] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'hero-images'), (snap) => {
+      if (snap.exists()) {
+        setHeroImages(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   const categories = ['ALL SCENTS', 'PERFUME OIL', 'DIFFUSERS', 'DHOOP STICKS'];
 
@@ -37,7 +49,7 @@ export default function AllProducts() {
       </div>
       <section className="shop-hero">
         <img 
-          src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000"
+          src={heroImages?.allProducts || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000"}
           alt="Shop All Hero"
         />
         <div className="container">

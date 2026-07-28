@@ -1,9 +1,11 @@
 'use client';
 
-import { use } from 'react';
+import { use, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
 import { useRouter, notFound } from 'next/navigation';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 const BLOG_POSTS = {
   '1': {
@@ -42,9 +44,47 @@ const BLOG_POSTS = {
 export default function BlogPostDetail({ params }) {
   const router = useRouter();
   const { id } = use(params);
-  const post = BLOG_POSTS[id];
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!post) return notFound();
+  useEffect(() => {
+    const fallbackPost = BLOG_POSTS[id];
+    const docRef = doc(db, 'journal', id);
+    const unsubscribe = onSnapshot(docRef, (snapshot) => {
+      if (snapshot.exists()) {
+        setPost({ id: snapshot.id, ...snapshot.data() });
+      } else if (fallbackPost) {
+        setPost({ id, ...fallbackPost });
+      } else {
+        setPost(null);
+      }
+      setLoading(false);
+    }, (err) => {
+      console.error(err);
+      if (fallbackPost) {
+        setPost({ id, ...fallbackPost });
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', background: '#fff' }}>
+        <p className="label-caps" style={{ letterSpacing: '0.2em' }}>Loading Story...</p>
+      </div>
+    );
+  }
+
+  if (!post) {
+    return notFound();
+  }
+
+  const paragraphs = typeof post.content === 'string'
+    ? post.content.split('\n').filter(p => p.trim() !== '')
+    : (Array.isArray(post.content) ? post.content : []);
 
   return (
     <div style={{ paddingTop: '0' }}>
@@ -55,7 +95,7 @@ export default function BlogPostDetail({ params }) {
       </div>
 
       <section className="shop-hero">
-        <img src={post.image} alt={post.title} />
+        <img src={post.image || null} alt={post.title} />
         <div className="container">
           <Reveal>
             <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1.5rem', letterSpacing: '0.2em' }}>{post.date}</div>
@@ -68,7 +108,7 @@ export default function BlogPostDetail({ params }) {
         <div className="container" style={{ maxWidth: '800px' }}>
           <Reveal>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
-              {post.content.map((para, i) => (
+              {paragraphs.map((para, i) => (
                 <p key={i} style={{ fontSize: '1.15rem', lineHeight: 2, color: '#333' }}>
                   {para}
                 </p>

@@ -1,11 +1,24 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Reveal from '@/components/Reveal';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function Heritage() {
   const router = useRouter();
+  const [heroImages, setHeroImages] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'hero-images'), (snap) => {
+      if (snap.exists()) {
+        setHeroImages(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div style={{ paddingTop: '0', background: '#faf9f7', minHeight: '100vh' }}>
@@ -19,7 +32,7 @@ export default function Heritage() {
       {/* HERO SECTION */}
       <section className="shop-hero">
         <img 
-          src="/images/heritage-hero.png"
+          src={heroImages?.heritage || "/images/heritage-hero.png"}
           alt="Heritage"
         />
         <div className="container">

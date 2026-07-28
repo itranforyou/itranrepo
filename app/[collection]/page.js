@@ -6,6 +6,8 @@ import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
 import { useAppContext } from '@/context/AppContext';
 import FilterSort from '@/components/FilterSort';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 const COLLECTION_MAP = {
   'perfume-oil': {
@@ -141,6 +143,27 @@ export default function CollectionPage({ params }) {
     }
   }, [collectionKey, config]);
 
+  const [heroImages, setHeroImages] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'hero-images'), (snap) => {
+      if (snap.exists()) {
+        setHeroImages(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const getCollectionHeroImage = () => {
+    if (heroImages) {
+      if (collectionKey === 'perfume-oil' && heroImages.perfumeOil) return heroImages.perfumeOil;
+      if (collectionKey === 'him' && heroImages.him) return heroImages.him;
+      if (collectionKey === 'her' && heroImages.her) return heroImages.her;
+      if (collectionKey === 'unisex' && heroImages.unisex) return heroImages.unisex;
+    }
+    return config?.image;
+  };
+
   if (!config) {
     return notFound();
   }
@@ -199,7 +222,7 @@ export default function CollectionPage({ params }) {
 
       <section className="shop-hero">
         <img 
-          src={config.image}
+          src={getCollectionHeroImage()}
           alt={config.title}
         />
         <div className="container">

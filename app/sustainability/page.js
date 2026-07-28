@@ -1,11 +1,24 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Reveal from '@/components/Reveal';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { db } from '@/lib/firebase';
+import { doc, onSnapshot } from 'firebase/firestore';
 
 export default function Sustainability() {
   const router = useRouter();
+  const [heroImages, setHeroImages] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'hero-images'), (snap) => {
+      if (snap.exists()) {
+        setHeroImages(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <div style={{ paddingTop: '0', background: '#faf9f7', minHeight: '100vh' }}>
@@ -19,7 +32,7 @@ export default function Sustainability() {
       {/* HERO SECTION */}
       <section className="shop-hero">
         <img 
-          src="/images/sustainability-hero.png"
+          src={heroImages?.sustainability || "/images/sustainability-hero.png"}
           alt="Sustainability"
         />
         <div className="container">

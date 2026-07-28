@@ -30,13 +30,87 @@ export default function ChangeProductPage() {
     ctaLink: '',
     image: '',
     stats: [],
-    cards: []
+    cards: [],
+    heroImage: '',
+    craftImage: '',
+    heritageHeading: '',
+    heritageDescription: '',
+    purposeHeading: '',
+    purposeDesc1: '',
+    purposeDesc2: '',
+    purposeQuote: ''
   });
   const [storySaving, setStorySaving] = useState(false);
   const [uploadingStoryImage, setUploadingStoryImage] = useState(false);
+  const [uploadingHeroImage, setUploadingHeroImage] = useState(false);
+  const [uploadingCraftImage, setUploadingCraftImage] = useState(false);
   const [uploadingCardIcon, setUploadingCardIcon] = useState({});
   const [newCard, setNewCard] = useState({ title: '', description: '', icon: 'eco', displayOrder: 1, active: true });
   const [newStat, setNewStat] = useState({ number: '', label: '', icon: '' });
+
+  // Contact Info states
+  const [contactInfo, setContactInfo] = useState({
+    location: '',
+    email: '',
+    phone: '',
+    whatsappNumber: '',
+    instagram: '',
+    pinterest: '',
+    twitter: ''
+  });
+  const [contactSaving, setContactSaving] = useState(false);
+
+  // Journal states
+  const [journalPosts, setJournalPosts] = useState([]);
+  const [journalFormData, setJournalFormData] = useState({
+    title: '',
+    date: '',
+    excerpt: '',
+    image: '',
+    content: ''
+  });
+  const [editingPostId, setEditingPostId] = useState(null);
+  const [journalSaving, setJournalSaving] = useState(false);
+  const [uploadingJournalImage, setUploadingJournalImage] = useState(false);
+
+  // Hero Images states
+  const [heroImages, setHeroImages] = useState({
+    allProducts: '',
+    perfumeOil: '',
+    him: '',
+    her: '',
+    unisex: '',
+    ourStory: '',
+    journal: ''
+  });
+  const [heroSaving, setHeroSaving] = useState(false);
+  const [uploadingHeroAllProducts, setUploadingHeroAllProducts] = useState(false);
+  const [uploadingHeroPerfumeOil, setUploadingHeroPerfumeOil] = useState(false);
+  const [uploadingHeroHim, setUploadingHeroHim] = useState(false);
+  const [uploadingHeroHer, setUploadingHeroHer] = useState(false);
+  const [uploadingHeroUnisex, setUploadingHeroUnisex] = useState(false);
+  const [uploadingHeroOurStory, setUploadingHeroOurStory] = useState(false);
+  const [uploadingHeroJournal, setUploadingHeroJournal] = useState(false);
+
+  const defaultHeros = {
+    allProducts: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000',
+    perfumeOil: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000',
+    him: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=2000',
+    her: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&q=80&w=2000',
+    unisex: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=2000',
+    ourStory: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=2000',
+    journal: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=2000'
+  };
+
+  const defaultContact = {
+    location: '51, Rama Rd, near GURU RAM SINGH METRO STATION\nNew Delhi, Delhi, 110015',
+    email: 'Itranforyou06@gmail.com',
+    phone: '+91 93116 05860',
+    whatsappNumber: '919311605860',
+    instagram: '#',
+    pinterest: '#',
+    twitter: '#'
+  };
 
   // Orders and settings state
   const [orders, setOrders] = useState([]);
@@ -288,8 +362,61 @@ export default function ChangeProductPage() {
           ctaLink: data.ctaLink || '',
           image: data.image || '',
           stats: data.stats || [],
-          cards: data.cards || []
+          cards: data.cards || [],
+          heroImage: data.heroImage || '',
+          craftImage: data.craftImage || '',
+          heritageHeading: data.heritageHeading || '',
+          heritageDescription: data.heritageDescription || '',
+          purposeHeading: data.purposeHeading || '',
+          purposeDesc1: data.purposeDesc1 || '',
+          purposeDesc2: data.purposeDesc2 || '',
+          purposeQuote: data.purposeQuote || ''
         });
+      }
+    });
+
+    // Real-time listener for Contact info settings
+    const unsubscribeContactInfo = onSnapshot(doc(db, 'settings', 'contact'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setContactInfo({
+          location: data.location || '',
+          email: data.email || '',
+          phone: data.phone || '',
+          whatsappNumber: data.whatsappNumber || '',
+          instagram: data.instagram || '',
+          pinterest: data.pinterest || '',
+          twitter: data.twitter || ''
+        });
+      } else {
+        setContactInfo(defaultContact);
+      }
+    });
+
+    // Real-time listener for Journal Posts
+    const unsubscribeJournal = onSnapshot(collection(db, 'journal'), (snapshot) => {
+      const posts = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setJournalPosts(posts);
+    }, (err) => console.error('Error fetching journal posts:', err));
+
+    // Real-time listener for Hero Images
+    const unsubscribeHeroImages = onSnapshot(doc(db, 'settings', 'hero-images'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setHeroImages({
+          allProducts: data.allProducts || '',
+          perfumeOil: data.perfumeOil || '',
+          him: data.him || '',
+          her: data.her || '',
+          unisex: data.unisex || '',
+          ourStory: data.ourStory || '',
+          journal: data.journal || ''
+        });
+      } else {
+        setHeroImages(defaultHeros);
       }
     });
 
@@ -299,6 +426,9 @@ export default function ChangeProductPage() {
       unsubscribeRealms();
       unsubscribeOrders();
       unsubscribeStory();
+      unsubscribeContactInfo();
+      unsubscribeJournal();
+      unsubscribeHeroImages();
     };
   }, [adminUser]);
 
@@ -473,6 +603,60 @@ export default function ChangeProductPage() {
     }
   };
 
+  const handleHeroImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+      alert('Error: Only JPG, PNG, and WEBP images are supported.');
+      return;
+    }
+
+    setUploadingHeroImage(true);
+    try {
+      const optimizedFile = await optimizeStoryImage(file);
+      const fileName = `${Date.now()}_storyhero_${optimizedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const storageRef = ref(storage, `our-story/${fileName}`);
+      const uploadResult = await uploadBytes(storageRef, optimizedFile);
+      const url = await getDownloadURL(uploadResult.ref);
+      setStoryContent(prev => ({ ...prev, heroImage: url }));
+    } catch (err) {
+      alert('Failed to upload image: ' + err.message);
+    } finally {
+      setUploadingHeroImage(false);
+    }
+  };
+
+  const handleCraftImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+      alert('Error: Only JPG, PNG, and WEBP images are supported.');
+      return;
+    }
+
+    setUploadingCraftImage(true);
+    try {
+      const optimizedFile = await optimizeStoryImage(file);
+      const fileName = `${Date.now()}_storycraft_${optimizedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const storageRef = ref(storage, `our-story/${fileName}`);
+      const uploadResult = await uploadBytes(storageRef, optimizedFile);
+      const url = await getDownloadURL(uploadResult.ref);
+      setStoryContent(prev => ({ ...prev, craftImage: url }));
+    } catch (err) {
+      alert('Failed to upload image: ' + err.message);
+    } finally {
+      setUploadingCraftImage(false);
+    }
+  };
+
   const handleCardIconUpload = async (e, index) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -603,6 +787,184 @@ export default function ChangeProductPage() {
       setStorySaving(false);
     }
   };
+
+  const handleSaveContactInfo = async (e) => {
+    e.preventDefault();
+    setContactSaving(true);
+    try {
+      await setDoc(doc(db, 'settings', 'contact'), contactInfo);
+      alert('Contact details updated successfully!');
+    } catch (err) {
+      alert('Failed to save contact details: ' + err.message);
+    } finally {
+      setContactSaving(false);
+    }
+  };
+
+  const handleSaveJournal = async (e) => {
+    e.preventDefault();
+    if (!journalFormData.title.trim()) {
+      alert('Title is required.');
+      return;
+    }
+    if (!journalFormData.excerpt.trim()) {
+      alert('Excerpt is required.');
+      return;
+    }
+    if (!journalFormData.content.trim()) {
+      alert('Content is required.');
+      return;
+    }
+
+    setJournalSaving(true);
+    try {
+      const dataToSave = {
+        title: journalFormData.title,
+        date: journalFormData.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+        excerpt: journalFormData.excerpt,
+        image: journalFormData.image,
+        content: journalFormData.content,
+        createdAt: serverTimestamp()
+      };
+
+      if (editingPostId) {
+        const postRef = doc(db, 'journal', editingPostId);
+        await setDoc(postRef, {
+          title: journalFormData.title,
+          date: journalFormData.date || new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          excerpt: journalFormData.excerpt,
+          image: journalFormData.image,
+          content: journalFormData.content
+        }, { merge: true });
+        alert('Journal post updated successfully!');
+      } else {
+        await addDoc(collection(db, 'journal'), dataToSave);
+        alert('Journal post created successfully!');
+      }
+      resetJournalForm();
+    } catch (err) {
+      alert('Failed to save journal post: ' + err.message);
+    } finally {
+      setJournalSaving(false);
+    }
+  };
+
+  const handleEditJournal = (post) => {
+    setEditingPostId(post.id);
+    setJournalFormData({
+      title: post.title || '',
+      date: post.date || '',
+      excerpt: post.excerpt || '',
+      image: post.image || '',
+      content: typeof post.content === 'string' ? post.content : (Array.isArray(post.content) ? post.content.join('\n\n') : '')
+    });
+  };
+
+  const handleDeleteJournal = async (postId) => {
+    if (!confirm('Are you sure you want to delete this journal post?')) return;
+    try {
+      await deleteDoc(doc(db, 'journal', postId));
+      alert('Journal post deleted successfully!');
+      if (editingPostId === postId) {
+        resetJournalForm();
+      }
+    } catch (err) {
+      alert('Failed to delete post: ' + err.message);
+    }
+  };
+
+  const resetJournalForm = () => {
+    setEditingPostId(null);
+    setJournalFormData({
+      title: '',
+      date: '',
+      excerpt: '',
+      image: '',
+      content: ''
+    });
+  };
+
+  const handleJournalImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+      alert('Error: Only JPG, PNG, and WEBP images are supported.');
+      return;
+    }
+
+    setUploadingJournalImage(true);
+    try {
+      const optimizedFile = await optimizeStoryImage(file);
+      const fileName = `${Date.now()}_journal_${optimizedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const storageRef = ref(storage, `journal/${fileName}`);
+      const uploadResult = await uploadBytes(storageRef, optimizedFile);
+      const url = await getDownloadURL(uploadResult.ref);
+      setJournalFormData(prev => ({ ...prev, image: url }));
+    } catch (err) {
+      alert('Failed to upload image: ' + err.message);
+    } finally {
+      setUploadingJournalImage(false);
+    }
+  };
+
+
+  const handleSaveHeroImages = async (e) => {
+    e.preventDefault();
+    setHeroSaving(true);
+    try {
+      await setDoc(doc(db, 'settings', 'hero-images'), heroImages);
+      alert('Hero Images updated successfully!');
+    } catch (err) {
+      alert('Failed to save hero images: ' + err.message);
+    } finally {
+      setHeroSaving(false);
+    }
+  };
+
+  const handleHeroSectionImageUpload = async (e, sectionKey) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+      alert('Error: Only JPG, PNG, and WEBP images are supported.');
+      return;
+    }
+
+    if (sectionKey === 'allProducts') setUploadingHeroAllProducts(true);
+    else if (sectionKey === 'perfumeOil') setUploadingHeroPerfumeOil(true);
+    else if (sectionKey === 'him') setUploadingHeroHim(true);
+    else if (sectionKey === 'her') setUploadingHeroHer(true);
+    else if (sectionKey === 'unisex') setUploadingHeroUnisex(true);
+    else if (sectionKey === 'ourStory') setUploadingHeroOurStory(true);
+    else if (sectionKey === 'journal') setUploadingHeroJournal(true);
+
+    try {
+      const optimizedFile = await optimizeStoryImage(file);
+      const fileName = `${Date.now()}_hero_${sectionKey}_${optimizedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const storageRef = ref(storage, `heros/${fileName}`);
+      const uploadResult = await uploadBytes(storageRef, optimizedFile);
+      const url = await getDownloadURL(uploadResult.ref);
+      setHeroImages(prev => ({ ...prev, [sectionKey]: url }));
+    } catch (err) {
+      alert('Failed to upload image: ' + err.message);
+    } finally {
+      if (sectionKey === 'allProducts') setUploadingHeroAllProducts(false);
+      else if (sectionKey === 'perfumeOil') setUploadingHeroPerfumeOil(false);
+      else if (sectionKey === 'him') setUploadingHeroHim(false);
+      else if (sectionKey === 'her') setUploadingHeroHer(false);
+      else if (sectionKey === 'unisex') setUploadingHeroUnisex(false);
+      else if (sectionKey === 'ourStory') setUploadingHeroOurStory(false);
+      else if (sectionKey === 'journal') setUploadingHeroJournal(false);
+    }
+  };
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -961,6 +1323,54 @@ export default function ChangeProductPage() {
             className="label-caps"
           >
             OUR STORY
+          </button>
+          <button 
+            onClick={() => setActiveTab('contact-info')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'contact-info' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            CONTACT INFO
+          </button>
+          <button 
+            onClick={() => setActiveTab('journal')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'journal' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            JOURNAL ({journalPosts.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('hero-images')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'hero-images' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            HERO IMAGES
           </button>
 
         </div>
@@ -1800,6 +2210,30 @@ export default function ChangeProductPage() {
                       <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Description Paragraph 2 (Optional)</label>
                       <textarea rows={4} value={storyContent.description2 || ''} onChange={(e) => setStoryContent({...storyContent, description2: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', fontFamily: 'inherit' }} />
                     </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Heritage Heading (under "Reclaiming the Pride")</label>
+                      <input type="text" value={storyContent.heritageHeading || ''} onChange={(e) => setStoryContent({...storyContent, heritageHeading: e.target.value})} placeholder="e.g. Our Eternal Heritage" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Heritage Description (under "Reclaiming the Pride")</label>
+                      <textarea rows={4} value={storyContent.heritageDescription || ''} onChange={(e) => setStoryContent({...storyContent, heritageDescription: e.target.value})} placeholder="India has always had a deep connection with fragrances..." style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Purpose Heading (under "The Purpose")</label>
+                      <input type="text" value={storyContent.purposeHeading || ''} onChange={(e) => setStoryContent({...storyContent, purposeHeading: e.target.value})} placeholder="e.g. Luxury Within Reach" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Purpose Description 1 (under "The Purpose")</label>
+                      <textarea rows={4} value={storyContent.purposeDesc1 || ''} onChange={(e) => setStoryContent({...storyContent, purposeDesc1: e.target.value})} placeholder="I started researching perfume oils..." style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Purpose Description 2 (under "The Purpose")</label>
+                      <textarea rows={4} value={storyContent.purposeDesc2 || ''} onChange={(e) => setStoryContent({...storyContent, purposeDesc2: e.target.value})} placeholder="Itran was built to bring high-quality..." style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Purpose Quote (under "The Purpose")</label>
+                      <input type="text" value={storyContent.purposeQuote || ''} onChange={(e) => setStoryContent({...storyContent, purposeQuote: e.target.value})} placeholder="Because fragrance is not just something you wear..." style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                       <div>
                         <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>CTA Button Text</label>
@@ -1850,7 +2284,13 @@ export default function ChangeProductPage() {
                       {storyContent.stats.map((stat, idx) => (
                         <div key={idx} style={{ display: 'flex', alignItems: 'center', justifycontent: 'space-between', padding: '0.75rem 1rem', background: '#faf9f7', border: '1px solid var(--border)' }}>
                           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-                            {stat.icon && <span className="material-icons" style={{ fontSize: '1.5rem', color: 'var(--primary)' }}>{stat.icon}</span>}
+                            {stat.icon && (
+                              stat.icon.startsWith('http') || stat.icon.startsWith('/') ? (
+                                <img src={stat.icon} alt="" style={{ width: '24px', height: '24px', objectFit: 'contain' }} />
+                              ) : (
+                                <span className="material-icons" style={{ fontSize: '1.5rem', color: 'var(--primary)' }}>{stat.icon}</span>
+                              )
+                            )}
                             <div>
                               <strong style={{ fontSize: '1.1rem', fontFamily: 'var(--font-serif)' }}>{stat.number}</strong>
                               <span style={{ marginLeft: '0.75rem', fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>{stat.label}</span>
@@ -1879,8 +2319,8 @@ export default function ChangeProductPage() {
                       <input type="text" value={newStat.label || ''} onChange={(e) => setNewStat({...newStat, label: e.target.value})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
                     </div>
                     <div>
-                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Icon (Optional, e.g. calendar_today)</label>
-                      <input type="text" value={newStat.icon || ''} onChange={(e) => setNewStat({...newStat, icon: e.target.value})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.35rem' }}>Logo's PNG Link (Optional, e.g. https://...)</label>
+                      <input type="text" placeholder="e.g. https://..." value={newStat.icon || ''} onChange={(e) => setNewStat({...newStat, icon: e.target.value})} style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
                     </div>
                     <button type="button" onClick={handleAddStat} style={{ padding: '0.6rem', background: 'var(--foreground)', color: 'var(--background)', border: 'none', cursor: 'pointer', height: '37px' }} className="label-caps">Add Stat</button>
                   </div>
@@ -2017,9 +2457,363 @@ export default function ChangeProductPage() {
                   </div>
                 </div>
 
+                {/* PAGE-SPECIFIC IMAGES */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>5. Our Story Page-Specific Craft Image</h2>
+                  
+                  <div style={{ maxWidth: '400px' }}>
+                    {/* Formulation Craft Image */}
+                    <div style={{ border: '1px solid var(--border)', padding: '1.5rem', background: '#faf9f7' }}>
+                      <h3 className="label-caps" style={{ fontSize: '0.75rem', marginBottom: '1rem', color: '#111' }}>Craft Image (Bottom of Page)</h3>
+                      {storyContent.craftImage && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', marginBottom: '1rem' }}>
+                          <img src={storyContent.craftImage} alt="Craft Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                          <button type="button" onClick={() => setStoryContent({...storyContent, craftImage: ''})} style={{ padding: '0.35rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', cursor: 'pointer', fontSize: '0.65rem' }} className="label-caps">Remove/Clear Image</button>
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                        <div>
+                          <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }}>Option A: Paste Image URL Link</label>
+                          <input type="text" value={storyContent.craftImage || ''} onChange={(e) => setStoryContent({...storyContent, craftImage: e.target.value})} placeholder="e.g. https://images.unsplash.com/..." style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
+                        </div>
+                        <div>
+                          <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }}>Option B: Upload File</label>
+                          <input type="file" accept="image/*" onChange={handleCraftImageUpload} style={{ display: 'none' }} id="craft-image-upload" />
+                          <label htmlFor="craft-image-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                            {uploadingCraftImage ? 'UPLOADING...' : 'UPLOAD CRAFT IMAGE FILE'}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* SAVE BUTTON */}
-                <button type="submit" disabled={storySaving || uploadingStoryImage} style={{ padding: '1.25rem', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} className="label-caps">
+                <button type="submit" disabled={storySaving || uploadingStoryImage || uploadingHeroImage || uploadingCraftImage} style={{ padding: '1.25rem', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} className="label-caps">
                   {storySaving ? 'SAVING CHANGES...' : 'SAVE OUR STORY'}
+                </button>
+              </form>
+            </div>
+          </Reveal>
+        ) : activeTab === 'contact-info' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', margin: 0 }}>Manage Contact Details</h1>
+                <div style={{ fontSize: '0.65rem', padding: '0.4rem 0.8rem', background: contactSaving ? '#fffbeb' : '#f0fdf4', color: contactSaving ? '#b45309' : '#166534', border: '1px solid currentColor', borderRadius: '20px', fontWeight: 600 }}>
+                  {contactSaving ? 'SAVING...' : 'SYNCED'}
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveContactInfo} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* ATELIER DETAILS */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>Atelier Contact Details</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Location (Street Address) *</label>
+                      <textarea required rows={3} value={contactInfo.location || ''} onChange={(e) => setContactInfo({...contactInfo, location: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', fontFamily: 'inherit' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Email Address *</label>
+                      <input type="email" required value={contactInfo.email || ''} onChange={(e) => setContactInfo({...contactInfo, email: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Phone Number *</label>
+                        <input type="text" required value={contactInfo.phone || ''} onChange={(e) => setContactInfo({...contactInfo, phone: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>WhatsApp Number (Digits only, e.g. 919311605860) *</label>
+                        <input type="text" required value={contactInfo.whatsappNumber || ''} onChange={(e) => setContactInfo({...contactInfo, whatsappNumber: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SOCIAL MEDIA LINKS */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>Social Media Links</h2>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Instagram Label</label>
+                        <input type="text" disabled value="Instagram" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#f5f5f5' }} />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Instagram URL Link</label>
+                        <input type="text" value={contactInfo.instagram || ''} onChange={(e) => setContactInfo({...contactInfo, instagram: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Pinterest Label</label>
+                        <input type="text" disabled value="Pinterest" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#f5f5f5' }} />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Pinterest URL Link</label>
+                        <input type="text" value={contactInfo.pinterest || ''} onChange={(e) => setContactInfo({...contactInfo, pinterest: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                      </div>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '1rem' }}>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Twitter Label</label>
+                        <input type="text" disabled value="Twitter" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#f5f5f5' }} />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Twitter URL Link</label>
+                        <input type="text" value={contactInfo.twitter || ''} onChange={(e) => setContactInfo({...contactInfo, twitter: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" disabled={contactSaving} style={{ padding: '1.25rem', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} className="label-caps">
+                  {contactSaving ? 'SAVING CHANGES...' : 'SAVE CONTACT INFO'}
+                </button>
+              </form>
+            </div>
+          </Reveal>
+        ) : activeTab === 'journal' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', margin: 0 }}>
+                  {editingPostId ? 'Edit Journal Post' : 'Add New Journal Post'}
+                </h1>
+                {editingPostId && (
+                  <button onClick={resetJournalForm} style={{ padding: '0.4rem 0.8rem', background: '#f5f5f5', border: '1px solid var(--border)', cursor: 'pointer', fontSize: '0.65rem' }} className="label-caps">
+                    Cancel Edit / Add New
+                  </button>
+                )}
+              </div>
+
+              <form onSubmit={handleSaveJournal} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '4rem', background: '#faf9f7', padding: '2rem', border: '1px solid var(--border)' }}>
+                <h3 className="label-caps" style={{ margin: 0, fontSize: '0.8rem', color: 'var(--primary)' }}>
+                  {editingPostId ? 'Edit Post Details' : 'Create a New Post'}
+                </h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Post Title *</label>
+                    <input type="text" required value={journalFormData.title || ''} onChange={(e) => setJournalFormData({...journalFormData, title: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff' }} />
+                  </div>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Post Date (Optional, defaults to today)</label>
+                    <input type="text" value={journalFormData.date || ''} onChange={(e) => setJournalFormData({...journalFormData, date: e.target.value})} placeholder="e.g. April 24, 2026" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff' }} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Short Excerpt (shows on listing page) *</label>
+                  <textarea required rows={2} value={journalFormData.excerpt || ''} onChange={(e) => setJournalFormData({...journalFormData, excerpt: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontFamily: 'inherit' }} />
+                </div>
+
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Post Image *</label>
+                  {journalFormData.image && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxWidth: '200px', marginBottom: '1rem' }}>
+                      <img src={journalFormData.image} alt="Preview" style={{ width: '100%', height: '120px', objectFit: 'cover', border: '1px solid var(--border)' }} />
+                      <button type="button" onClick={() => setJournalFormData({...journalFormData, image: ''})} style={{ padding: '0.35rem', background: '#fee2e2', color: '#991b1b', border: '1px solid #fca5a5', cursor: 'pointer', fontSize: '0.65rem' }} className="label-caps">Clear Image</button>
+                    </div>
+                  )}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }}>Option A: Paste Image URL Link</label>
+                      <input type="text" value={journalFormData.image || ''} onChange={(e) => setJournalFormData({...journalFormData, image: e.target.value})} placeholder="e.g. https://images.unsplash.com/..." style={{ width: '100%', padding: '0.5rem', border: '1px solid var(--border)', background: '#fff' }} />
+                    </div>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.25rem' }}>Option B: Upload File</label>
+                      <input type="file" accept="image/*" onChange={handleJournalImageUpload} style={{ display: 'none' }} id="journal-image-upload" />
+                      <label htmlFor="journal-image-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                        {uploadingJournalImage ? 'UPLOADING...' : 'UPLOAD IMAGE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Post Body Content (Use double line breaks for new paragraphs) *</label>
+                  <textarea required rows={12} value={journalFormData.content || ''} onChange={(e) => setJournalFormData({...journalFormData, content: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontFamily: 'inherit', lineHeight: 1.6 }} />
+                </div>
+
+                <button type="submit" disabled={journalSaving || uploadingJournalImage} style={{ padding: '1.25rem', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} className="label-caps">
+                  {journalSaving ? 'SAVING...' : (editingPostId ? 'UPDATE JOURNAL POST' : 'CREATE JOURNAL POST')}
+                </button>
+              </form>
+
+              {/* POST LISTING */}
+              <h2 style={{ fontSize: '1.5rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>Existing Journal Posts</h2>
+              {journalPosts.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {journalPosts.map((post) => (
+                    <div key={post.id} style={{ display: 'flex', gap: '1.5rem', background: '#fff', border: '1px solid var(--border)', padding: '1.5rem', alignItems: 'center' }}>
+                      <div style={{ width: '100px', height: '70px', background: '#f5f5f5', position: 'relative', flexShrink: 0 }}>
+                        {post.image && <img src={post.image} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--primary)', marginBottom: '0.25rem' }}>{post.date}</div>
+                        <div style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '0.25rem', fontFamily: 'var(--font-serif)' }}>{post.title}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>{post.excerpt}</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '1rem', flexShrink: 0 }}>
+                        <button onClick={() => handleEditJournal(post)} style={{ background: 'none', border: 'none', borderBottom: '1px solid #000', padding: 0, cursor: 'pointer', fontSize: '0.65rem' }} className="label-caps">EDIT</button>
+                        <button onClick={() => handleDeleteJournal(post.id)} style={{ background: 'none', border: 'none', color: '#991b1b', borderBottom: '1px solid #991b1b', padding: 0, cursor: 'pointer', fontSize: '0.65rem' }} className="label-caps">DELETE</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ textAlign: 'center', padding: '4rem', border: '1px dashed var(--border)' }}>
+                  <p className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)' }}>No journal posts in database yet.</p>
+                </div>
+              )}
+            </div>
+          </Reveal>
+        ) : activeTab === 'hero-images' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', margin: 0 }}>Manage Page Hero Images</h1>
+                <div style={{ fontSize: '0.65rem', padding: '0.4rem 0.8rem', background: heroSaving ? '#fffbeb' : '#f0fdf4', color: heroSaving ? '#b45309' : '#166534', border: '1px solid currentColor', borderRadius: '20px', fontWeight: 600 }}>
+                  {heroSaving ? 'SAVING...' : 'SYNCED'}
+                </div>
+              </div>
+              <form onSubmit={handleSaveHeroImages} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* SHOP ALL */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>1. Shop All Page Hero</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {heroImages.allProducts && (
+                      <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img src={heroImages.allProducts} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <input type="text" value={heroImages.allProducts || ''} onChange={(e) => setHeroImages({...heroImages, allProducts: e.target.value})} placeholder="Paste Image URL" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    <div>
+                      <input type="file" accept="image/*" onChange={(e) => handleHeroSectionImageUpload(e, 'allProducts')} style={{ display: 'none' }} id="hero-allproducts-upload" />
+                      <label htmlFor="hero-allproducts-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                        {uploadingHeroAllProducts ? 'UPLOADING...' : 'UPLOAD IMAGE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* PERFUME OIL */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>2. Perfume Oil Collection Hero</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {heroImages.perfumeOil && (
+                      <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img src={heroImages.perfumeOil} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <input type="text" value={heroImages.perfumeOil || ''} onChange={(e) => setHeroImages({...heroImages, perfumeOil: e.target.value})} placeholder="Paste Image URL" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    <div>
+                      <input type="file" accept="image/*" onChange={(e) => handleHeroSectionImageUpload(e, 'perfumeOil')} style={{ display: 'none' }} id="hero-perfume-upload" />
+                      <label htmlFor="hero-perfume-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                        {uploadingHeroPerfumeOil ? 'UPLOADING...' : 'UPLOAD IMAGE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* HIM */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>3. Him Collection Hero</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {heroImages.him && (
+                      <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img src={heroImages.him} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <input type="text" value={heroImages.him || ''} onChange={(e) => setHeroImages({...heroImages, him: e.target.value})} placeholder="Paste Image URL" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    <div>
+                      <input type="file" accept="image/*" onChange={(e) => handleHeroSectionImageUpload(e, 'him')} style={{ display: 'none' }} id="hero-him-upload" />
+                      <label htmlFor="hero-him-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                        {uploadingHeroHim ? 'UPLOADING...' : 'UPLOAD IMAGE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* HER */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>4. Her Collection Hero</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {heroImages.her && (
+                      <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img src={heroImages.her} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <input type="text" value={heroImages.her || ''} onChange={(e) => setHeroImages({...heroImages, her: e.target.value})} placeholder="Paste Image URL" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    <div>
+                      <input type="file" accept="image/*" onChange={(e) => handleHeroSectionImageUpload(e, 'her')} style={{ display: 'none' }} id="hero-her-upload" />
+                      <label htmlFor="hero-her-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                        {uploadingHeroHer ? 'UPLOADING...' : 'UPLOAD IMAGE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* UNISEX */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>5. Unisex Collection Hero</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {heroImages.unisex && (
+                      <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img src={heroImages.unisex} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <input type="text" value={heroImages.unisex || ''} onChange={(e) => setHeroImages({...heroImages, unisex: e.target.value})} placeholder="Paste Image URL" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    <div>
+                      <input type="file" accept="image/*" onChange={(e) => handleHeroSectionImageUpload(e, 'unisex')} style={{ display: 'none' }} id="hero-unisex-upload" />
+                      <label htmlFor="hero-unisex-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                        {uploadingHeroUnisex ? 'UPLOADING...' : 'UPLOAD IMAGE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* OUR STORY */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>6. Our Story Page Hero</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {heroImages.ourStory && (
+                      <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img src={heroImages.ourStory} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <input type="text" value={heroImages.ourStory || ''} onChange={(e) => setHeroImages({...heroImages, ourStory: e.target.value})} placeholder="Paste Image URL" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    <div>
+                      <input type="file" accept="image/*" onChange={(e) => handleHeroSectionImageUpload(e, 'ourStory')} style={{ display: 'none' }} id="hero-ourstory-upload" />
+                      <label htmlFor="hero-ourstory-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                        {uploadingHeroOurStory ? 'UPLOADING...' : 'UPLOAD IMAGE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                {/* JOURNAL */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>7. Journal Page Hero</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    {heroImages.journal && (
+                      <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                        <img src={heroImages.journal} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <input type="text" value={heroImages.journal || ''} onChange={(e) => setHeroImages({...heroImages, journal: e.target.value})} placeholder="Paste Image URL" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    <div>
+                      <input type="file" accept="image/*" onChange={(e) => handleHeroSectionImageUpload(e, 'journal')} style={{ display: 'none' }} id="hero-journal-upload" />
+                      <label htmlFor="hero-journal-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                        {uploadingHeroJournal ? 'UPLOADING...' : 'UPLOAD IMAGE FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <button type="submit" disabled={heroSaving} style={{ padding: '1.25rem', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} className="label-caps">
+                  {heroSaving ? 'SAVING CHANGES...' : 'SAVE HERO IMAGES'}
                 </button>
               </form>
             </div>

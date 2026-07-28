@@ -1,14 +1,36 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, onSnapshot } from 'firebase/firestore';
 
 export default function Contact() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [contactInfo, setContactInfo] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'contact'), (snap) => {
+      if (snap.exists()) {
+        setContactInfo(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const defaultContact = {
+    location: "51, Rama Rd, near GURU RAM SINGH METRO STATION\nNew Delhi, Delhi, 110015",
+    email: "Itranforyou06@gmail.com",
+    phone: "+91 93116 05860",
+    whatsappNumber: "919311605860",
+    instagram: "#",
+    pinterest: "#",
+    twitter: "#"
+  };
+
+  const contact = contactInfo || defaultContact;
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -46,7 +68,7 @@ export default function Contact() {
     }
   };
 
-  const whatsappNumber = "919311605860";
+  const whatsappNumber = contact.whatsappNumber || "919311605860";
   const whatsappMessage = encodeURIComponent("Hello, I would like to know more about your perfumes.");
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
 
@@ -115,22 +137,21 @@ export default function Contact() {
                     <span className="material-icons" style={{ color: 'var(--primary)' }}>place</span>
                     <div>
                       <div className="label-caps" style={{ fontSize: '0.7rem', marginBottom: '0.25rem' }}>Location</div>
-                      <p style={{ fontSize: '0.9rem' }}>51, Rama Rd, near GURU RAM SINGH METRO STATION
-                        New Delhi, Delhi, 110015</p>
+                      <p style={{ fontSize: '0.9rem', whiteSpace: 'pre-line' }}>{contact.location}</p>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                     <span className="material-icons" style={{ color: 'var(--primary)' }}>mail</span>
                     <div>
                       <div className="label-caps" style={{ fontSize: '0.7rem', marginBottom: '0.25rem' }}>Email</div>
-                      <p style={{ fontSize: '0.9rem' }}>Itranforyou06@gmail.com</p>
+                      <p style={{ fontSize: '0.9rem' }}>{contact.email}</p>
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
                     <span className="material-icons" style={{ color: 'var(--primary)' }}>call</span>
                     <div>
                       <div className="label-caps" style={{ fontSize: '0.7rem', marginBottom: '0.25rem' }}>Phone</div>
-                      <p style={{ fontSize: '0.9rem' }}>+91 93116 05860</p>
+                      <p style={{ fontSize: '0.9rem' }}>{contact.phone}</p>
                     </div>
                   </div>
                 </div>
@@ -139,9 +160,9 @@ export default function Contact() {
               <div>
                 <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem' }}>Follow Our Journey</h3>
                 <div style={{ display: 'flex', gap: '1.5rem' }}>
-                  <Link href="#" className="label-caps" style={{ fontSize: '0.7rem', borderBottom: '1px solid var(--border)' }}>Instagram</Link>
-                  <Link href="#" className="label-caps" style={{ fontSize: '0.7rem', borderBottom: '1px solid var(--border)' }}>Pinterest</Link>
-                  <Link href="#" className="label-caps" style={{ fontSize: '0.7rem', borderBottom: '1px solid var(--border)' }}>Twitter</Link>
+                  {contact.instagram && <Link href={contact.instagram} target="_blank" rel="noopener noreferrer" className="label-caps" style={{ fontSize: '0.7rem', borderBottom: '1px solid var(--border)' }}>Instagram</Link>}
+                  {contact.pinterest && <Link href={contact.pinterest} target="_blank" rel="noopener noreferrer" className="label-caps" style={{ fontSize: '0.7rem', borderBottom: '1px solid var(--border)' }}>Pinterest</Link>}
+                  {contact.twitter && <Link href={contact.twitter} target="_blank" rel="noopener noreferrer" className="label-caps" style={{ fontSize: '0.7rem', borderBottom: '1px solid var(--border)' }}>Twitter</Link>}
                 </div>
               </div>
             </Reveal>

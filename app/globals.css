@@ -693,6 +693,10 @@ footer {
   transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
 }
 
+.btn-primary.label-caps {
+  color: var(--background);
+}
+
 .btn-primary:hover {
   background-color: var(--secondary);
   transform: translateY(-3px);
