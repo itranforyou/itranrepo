@@ -73,10 +73,10 @@ export default function OurStory() {
         />
         <div className="container">
           <Reveal>
-            <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1.5rem', letterSpacing: '0.3em' }}>Our Legacy</div>
-            <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 5.5rem)', marginBottom: '2rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>The Scent of Memory</h1>
+            <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1.5rem', letterSpacing: '0.3em' }}>{story.heroLabel || "Our Legacy"}</div>
+            <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 5.5rem)', marginBottom: '2rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>{story.heroHeading || "The Scent of Memory"}</h1>
             <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.85)', maxWidth: '700px', margin: '0 auto', textShadow: '0 2px 6px rgba(0,0,0,0.5)', lineHeight: 1.6 }}>
-              A personal journey of passion, composition, and reclaiming the pride of Indian perfume craft.
+              {story.heroSubheading || "A personal journey of passion, composition, and reclaiming the pride of Indian perfume craft."}
             </p>
           </Reveal>
         </div>

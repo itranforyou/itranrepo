@@ -38,7 +38,10 @@ export default function ChangeProductPage() {
     purposeHeading: '',
     purposeDesc1: '',
     purposeDesc2: '',
-    purposeQuote: ''
+    purposeQuote: '',
+    heroLabel: '',
+    heroHeading: '',
+    heroSubheading: ''
   });
   const [storySaving, setStorySaving] = useState(false);
   const [uploadingStoryImage, setUploadingStoryImage] = useState(false);
@@ -72,6 +75,14 @@ export default function ChangeProductPage() {
   const [editingPostId, setEditingPostId] = useState(null);
   const [journalSaving, setJournalSaving] = useState(false);
   const [uploadingJournalImage, setUploadingJournalImage] = useState(false);
+
+  // Journal Settings states (Hero labels & texts)
+  const [journalSettings, setJournalSettings] = useState({
+    heroLabel: '',
+    heroHeading: '',
+    heroSubheading: ''
+  });
+  const [journalSettingsSaving, setJournalSettingsSaving] = useState(false);
 
   // Hero Images states
   const [heroImages, setHeroImages] = useState({
@@ -370,7 +381,10 @@ export default function ChangeProductPage() {
           purposeHeading: data.purposeHeading || '',
           purposeDesc1: data.purposeDesc1 || '',
           purposeDesc2: data.purposeDesc2 || '',
-          purposeQuote: data.purposeQuote || ''
+          purposeQuote: data.purposeQuote || '',
+          heroLabel: data.heroLabel || '',
+          heroHeading: data.heroHeading || '',
+          heroSubheading: data.heroSubheading || ''
         });
       }
     });
@@ -420,6 +434,24 @@ export default function ChangeProductPage() {
       }
     });
 
+    // Real-time listener for Journal Settings (Hero label, heading, subheading)
+    const unsubscribeJournalSettings = onSnapshot(doc(db, 'settings', 'journal'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setJournalSettings({
+          heroLabel: data.heroLabel || '',
+          heroHeading: data.heroHeading || '',
+          heroSubheading: data.heroSubheading || ''
+        });
+      } else {
+        setJournalSettings({
+          heroLabel: 'The Journal',
+          heroHeading: 'Stories in Silence',
+          heroSubheading: "Reflections on the art of slow perfumery, heritage distillation, and the emotive power of nature's rarest essences."
+        });
+      }
+    });
+
     return () => {
       unsubscribe();
       unsubscribeContact();
@@ -429,6 +461,7 @@ export default function ChangeProductPage() {
       unsubscribeContactInfo();
       unsubscribeJournal();
       unsubscribeHeroImages();
+      unsubscribeJournalSettings();
     };
   }, [adminUser]);
 
@@ -882,6 +915,19 @@ export default function ChangeProductPage() {
       image: '',
       content: ''
     });
+  };
+
+  const handleSaveJournalSettings = async (e) => {
+    e.preventDefault();
+    setJournalSettingsSaving(true);
+    try {
+      await setDoc(doc(db, 'settings', 'journal'), journalSettings);
+      alert('Journal Hero texts updated successfully!');
+    } catch (err) {
+      alert('Failed to save journal hero texts: ' + err.message);
+    } finally {
+      setJournalSettingsSaving(false);
+    }
   };
 
   const handleJournalImageUpload = async (e) => {
@@ -2194,6 +2240,21 @@ export default function ChangeProductPage() {
                 <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
                   <h2 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', marginBottom: '1.5rem' }}>1. Section Content</h2>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div style={{ border: '1px dashed var(--border)', padding: '1rem', background: '#faf9f7', display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1rem' }}>
+                      <h4 className="label-caps" style={{ margin: 0, color: 'var(--primary)', fontSize: '0.75rem' }}>Hero Banner Text Settings</h4>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Hero Badge/Label (e.g. Our Legacy)</label>
+                        <input type="text" placeholder="e.g. Our Legacy" value={storyContent.heroLabel || ''} onChange={(e) => setStoryContent({...storyContent, heroLabel: e.target.value})} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', background: '#fff' }} />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Hero Main Title (e.g. The Scent of Memory)</label>
+                        <input type="text" placeholder="e.g. The Scent of Memory" value={storyContent.heroHeading || ''} onChange={(e) => setStoryContent({...storyContent, heroHeading: e.target.value})} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', background: '#fff' }} />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Hero Subheading Paragraph</label>
+                        <textarea rows={2} placeholder="A personal journey of passion, composition, and reclaiming..." value={storyContent.heroSubheading || ''} onChange={(e) => setStoryContent({...storyContent, heroSubheading: e.target.value})} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', background: '#fff', fontFamily: 'inherit' }} />
+                      </div>
+                    </div>
                     <div>
                       <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.5rem' }}>Main Heading *</label>
                       <input type="text" required value={storyContent.mainHeading || ''} onChange={(e) => setStoryContent({...storyContent, mainHeading: e.target.value})} style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
@@ -2577,6 +2638,36 @@ export default function ChangeProductPage() {
         ) : activeTab === 'journal' ? (
           <Reveal>
             <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
+              {/* JOURNAL HERO TEXT SETTINGS */}
+              <div style={{ borderBottom: '2px solid var(--border)', paddingBottom: '3rem', marginBottom: '3rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+                  <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', margin: 0 }}>Manage Journal Hero Text</h1>
+                  <div style={{ fontSize: '0.65rem', padding: '0.4rem 0.8rem', background: journalSettingsSaving ? '#fffbeb' : '#f0fdf4', color: journalSettingsSaving ? '#b45309' : '#166534', border: '1px solid currentColor', borderRadius: '20px', fontWeight: 600 }}>
+                    {journalSettingsSaving ? 'SAVING...' : 'SYNCED'}
+                  </div>
+                </div>
+
+                <form onSubmit={handleSaveJournalSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', background: '#faf9f7', padding: '2rem', border: '1px solid var(--border)' }}>
+                  <h3 className="label-caps" style={{ margin: 0, fontSize: '0.8rem', color: 'var(--primary)' }}>Hero Banner Settings</h3>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Hero Badge/Label (e.g. The Journal)</label>
+                    <input type="text" placeholder="e.g. The Journal" value={journalSettings.heroLabel || ''} onChange={(e) => setJournalSettings({...journalSettings, heroLabel: e.target.value})} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', background: '#fff' }} />
+                  </div>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Hero Main Title (e.g. Stories in Silence)</label>
+                    <input type="text" placeholder="e.g. Stories in Silence" value={journalSettings.heroHeading || ''} onChange={(e) => setJournalSettings({...journalSettings, heroHeading: e.target.value})} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', background: '#fff' }} />
+                  </div>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.35rem' }}>Hero Subheading Paragraph</label>
+                    <textarea rows={2} placeholder="Reflections on the art of slow perfumery..." value={journalSettings.heroSubheading || ''} onChange={(e) => setJournalSettings({...journalSettings, heroSubheading: e.target.value})} style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--border)', background: '#fff', fontFamily: 'inherit' }} />
+                  </div>
+                  <button type="submit" disabled={journalSettingsSaving} style={{ padding: '1rem', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} className="label-caps">
+                    {journalSettingsSaving ? 'SAVING CHANGES...' : 'SAVE HERO SETTINGS'}
+                  </button>
+                </form>
+              </div>
+
+              {/* POST MANAGEMENT FORM */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
                 <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', margin: 0 }}>
                   {editingPostId ? 'Edit Journal Post' : 'Add New Journal Post'}

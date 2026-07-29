@@ -32,6 +32,17 @@ export default function Blog() {
     return () => unsubscribe();
   }, []);
 
+  const [journalSettings, setJournalSettings] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'journal'), (snap) => {
+      if (snap.exists()) {
+        setJournalSettings(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   const defaultPosts = [
     {
       id: '1',
@@ -75,10 +86,10 @@ export default function Blog() {
         />
         <div className="container">
           <Reveal>
-            <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1.5rem', letterSpacing: '0.3em' }}>The Journal</div>
-            <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 5.5rem)', marginBottom: '2rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>Stories in Silence</h1>
+            <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1.5rem', letterSpacing: '0.3em' }}>{journalSettings?.heroLabel || "The Journal"}</div>
+            <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 5.5rem)', marginBottom: '2rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>{journalSettings?.heroHeading || "Stories in Silence"}</h1>
             <p style={{ fontSize: '1.25rem', color: 'rgba(255,255,255,0.85)', maxWidth: '700px', margin: '0 auto', textShadow: '0 2px 6px rgba(0,0,0,0.5)', lineHeight: 1.6 }}>
-              Reflections on the art of slow perfumery, heritage distillation, and the emotive power of nature's rarest essences.
+              {journalSettings?.heroSubheading || "Reflections on the art of slow perfumery, heritage distillation, and the emotive power of nature's rarest essences."}
             </p>
           </Reveal>
         </div>
