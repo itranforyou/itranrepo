@@ -2277,3 +2277,65 @@ a.product-card.active:hover h3 {
     font-size: 0.7rem !important;
   }
 }
+
+/* Product Card Tags & Responsive Scaling */
+.product-card-tags {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 2;
+}
+
+.product-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  padding: 0.35rem 0.75rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.tag-sold-out {
+  background: #7f1d1d;
+  color: #ffffff;
+}
+
+.tag-best-seller {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.tag-discount {
+  background: #991b1b;
+  color: #ffffff;
+}
+
+.tag-discount-bottom {
+  position: absolute;
+  bottom: 1rem;
+  left: 1rem;
+  z-index: 2;
+}
+
+@media (max-width: 768px) {
+  .product-card-tags {
+    top: 0.5rem;
+    left: 0.5rem;
+    gap: 0.25rem;
+  }
+
+  .tag-discount-bottom {
+    bottom: 0.5rem;
+    left: 0.5rem;
+  }
+
+  .product-tag {
+    font-size: 0.5rem;
+    letter-spacing: 0.08em;
+    padding: 0.2rem 0.4rem;
+  }
+}

@@ -22,6 +22,17 @@ export default function Home() {
     return () => unsubscribe();
   }, []);
 
+  const [heroImages, setHeroImages] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'hero-images'), (snap) => {
+      if (snap.exists()) {
+        setHeroImages(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
   const defaultStory = {
     mainHeading: "The Story Behind Itran",
     subHeading: "At Itran, fragrance is more than just a scent — it’s a feeling, a memory, and a reflection of personality.",
@@ -67,6 +78,7 @@ export default function Home() {
       <section style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', position: 'relative', overflow: 'hidden', backgroundColor: '#000' }}>
         {/* Premium Background Video */}
         <video
+          key={heroImages?.homeVideo || "/videos/homePage.mp4"}
           autoPlay
           muted
           loop
@@ -80,9 +92,8 @@ export default function Home() {
             opacity: 0.6, 
             zIndex: 0 
           }}
-        >
-          <source src="/videos/homePage.mp4" type="video/mp4" />
-        </video>
+          src={heroImages?.homeVideo || "/videos/homePage.mp4"}
+        />
 
         {/* Code-based Animated Mist Background */}
         <div className="smoke-video-placeholder" style={{ zIndex: 1 }}>

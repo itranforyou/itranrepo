@@ -10,6 +10,7 @@ export default function ProductCard({ product, delay = 0 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isActive, setIsActive] = useState(false);
   const ref = useRef(null);
+  const imgRef = useRef(null);
 
   const isInWishlist = wishlist.some(item => item.id === product.id);
 
@@ -28,6 +29,12 @@ export default function ProductCard({ product, delay = 0 }) {
       if (ref.current) observer.unobserve(ref.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (imgRef.current && imgRef.current.complete) {
+      setIsLoaded(true);
+    }
+  }, [product.images]);
 
   const handleAddToCart = (e) => {
     e.preventDefault(); 
@@ -77,6 +84,7 @@ export default function ProductCard({ product, delay = 0 }) {
             />
           ) : (
             <img 
+              ref={imgRef}
               src={product.images?.[0] || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1000'} 
               alt={product.name} 
               className={`img-reveal ${isLoaded ? 'loaded' : ''}`}
@@ -84,20 +92,15 @@ export default function ProductCard({ product, delay = 0 }) {
             />
           )}
           
-          <div style={{ position: 'absolute', top: '1rem', left: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 2 }}>
+          <div className="product-card-tags">
             {product.inStock === false && (
-              <div style={{ background: '#7f1d1d', color: '#ffffff', fontSize: '0.6rem', letterSpacing: '0.15em', padding: '0.35rem 0.75rem', textTransform: 'uppercase', fontWeight: 600 }}>
+              <div className="product-tag tag-sold-out">
                 SOLD OUT
               </div>
             )}
             {product.isBestSeller && (
-              <div style={{ background: 'var(--foreground)', color: 'var(--background)', fontSize: '0.6rem', letterSpacing: '0.15em', padding: '0.35rem 0.75rem', textTransform: 'uppercase' }}>
+              <div className="product-tag tag-best-seller">
                 #1 Best Seller
-              </div>
-            )}
-            {discountPercentage > 0 && (
-              <div style={{ background: '#991b1b', color: '#ffffff', fontSize: '0.6rem', letterSpacing: '0.15em', padding: '0.35rem 0.75rem', textTransform: 'uppercase' }}>
-                {discountPercentage}% OFF
               </div>
             )}
           </div>
@@ -126,6 +129,13 @@ export default function ProductCard({ product, delay = 0 }) {
               {isInWishlist ? 'favorite' : 'favorite_border'}
             </span>
           </button>
+
+          {/* Discount Tag at the bottom-left of the image wrapper */}
+          {discountPercentage > 0 && (
+            <div className="product-tag tag-discount tag-discount-bottom">
+              {discountPercentage}% OFF
+            </div>
+          )}
           
           {/* Quick Add Button */}
           {product.inStock !== false && (

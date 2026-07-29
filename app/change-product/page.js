@@ -92,7 +92,8 @@ export default function ChangeProductPage() {
     her: '',
     unisex: '',
     ourStory: '',
-    journal: ''
+    journal: '',
+    homeVideo: ''
   });
   const [heroSaving, setHeroSaving] = useState(false);
   const [uploadingHeroAllProducts, setUploadingHeroAllProducts] = useState(false);
@@ -102,6 +103,7 @@ export default function ChangeProductPage() {
   const [uploadingHeroUnisex, setUploadingHeroUnisex] = useState(false);
   const [uploadingHeroOurStory, setUploadingHeroOurStory] = useState(false);
   const [uploadingHeroJournal, setUploadingHeroJournal] = useState(false);
+  const [uploadingHeroHomeVideo, setUploadingHeroHomeVideo] = useState(false);
 
   const defaultHeros = {
     allProducts: 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000',
@@ -110,7 +112,8 @@ export default function ChangeProductPage() {
     her: 'https://images.unsplash.com/photo-1588405748880-12d1d2a59f75?auto=format&fit=crop&q=80&w=2000',
     unisex: 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=2000',
     ourStory: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=2000',
-    journal: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=2000'
+    journal: 'https://images.unsplash.com/photo-1595428774223-ef52624120d2?auto=format&fit=crop&q=80&w=2000',
+    homeVideo: '/videos/homePage.mp4'
   };
 
   const defaultContact = {
@@ -427,7 +430,8 @@ export default function ChangeProductPage() {
           her: data.her || '',
           unisex: data.unisex || '',
           ourStory: data.ourStory || '',
-          journal: data.journal || ''
+          journal: data.journal || '',
+          homeVideo: data.homeVideo || ''
         });
       } else {
         setHeroImages(defaultHeros);
@@ -974,6 +978,30 @@ export default function ChangeProductPage() {
   const handleHeroSectionImageUpload = async (e, sectionKey) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    if (sectionKey === 'homeVideo') {
+      const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'];
+      const fileExt = file.name.split('.').pop().toLowerCase();
+      const allowedExts = ['mp4', 'webm', 'ogg', 'mov'];
+      if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+        alert('Error: Only MP4, WEBM, OGG, and MOV videos are supported.');
+        return;
+      }
+
+      setUploadingHeroHomeVideo(true);
+      try {
+        const fileName = `${Date.now()}_hero_homeVideo_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const storageRef = ref(storage, `heros/${fileName}`);
+        const uploadResult = await uploadBytes(storageRef, file);
+        const url = await getDownloadURL(uploadResult.ref);
+        setHeroImages(prev => ({ ...prev, homeVideo: url }));
+      } catch (err) {
+        alert('Failed to upload video: ' + err.message);
+      } finally {
+        setUploadingHeroHomeVideo(false);
+      }
+      return;
+    }
 
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     const fileExt = file.name.split('.').pop().toLowerCase();
@@ -2770,9 +2798,38 @@ export default function ChangeProductPage() {
                 </div>
               </div>
               <form onSubmit={handleSaveHeroImages} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                {/* HOMEPAGE VIDEO */}
+                <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>1. Homepage Background Video</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <div style={{ fontSize: '0.75rem', background: '#f8fafc', border: '1px solid #e2e8f0', padding: '1rem', color: '#475569', lineHeight: 1.5 }}>
+                      <strong style={{ display: 'block', marginBottom: '0.35rem' }}>Video Specifications & Recommendations:</strong>
+                      <ul style={{ margin: 0, paddingLeft: '1.25rem' }}>
+                        <li><strong>Format:</strong> Compressed MP4 format (.mp4)</li>
+                        <li><strong>Resolution:</strong> 1920x1080 (16:9 widescreen aspect ratio)</li>
+                        <li><strong>File Size:</strong> Recommended under <strong>10 MB</strong> (highly recommended for fast page load speed and smooth mobile performance)</li>
+                        <li><strong>Encoding:</strong> H.264 video codec with audio track removed (stripped sound tracks improve browser autoplay compatibility on modern browsers like Safari, Chrome)</li>
+                      </ul>
+                    </div>
+
+                    {heroImages.homeVideo && (
+                      <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)', background: '#000' }}>
+                        <video src={heroImages.homeVideo} controls muted style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    )}
+                    <input type="text" value={heroImages.homeVideo || ''} onChange={(e) => setHeroImages({...heroImages, homeVideo: e.target.value})} placeholder="Paste Video URL Link (.mp4)" style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)' }} />
+                    <div>
+                      <input type="file" accept="video/mp4,video/webm,video/ogg,video/quicktime" onChange={(e) => handleHeroSectionImageUpload(e, 'homeVideo')} style={{ display: 'none' }} id="hero-homevideo-upload" />
+                      <label htmlFor="hero-homevideo-upload" style={{ display: 'inline-block', padding: '0.5rem 1rem', border: '1px solid var(--border)', background: '#fff', cursor: 'pointer', fontSize: '0.7rem' }} className="label-caps">
+                        {uploadingHeroHomeVideo ? 'UPLOADING VIDEO...' : 'UPLOAD VIDEO FILE'}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
                 {/* SHOP ALL */}
                 <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
-                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>1. Shop All Page Hero</h3>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>2. Shop All Page Hero</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {heroImages.allProducts && (
                       <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
@@ -2791,7 +2848,7 @@ export default function ChangeProductPage() {
 
                 {/* PERFUME OIL */}
                 <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
-                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>2. Perfume Oil Collection Hero</h3>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>3. Perfume Oil Collection Hero</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {heroImages.perfumeOil && (
                       <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
@@ -2810,7 +2867,7 @@ export default function ChangeProductPage() {
 
                 {/* HIM */}
                 <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
-                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>3. Him Collection Hero</h3>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>4. Him Collection Hero</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {heroImages.him && (
                       <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
@@ -2829,7 +2886,7 @@ export default function ChangeProductPage() {
 
                 {/* HER */}
                 <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
-                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>4. Her Collection Hero</h3>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>5. Her Collection Hero</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {heroImages.her && (
                       <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
@@ -2848,7 +2905,7 @@ export default function ChangeProductPage() {
 
                 {/* UNISEX */}
                 <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
-                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>5. Unisex Collection Hero</h3>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>6. Unisex Collection Hero</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {heroImages.unisex && (
                       <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
@@ -2867,7 +2924,7 @@ export default function ChangeProductPage() {
 
                 {/* OUR STORY */}
                 <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
-                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>6. Our Story Page Hero</h3>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>7. Our Story Page Hero</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {heroImages.ourStory && (
                       <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
@@ -2886,7 +2943,7 @@ export default function ChangeProductPage() {
 
                 {/* JOURNAL */}
                 <div style={{ borderBottom: '1px solid var(--border)', paddingBottom: '2rem' }}>
-                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>7. Journal Page Hero</h3>
+                  <h3 className="label-caps" style={{ fontSize: '0.8rem', color: 'var(--primary)', marginBottom: '1rem' }}>8. Journal Page Hero</h3>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     {heroImages.journal && (
                       <div style={{ width: '100%', maxHeight: '180px', overflow: 'hidden', border: '1px solid var(--border)' }}>
