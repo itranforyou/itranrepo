@@ -142,6 +142,31 @@ export default function ChangeProductPage() {
   const [enquiries, setEnquiries] = useState([]);
   const [enquirySearch, setEnquirySearch] = useState('');
   const [enquiryFilter, setEnquiryFilter] = useState('All');
+  const [giftingTypeFilter, setGiftingTypeFilter] = useState('All');
+  const [enquiryReplies, setEnquiryReplies] = useState({});
+  const [savingReplyId, setSavingReplyId] = useState(null);
+
+  // Bulk Gifting Card Images state
+  const [giftingImages, setGiftingImages] = useState({
+    wedding: '/images/wedding-gifting.jpg',
+    corporate: '/images/corporate-gifting.jpg',
+    returnGifting: '/images/return-gifting.jpg',
+    hero: '/images/bulk-gifting-hero.jpg'
+  });
+  const [uploadingGiftingImage, setUploadingGiftingImage] = useState({
+    wedding: false,
+    corporate: false,
+    returnGifting: false,
+    hero: false
+  });
+  const [savingGiftingImages, setSavingGiftingImages] = useState(false);
+
+  // Announcement Ticker state
+  const [tickerConfig, setTickerConfig] = useState({
+    text: 'WE OFFER FREE SHIPPING ON ALL ORDERS PAN INDIA !!',
+    enabled: true
+  });
+  const [savingTicker, setSavingTicker] = useState(false);
 
   // Contact Enquiries state
   const [contactEnquiries, setContactEnquiries] = useState([]);
@@ -456,6 +481,31 @@ export default function ChangeProductPage() {
       }
     });
 
+    // Real-time listener for Bulk Gifting Card Images
+    const unsubscribeGiftingImages = onSnapshot(doc(db, 'settings', 'gifting-images'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setGiftingImages(prev => ({
+          ...prev,
+          wedding: data.wedding || prev.wedding,
+          corporate: data.corporate || prev.corporate,
+          returnGifting: data.returnGifting || prev.returnGifting,
+          hero: data.hero || prev.hero
+        }));
+      }
+    });
+
+    // Real-time listener for Announcement Ticker
+    const unsubscribeTicker = onSnapshot(doc(db, 'settings', 'ticker'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setTickerConfig({
+          text: data.text || 'WE OFFER FREE SHIPPING ON ALL ORDERS PAN INDIA !!',
+          enabled: data.enabled !== undefined ? data.enabled : true
+        });
+      }
+    });
+
     return () => {
       unsubscribe();
       unsubscribeContact();
@@ -466,8 +516,80 @@ export default function ChangeProductPage() {
       unsubscribeJournal();
       unsubscribeHeroImages();
       unsubscribeJournalSettings();
+      unsubscribeGiftingImages();
+      unsubscribeTicker();
     };
   }, [adminUser]);
+
+  // Handler for uploading Gifting Card Images
+  const handleGiftingImageUpload = async (key, file) => {
+    if (!file) return;
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const fileExt = file.name.split('.').pop().toLowerCase();
+    const allowedExts = ['jpg', 'jpeg', 'png', 'webp'];
+    if (!allowedTypes.includes(file.type) && !allowedExts.includes(fileExt)) {
+      alert('Error: Only JPG, PNG, and WEBP images are supported.');
+      return;
+    }
+
+    setUploadingGiftingImage(prev => ({ ...prev, [key]: true }));
+    try {
+      const optimizedFile = await optimizeStoryImage(file);
+      const fileName = `${Date.now()}_gifting_${key}_${optimizedFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+      const storageRef = ref(storage, `gifting/${fileName}`);
+      const uploadResult = await uploadBytes(storageRef, optimizedFile);
+      const url = await getDownloadURL(uploadResult.ref);
+      setGiftingImages(prev => ({ ...prev, [key]: url }));
+    } catch (err) {
+      alert('Failed to upload image: ' + err.message);
+    } finally {
+      setUploadingGiftingImage(prev => ({ ...prev, [key]: false }));
+    }
+  };
+
+  const handleSaveGiftingImages = async () => {
+    setSavingGiftingImages(true);
+    try {
+      await setDoc(doc(db, 'settings', 'gifting-images'), giftingImages, { merge: true });
+      alert('Bulk Gifting images saved successfully!');
+    } catch (err) {
+      alert('Failed to save gifting images: ' + err.message);
+    } finally {
+      setSavingGiftingImages(false);
+    }
+  };
+
+  // Handler for saving Announcement Ticker
+  const handleSaveTickerSettings = async (e) => {
+    if (e) e.preventDefault();
+    setSavingTicker(true);
+    try {
+      await setDoc(doc(db, 'settings', 'ticker'), tickerConfig, { merge: true });
+      alert('Announcement Ticker updated successfully!');
+    } catch (err) {
+      alert('Failed to save ticker settings: ' + err.message);
+    } finally {
+      setSavingTicker(false);
+    }
+  };
+
+  // Handler for sending Admin Reply to Customer on Bulk Enquiry
+  const handleSaveAdminReply = async (enquiryId) => {
+    const replyText = enquiryReplies[enquiryId];
+    if (replyText === undefined) return;
+    setSavingReplyId(enquiryId);
+    try {
+      await updateDoc(doc(db, 'bulkEnquiries', enquiryId), {
+        adminReply: replyText.trim(),
+        adminReplyUpdatedAt: serverTimestamp()
+      });
+      alert('Reply sent to customer successfully! It is now visible in their Bulk Gifting History.');
+    } catch (err) {
+      alert('Failed to send reply: ' + err.message);
+    } finally {
+      setSavingReplyId(null);
+    }
+  };
 
   const updateContactStatus = async (id, newStatus) => {
     try {
@@ -1446,6 +1568,22 @@ export default function ChangeProductPage() {
           >
             HERO IMAGES
           </button>
+          <button 
+            onClick={() => setActiveTab('ticker')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'ticker' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            ANNOUNCEMENT TICKER
+          </button>
 
         </div>
 
@@ -1723,15 +1861,178 @@ export default function ChangeProductPage() {
           </Reveal>
         ) : activeTab === 'enquiries' ? (
           <Reveal>
+            {/* 1. BULK GIFTING CARD IMAGES & HERO VISUALS MANAGER */}
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '2.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.75rem' }}>
+                <div>
+                  <h2 style={{ fontSize: '1.4rem', fontFamily: 'var(--font-serif)', margin: '0 0 0.25rem' }}>Bulk Gifting Card Images</h2>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', margin: 0 }}>
+                    Manage the public photography displayed on the /bulk-enquiry cards and hero section.
+                  </p>
+                </div>
+                <button 
+                  type="button"
+                  onClick={handleSaveGiftingImages}
+                  disabled={savingGiftingImages}
+                  className="btn-primary label-caps"
+                  style={{ padding: '0.75rem 1.5rem', fontSize: '0.7rem' }}
+                >
+                  {savingGiftingImages ? 'SAVING...' : 'SAVE GIFTING IMAGES'}
+                </button>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
+                
+                {/* Wedding Gifting Image */}
+                <div style={{ background: '#faf9f7', padding: '1rem', border: '1px solid #ede8e1' }}>
+                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#b45309' }}>
+                    1. Wedding Gifting Card Image
+                  </label>
+                  <div style={{ width: '100%', height: '140px', overflow: 'hidden', border: '1px solid var(--border)', marginBottom: '0.75rem', background: '#eee' }}>
+                    <img src={giftingImages.wedding || '/images/wedding-gifting.jpg'} alt="Wedding Gifting" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <input 
+                    type="text" 
+                    value={giftingImages.wedding || ''} 
+                    onChange={(e) => setGiftingImages({ ...giftingImages, wedding: e.target.value })} 
+                    placeholder="Image URL" 
+                    style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', marginBottom: '0.5rem' }} 
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="wedding-img-upload" 
+                    style={{ display: 'none' }} 
+                    onChange={(e) => handleGiftingImageUpload('wedding', e.target.files[0])} 
+                  />
+                  <label 
+                    htmlFor="wedding-img-upload" 
+                    className="label-caps" 
+                    style={{ display: 'block', textAlign: 'center', padding: '0.5rem', background: '#fff', border: '1px solid var(--border)', cursor: 'pointer', fontSize: '0.65rem' }}
+                  >
+                    {uploadingGiftingImage.wedding ? 'UPLOADING...' : 'UPLOAD NEW IMAGE'}
+                  </label>
+                </div>
+
+                {/* Corporate Gifting Image */}
+                <div style={{ background: '#faf9f7', padding: '1rem', border: '1px solid #ede8e1' }}>
+                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#1e40af' }}>
+                    2. Corporate Gifting Card Image
+                  </label>
+                  <div style={{ width: '100%', height: '140px', overflow: 'hidden', border: '1px solid var(--border)', marginBottom: '0.75rem', background: '#eee' }}>
+                    <img src={giftingImages.corporate || '/images/corporate-gifting.jpg'} alt="Corporate Gifting" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <input 
+                    type="text" 
+                    value={giftingImages.corporate || ''} 
+                    onChange={(e) => setGiftingImages({ ...giftingImages, corporate: e.target.value })} 
+                    placeholder="Image URL" 
+                    style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', marginBottom: '0.5rem' }} 
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="corporate-img-upload" 
+                    style={{ display: 'none' }} 
+                    onChange={(e) => handleGiftingImageUpload('corporate', e.target.files[0])} 
+                  />
+                  <label 
+                    htmlFor="corporate-img-upload" 
+                    className="label-caps" 
+                    style={{ display: 'block', textAlign: 'center', padding: '0.5rem', background: '#fff', border: '1px solid var(--border)', cursor: 'pointer', fontSize: '0.65rem' }}
+                  >
+                    {uploadingGiftingImage.corporate ? 'UPLOADING...' : 'UPLOAD NEW IMAGE'}
+                  </label>
+                </div>
+
+                {/* Return Gifting Image */}
+                <div style={{ background: '#faf9f7', padding: '1rem', border: '1px solid #ede8e1' }}>
+                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#047857' }}>
+                    3. Return Gifting Card Image
+                  </label>
+                  <div style={{ width: '100%', height: '140px', overflow: 'hidden', border: '1px solid var(--border)', marginBottom: '0.75rem', background: '#eee' }}>
+                    <img src={giftingImages.returnGifting || '/images/return-gifting.jpg'} alt="Return Gifting" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <input 
+                    type="text" 
+                    value={giftingImages.returnGifting || ''} 
+                    onChange={(e) => setGiftingImages({ ...giftingImages, returnGifting: e.target.value })} 
+                    placeholder="Image URL" 
+                    style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', marginBottom: '0.5rem' }} 
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="return-img-upload" 
+                    style={{ display: 'none' }} 
+                    onChange={(e) => handleGiftingImageUpload('returnGifting', e.target.files[0])} 
+                  />
+                  <label 
+                    htmlFor="return-img-upload" 
+                    className="label-caps" 
+                    style={{ display: 'block', textAlign: 'center', padding: '0.5rem', background: '#fff', border: '1px solid var(--border)', cursor: 'pointer', fontSize: '0.65rem' }}
+                  >
+                    {uploadingGiftingImage.returnGifting ? 'UPLOADING...' : 'UPLOAD NEW IMAGE'}
+                  </label>
+                </div>
+
+                {/* Bulk Gifting Hero Image */}
+                <div style={{ background: '#faf9f7', padding: '1rem', border: '1px solid #ede8e1' }}>
+                  <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                    4. Bulk Gifting Page Hero Image
+                  </label>
+                  <div style={{ width: '100%', height: '140px', overflow: 'hidden', border: '1px solid var(--border)', marginBottom: '0.75rem', background: '#eee' }}>
+                    <img src={giftingImages.hero || '/images/bulk-gifting-hero.jpg'} alt="Bulk Hero" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <input 
+                    type="text" 
+                    value={giftingImages.hero || ''} 
+                    onChange={(e) => setGiftingImages({ ...giftingImages, hero: e.target.value })} 
+                    placeholder="Image URL" 
+                    style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', marginBottom: '0.5rem' }} 
+                  />
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    id="hero-gifting-img-upload" 
+                    style={{ display: 'none' }} 
+                    onChange={(e) => handleGiftingImageUpload('hero', e.target.files[0])} 
+                  />
+                  <label 
+                    htmlFor="hero-gifting-img-upload" 
+                    className="label-caps" 
+                    style={{ display: 'block', textAlign: 'center', padding: '0.5rem', background: '#fff', border: '1px solid var(--border)', cursor: 'pointer', fontSize: '0.65rem' }}
+                  >
+                    {uploadingGiftingImage.hero ? 'UPLOADING...' : 'UPLOAD NEW IMAGE'}
+                  </label>
+                </div>
+
+              </div>
+            </div>
+
+            {/* 2. ENQUIRIES SEARCH & FILTER BAR */}
             <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)', marginBottom: '2rem', display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-              <div style={{ flex: '1 1 300px' }}>
+              <div style={{ flex: '1 1 280px' }}>
                 <input 
                   type="text" 
-                  placeholder="Search by customer name or product..." 
+                  placeholder="Search by name, email, phone, company, occasion..." 
                   value={enquirySearch}
                   onChange={(e) => setEnquirySearch(e.target.value)}
                   style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem' }} 
                 />
+              </div>
+              <div style={{ flex: '1 1 180px' }}>
+                <select 
+                  value={giftingTypeFilter} 
+                  onChange={(e) => setGiftingTypeFilter(e.target.value)}
+                  style={{ width: '100%', padding: '0.85rem', border: '1px solid var(--border)', fontSize: '0.9rem', background: '#fff' }}
+                >
+                  <option value="All">All Gifting Types</option>
+                  <option value="wedding">Wedding Gifting</option>
+                  <option value="corporate">Corporate Gifting</option>
+                  <option value="return">Return Gifting</option>
+                  <option value="general">General / Other</option>
+                </select>
               </div>
               <div style={{ flex: '1 1 150px' }}>
                 <select 
@@ -1742,62 +2043,227 @@ export default function ChangeProductPage() {
                   <option value="All">All Statuses</option>
                   <option value="Pending">Pending</option>
                   <option value="Contacted">Contacted</option>
+                  <option value="In Progress">In Progress</option>
                   <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
                 </select>
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+            {/* 3. ENQUIRY CARDS LIST WITH ADMIN REPLY */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
               {enquiries
                 .filter(enq => {
-                  const matchesSearch = enq.fullName?.toLowerCase().includes(enquirySearch.toLowerCase()) || enq.productName?.toLowerCase().includes(enquirySearch.toLowerCase());
-                  const matchesFilter = enquiryFilter === 'All' || enq.status === enquiryFilter;
-                  return matchesSearch && matchesFilter;
+                  const s = enquirySearch.toLowerCase();
+                  const matchesSearch = 
+                    !s ||
+                    enq.fullName?.toLowerCase().includes(s) ||
+                    enq.email?.toLowerCase().includes(s) ||
+                    enq.phone?.toLowerCase().includes(s) ||
+                    enq.companyName?.toLowerCase().includes(s) ||
+                    enq.occasion?.toLowerCase().includes(s) ||
+                    enq.productName?.toLowerCase().includes(s) ||
+                    enq.id?.toLowerCase().includes(s);
+
+                  const matchesStatus = enquiryFilter === 'All' || enq.status === enquiryFilter;
+
+                  const enqType = (enq.giftingType || 'general').toLowerCase();
+                  const matchesType = 
+                    giftingTypeFilter === 'All' || 
+                    (giftingTypeFilter === 'wedding' && enqType === 'wedding') ||
+                    (giftingTypeFilter === 'corporate' && enqType === 'corporate') ||
+                    (giftingTypeFilter === 'return' && enqType === 'return') ||
+                    (giftingTypeFilter === 'general' && (!enq.giftingType || enqType === 'general' || enqType === 'bespoke'));
+
+                  return matchesSearch && matchesStatus && matchesType;
                 })
-                .map((enq) => (
-                <div key={enq.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: 'var(--spacing-gutter)' }}>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem' }}>
-                    <div>
-                      <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>{enq.status.toUpperCase()}</div>
-                      <h3 style={{ fontSize: '1.25rem', fontFamily: 'var(--font-serif)', margin: 0 }}>{enq.fullName}</h3>
-                      <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', marginTop: '0.25rem' }}>{new Date(enq.createdAt?.seconds * 1000).toLocaleString()}</p>
+                .map((enq) => {
+                  const typeLabel = 
+                    enq.giftingType === 'wedding' ? 'WEDDING GIFTING' :
+                    enq.giftingType === 'corporate' ? 'CORPORATE GIFTING' :
+                    enq.giftingType === 'return' ? 'RETURN GIFTING' : 'BULK GIFTING';
+
+                  const typeColor = 
+                    enq.giftingType === 'wedding' ? '#b45309' :
+                    enq.giftingType === 'corporate' ? '#1e40af' :
+                    enq.giftingType === 'return' ? '#047857' : 'var(--primary)';
+
+                  const statusBg = 
+                    enq.status === 'Pending' ? '#fff4ed' :
+                    enq.status === 'Contacted' ? '#eff6ff' :
+                    enq.status === 'In Progress' ? '#fefce8' :
+                    enq.status === 'Completed' ? '#f0fdf4' : '#fef2f2';
+
+                  const currentReplyValue = enquiryReplies[enq.id] !== undefined ? enquiryReplies[enq.id] : (enq.adminReply || '');
+
+                  return (
+                    <div key={enq.id} style={{ background: '#fff', border: '1px solid var(--border)', padding: 'var(--spacing-gutter)', boxShadow: '0 2px 8px rgba(0,0,0,0.03)' }}>
+                      
+                      {/* Top Header Card */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '0.35rem' }}>
+                            <span className="label-caps" style={{ fontSize: '0.65rem', padding: '0.2rem 0.6rem', background: '#faf6f0', border: `1px solid ${typeColor}`, color: typeColor }}>
+                              {typeLabel}
+                            </span>
+                            <span style={{ fontSize: '0.75rem', color: 'var(--muted-foreground)' }}>ID: {enq.id}</span>
+                          </div>
+                          <h3 style={{ fontSize: '1.35rem', fontFamily: 'var(--font-serif)', margin: '0.2rem 0 0' }}>{enq.fullName}</h3>
+                          <p style={{ fontSize: '0.8rem', color: 'var(--muted-foreground)', marginTop: '0.2rem' }}>
+                            Submitted: {enq.createdAt?.seconds ? new Date(enq.createdAt.seconds * 1000).toLocaleString() : 'Recent'}
+                          </p>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <select 
+                            value={enq.status || 'Pending'} 
+                            onChange={(e) => updateEnquiryStatus(enq.id, e.target.value)}
+                            style={{ padding: '0.6rem 0.85rem', fontSize: '0.8rem', fontWeight: 600, border: '1px solid var(--border)', background: statusBg, cursor: 'pointer' }}
+                          >
+                            <option value="Pending">Pending</option>
+                            <option value="Contacted">Contacted</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                          </select>
+
+                          <button 
+                            onClick={() => deleteEnquiry(enq.id)} 
+                            title="Delete Enquiry"
+                            style={{ padding: '0.5rem', color: '#991b1b', border: 'none', background: 'none', cursor: 'pointer' }} 
+                            className="material-icons"
+                          >
+                            delete_outline
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {/* Grid Sections */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem', background: '#faf9f7', padding: '1.5rem', border: '1px solid #ede8e1' }}>
+                        
+                        {/* 1. Customer Details */}
+                        <div>
+                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                            Customer Details
+                          </label>
+                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Name:</strong> {enq.fullName}</p>
+                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Phone:</strong> {enq.phone}</p>
+                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Email:</strong> {enq.email}</p>
+                          {enq.city && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>City:</strong> {enq.city}</p>}
+                        </div>
+
+                        {/* 2. Gifting & Requirements */}
+                        <div>
+                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                            Gifting Requirements
+                          </label>
+                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Occasion:</strong> {enq.occasion || enq.weddingOccasion || enq.returnOccasion || 'Bulk'}</p>
+                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Quantity:</strong> {enq.quantity || enq.numberOfRecipients || enq.expectedGuests || '—'}</p>
+                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Budget:</strong> {enq.budgetPerGift || enq.returnBudget || 'Custom'}</p>
+                          {enq.giftType && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Gift Type:</strong> {enq.giftType}</p>}
+                          <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>Fragrance:</strong> {enq.productName || enq.preferredFragrance || 'Need Recommendation'}</p>
+                        </div>
+
+                        {/* 3. Event & Delivery */}
+                        <div>
+                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                            Event & Delivery
+                          </label>
+                          {enq.eventDate && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Event Date:</strong> {enq.eventDate}</p>}
+                          {enq.deliveryDate && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Delivery Date:</strong> {enq.deliveryDate}</p>}
+                          {enq.deliveryLocation && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Location:</strong> {enq.deliveryLocation}</p>}
+                          {enq.pinCode && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>PIN:</strong> {enq.pinCode}</p>}
+                          {enq.deliveryType && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>Type:</strong> {enq.deliveryType}</p>}
+                        </div>
+
+                        {/* 4. Corporate Specific Details (if present) */}
+                        {enq.companyName && (
+                          <div>
+                            <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#1e40af' }}>
+                              Corporate Details
+                            </label>
+                            <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Company:</strong> {enq.companyName}</p>
+                            {enq.designation && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Designation:</strong> {enq.designation}</p>}
+                            {enq.purposeOfGifting && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Purpose:</strong> {enq.purposeOfGifting}</p>}
+                            {enq.gstRequired && (
+                              <div style={{ marginTop: '0.4rem', padding: '0.4rem', background: '#fff', border: '1px dashed #cbd5e1' }}>
+                                <p style={{ fontSize: '0.78rem', margin: 0 }}><strong>GST:</strong> {enq.gstNumber || 'Yes'}</p>
+                                {enq.billingCompanyName && <p style={{ fontSize: '0.78rem', margin: 0 }}><strong>Billing To:</strong> {enq.billingCompanyName}</p>}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                      </div>
+
+                      {/* Personalisation Options & Packaging Badges */}
+                      {((enq.personalization && enq.personalization.length > 0) || enq.packagingPreference) && (
+                        <div style={{ marginBottom: '1.25rem', padding: '0.85rem 1.25rem', background: '#fdfaf7', border: '1px solid #ede8e1' }}>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+                            <span className="label-caps" style={{ fontSize: '0.62rem', color: '#7c6d63', marginRight: '0.5rem' }}>Personalisation:</span>
+                            {enq.packagingPreference && (
+                              <span style={{ fontSize: '0.75rem', background: '#f5efe6', border: '1px solid #d4c8be', padding: '0.2rem 0.6rem', color: '#2a2622' }}>
+                                📦 {enq.packagingPreference}
+                              </span>
+                            )}
+                            {Array.isArray(enq.personalization) && enq.personalization.map((p, idx) => (
+                              <span key={idx} style={{ fontSize: '0.75rem', background: '#f5efe6', border: '1px solid #d4c8be', padding: '0.2rem 0.6rem', color: '#2a2622' }}>
+                                ✨ {p}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Customer Message */}
+                      <div style={{ marginBottom: '1.5rem' }}>
+                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: 'var(--primary)' }}>
+                          Customer Vision & Additional Notes
+                        </label>
+                        <p style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', background: '#fff', padding: '0.75rem', border: '1px solid #ede8e1', margin: 0 }}>
+                          {enq.additionalRequirements || enq.message || 'No additional notes provided.'}
+                        </p>
+                      </div>
+
+                      {/* ADMIN REPLY TO CUSTOMER SECTION */}
+                      <div style={{ background: '#faf6f0', padding: '1.25rem', border: '1px solid rgba(212, 175, 55, 0.35)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                          <span className="material-icons" style={{ fontSize: '18px', color: '#c19a5b' }}>rate_review</span>
+                          <label className="label-caps" style={{ fontSize: '0.65rem', color: '#1a1a1a', letterSpacing: '0.12em', margin: 0 }}>
+                            Admin Reply / Message to Customer (Visible on Customer Profile)
+                          </label>
+                        </div>
+                        <textarea
+                          rows="3"
+                          placeholder="Type your response, custom fragrance curation, pricing quote, or sample dispatch update for this customer..."
+                          value={currentReplyValue}
+                          onChange={(e) => setEnquiryReplies({ ...enquiryReplies, [enq.id]: e.target.value })}
+                          style={{ width: '100%', padding: '0.75rem', border: '1px solid #d4c8be', fontSize: '0.85rem', background: '#fff', marginBottom: '0.75rem' }}
+                        />
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem' }}>
+                          {enq.adminReply && (
+                            <span style={{ fontSize: '0.72rem', color: '#15803d' }}>
+                              ✓ Customer reply is active
+                            </span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleSaveAdminReply(enq.id)}
+                            disabled={savingReplyId === enq.id}
+                            className="btn-primary label-caps"
+                            style={{ padding: '0.6rem 1.25rem', fontSize: '0.68rem', letterSpacing: '0.12em' }}
+                          >
+                            {savingReplyId === enq.id ? 'SENDING...' : (enq.adminReply ? 'UPDATE CUSTOMER REPLY' : 'SEND REPLY TO CUSTOMER')}
+                          </button>
+                        </div>
+                      </div>
+
                     </div>
-                    <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-                      <select 
-                        value={enq.status} 
-                        onChange={(e) => updateEnquiryStatus(enq.id, e.target.value)}
-                        style={{ padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', background: enq.status === 'Pending' ? '#fff4ed' : enq.status === 'Contacted' ? '#eff6ff' : '#f0fdf4' }}
-                      >
-                        <option value="Pending">Pending</option>
-                        <option value="Contacted">Contacted</option>
-                        <option value="Completed">Completed</option>
-                      </select>
-                      <button onClick={() => deleteEnquiry(enq.id)} style={{ padding: '0.5rem', color: '#991b1b', border: 'none', background: 'none', cursor: 'pointer' }} className="material-icons">delete_outline</button>
-                    </div>
-                  </div>
-                  
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '2rem', marginBottom: '1.5rem', background: '#faf9f7', padding: '1.5rem' }}>
-                    <div>
-                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.4rem' }}>Contact Info</label>
-                      <p style={{ fontSize: '0.9rem', margin: 0 }}>{enq.phone}</p>
-                      <p style={{ fontSize: '0.9rem', margin: 0 }}>{enq.email}</p>
-                    </div>
-                    <div>
-                      <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.4rem' }}>Request Details</label>
-                      <p style={{ fontSize: '0.9rem', margin: 0 }}><strong>Product:</strong> {enq.productName}</p>
-                      <p style={{ fontSize: '0.9rem', margin: 0 }}><strong>Qty:</strong> {enq.quantity}</p>
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="label-caps" style={{ fontSize: '0.6rem', display: 'block', marginBottom: '0.4rem' }}>Message / Vision</label>
-                    <p style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{enq.message}</p>
-                  </div>
-                </div>
-              ))}
+                  );
+                })}
               {enquiries.length === 0 && (
                 <div style={{ textAlign: 'center', padding: '5rem', background: '#fff', border: '1px dashed var(--border)' }}>
-                  <p className="label-caps">No bulk enquiries found.</p>
+                  <p className="label-caps">No bulk gifting enquiries found.</p>
                 </div>
               )}
             </div>
@@ -2962,6 +3428,105 @@ export default function ChangeProductPage() {
 
                 <button type="submit" disabled={heroSaving} style={{ padding: '1.25rem', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} className="label-caps">
                   {heroSaving ? 'SAVING CHANGES...' : 'SAVE HERO IMAGES'}
+                </button>
+              </form>
+            </div>
+          </Reveal>
+        ) : activeTab === 'ticker' ? (
+          <Reveal>
+            <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid var(--border)', paddingBottom: '1rem' }}>
+                <div>
+                  <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', margin: '0 0 0.5rem' }}>Announcement Ticker Settings</h1>
+                  <p style={{ color: 'var(--muted-foreground)', fontSize: '0.85rem', margin: 0 }}>
+                    Control the slim scrolling announcement ticker bar pinned at the very top of the website.
+                  </p>
+                </div>
+                <div style={{ 
+                  padding: '0.4rem 0.9rem', 
+                  borderRadius: '20px', 
+                  fontSize: '0.7rem', 
+                  fontWeight: 600,
+                  background: tickerConfig.enabled ? '#f0fdf4' : '#fee2e2',
+                  color: tickerConfig.enabled ? '#15803d' : '#991b1b',
+                  border: '1px solid currentColor'
+                }}>
+                  {tickerConfig.enabled ? 'TICKER ACTIVE' : 'TICKER DISABLED'}
+                </div>
+              </div>
+
+              <form onSubmit={handleSaveTickerSettings} style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                
+                {/* Enable / Disable Toggle */}
+                <div style={{ background: '#faf9f7', padding: '1.25rem', border: '1px solid #ede8e1', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  <input 
+                    type="checkbox" 
+                    id="tickerEnableToggle"
+                    checked={tickerConfig.enabled}
+                    onChange={(e) => setTickerConfig({ ...tickerConfig, enabled: e.target.checked })}
+                    style={{ width: '20px', height: '20px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="tickerEnableToggle" className="label-caps" style={{ fontSize: '0.75rem', color: '#1a1a1a', cursor: 'pointer', fontWeight: 600 }}>
+                    Enable Top Scrolling Announcement Ticker Bar
+                  </label>
+                </div>
+
+                {/* Ticker Text Input */}
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.6rem', color: 'var(--primary)' }}>
+                    Announcement Message Text
+                  </label>
+                  <input 
+                    type="text" 
+                    required
+                    value={tickerConfig.text || ''} 
+                    onChange={(e) => setTickerConfig({ ...tickerConfig, text: e.target.value })} 
+                    placeholder="e.g. WE OFFER FREE SHIPPING ON ALL ORDERS PAN INDIA !!" 
+                    style={{ width: '100%', padding: '1rem', border: '1px solid var(--border)', fontSize: '0.95rem' }} 
+                  />
+                  <span style={{ fontSize: '0.75rem', color: '#888', marginTop: '0.4rem', display: 'block' }}>
+                    Tip: Text is automatically looped infinitely with luxury diamond separators (✦) across all screen sizes.
+                  </span>
+                </div>
+
+                {/* Live Preview Bar */}
+                <div>
+                  <label className="label-caps" style={{ fontSize: '0.7rem', display: 'block', marginBottom: '0.6rem', color: '#888' }}>
+                    Live Preview (How it appears to visitors)
+                  </label>
+                  <div style={{ 
+                    width: '100%', 
+                    height: '34px', 
+                    background: '#f7f2ea', 
+                    border: '1px solid rgba(212, 175, 55, 0.25)', 
+                    display: 'flex', 
+                    alignItems: 'center',
+                    overflow: 'hidden',
+                    whiteSpace: 'nowrap'
+                  }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '1.5rem', paddingLeft: '1rem' }}>
+                      <span style={{ fontSize: '0.72rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#2c2724', fontWeight: 500 }}>
+                        {tickerConfig.text || 'WE OFFER FREE SHIPPING ON ALL ORDERS PAN INDIA !!'}
+                      </span>
+                      <span style={{ color: '#c19a5b', fontSize: '0.62rem' }}>✦</span>
+                      <span style={{ fontSize: '0.72rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#2c2724', fontWeight: 500 }}>
+                        {tickerConfig.text || 'WE OFFER FREE SHIPPING ON ALL ORDERS PAN INDIA !!'}
+                      </span>
+                      <span style={{ color: '#c19a5b', fontSize: '0.62rem' }}>✦</span>
+                      <span style={{ fontSize: '0.72rem', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#2c2724', fontWeight: 500 }}>
+                        {tickerConfig.text || 'WE OFFER FREE SHIPPING ON ALL ORDERS PAN INDIA !!'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <button 
+                  type="submit" 
+                  disabled={savingTicker} 
+                  style={{ padding: '1.25rem', background: 'var(--primary)', color: '#fff', border: 'none', cursor: 'pointer', fontSize: '0.85rem' }} 
+                  className="label-caps"
+                >
+                  {savingTicker ? 'SAVING CHANGES...' : 'SAVE TICKER SETTINGS'}
                 </button>
               </form>
             </div>

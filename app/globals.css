@@ -18,12 +18,14 @@
   --spacing-container: 1440px;
   --spacing-gutter: 2rem;
   --spacing-section: 8rem;
+  --ticker-height: 32px;
 }
 
 @media (max-width: 768px) {
   :root {
     --spacing-section: 3.5rem;
     --spacing-gutter: 1.25rem;
+    --ticker-height: 30px;
   }
 }
 
@@ -90,6 +92,82 @@ img {
   padding: 0 var(--spacing-gutter);
 }
 
+/* Announcement Ticker Bar */
+.announcement-ticker-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--ticker-height);
+  background-color: #f7f2ea;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.22);
+  z-index: 101;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.announcement-ticker-track {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: announcement-marquee 32s linear infinite;
+}
+
+.announcement-ticker-track:hover {
+  animation-play-state: paused;
+}
+
+.announcement-ticker-content {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.announcement-ticker-item {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-sans);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #2c2724;
+  white-space: nowrap;
+}
+
+.announcement-ticker-separator {
+  color: #c19a5b;
+  font-size: 0.62rem;
+  padding: 0 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.85;
+}
+
+@keyframes announcement-marquee {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 768px) {
+  .announcement-ticker-item {
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+  }
+
+  .announcement-ticker-separator {
+    padding: 0 1.25rem;
+  }
+}
+
 header {
   width: 100%;
   padding: 1.25rem var(--spacing-gutter);
@@ -97,7 +175,7 @@ header {
   justify-content: space-between;
   align-items: center;
   position: fixed;
-  top: 0;
+  top: var(--ticker-height);
   z-index: 100;
   background-color: rgba(253, 250, 247, 0.85); /* Nude Backdrop */
   backdrop-filter: blur(20px);

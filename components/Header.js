@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAppContext } from '@/context/AppContext';
 import { isVideoUrl } from '@/lib/products';
+import AnnouncementTicker from '@/components/AnnouncementTicker';
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -120,7 +121,9 @@ export default function Header() {
   }, [searchQuery, products]);
 
   return (
-    <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
+    <>
+      <AnnouncementTicker />
+      <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="mobile-left-group">
         <div className="menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
           <div className={`hamburger ${isMenuOpen ? 'open' : ''}`}></div>
@@ -318,7 +321,7 @@ export default function Header() {
           Shop All
         </Link>
 
-        <Link href="/bulk-enquiry" className={`nav-link ${pathname === '/bulk-enquiry' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/bulk-enquiry' ? 'var(--primary)' : '' }}>Bulk Queries</Link>
+        <Link href="/bulk-enquiry" className={`nav-link ${pathname === '/bulk-enquiry' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/bulk-enquiry' ? 'var(--primary)' : '' }}>Bulk Gifting</Link>
         <Link href="/contact" className={`nav-link ${pathname === '/contact' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/contact' ? 'var(--primary)' : '' }}>Contact</Link>
         <Link href="/our-story" className={`nav-link ${pathname === '/our-story' ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname === '/our-story' ? 'var(--primary)' : '' }}>Our Story</Link>
         <Link href="/blog" className={`nav-link ${pathname?.startsWith('/blog') ? 'active' : ''}`} onClick={() => setIsMenuOpen(false)} style={{ color: pathname?.startsWith('/blog') ? 'var(--primary)' : '' }}>Journal</Link>
@@ -403,7 +406,7 @@ export default function Header() {
                   <h4 className="label-caps" style={{ fontSize: '0.7rem', letterSpacing: '0.15em', color: 'var(--muted-foreground)', marginTop: '2.5rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Pages</h4>
                   <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                     <li><Link href="/our-story" onClick={() => setIsSearchOpen(false)} style={{ textDecoration: 'none', color: 'var(--foreground)', fontSize: '0.95rem' }}>Our Heritage</Link></li>
-                    <li><Link href="/bulk-enquiry" onClick={() => setIsSearchOpen(false)} style={{ textDecoration: 'none', color: 'var(--foreground)', fontSize: '0.95rem' }}>Bulk Queries</Link></li>
+                    <li><Link href="/bulk-enquiry" onClick={() => setIsSearchOpen(false)} style={{ textDecoration: 'none', color: 'var(--foreground)', fontSize: '0.95rem' }}>Bulk Gifting</Link></li>
                   </ul>
                 </div>
 
@@ -492,6 +495,9 @@ export default function Header() {
                     <Link href="/orders" onClick={() => setIsProfileOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none', color: '#222', fontSize: '0.95rem', fontWeight: 500 }}>
                       <span className="material-icons" style={{ fontSize: '1.3rem', color: '#999' }}>history</span> Order History
                     </Link>
+                    <Link href="/bulk-history" onClick={() => setIsProfileOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none', color: '#222', fontSize: '0.95rem', fontWeight: 500 }}>
+                      <span className="material-icons" style={{ fontSize: '1.3rem', color: '#999' }}>card_giftcard</span> Bulk Gifting History
+                    </Link>
                     <Link href="/wishlist" onClick={() => setIsProfileOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '1rem', textDecoration: 'none', color: '#222', fontSize: '0.95rem', fontWeight: 500 }}>
                       <span className="material-icons" style={{ fontSize: '1.3rem', color: '#999' }}>favorite_border</span> Wishlist
                     </Link>
@@ -570,5 +576,6 @@ export default function Header() {
         </div>
       </div>
     </header>
+    </>
   );
 }
