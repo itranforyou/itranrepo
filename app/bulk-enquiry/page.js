@@ -64,8 +64,8 @@ export default function BulkGiftingPage() {
     preferredFragrance: 'Need Recommendation',
     specificProduct: '',
 
-    // 05 Personalisation
-    personalization: ['Custom Greeting Card', 'Custom Satin Ribbon'],
+    // 03 Personalisation
+    personalization: ['Custom Greeting Card', 'Custom Gift Tag'],
 
     // 06 Delivery
     deliveryLocation: '',
@@ -167,8 +167,7 @@ export default function BulkGiftingPage() {
     }
     if (!formData.city.trim()) newErrors.city = 'Please enter your city/location.';
 
-    if (!formData.eventDate) newErrors.eventDate = 'Please select an event date.';
-    if (!formData.deliveryDate) newErrors.deliveryDate = 'Please select a preferred delivery date.';
+    // Event Date and Event / Delivery Location are optional (not mandatory)
 
     if (selectedOccasion === 'corporate') {
       if (!formData.companyName.trim()) newErrors.companyName = 'Please enter your company or organisation name.';
@@ -181,9 +180,6 @@ export default function BulkGiftingPage() {
     if (!calculatedQty || calculatedQty <= 0) {
       newErrors.quantity = 'Please specify the number of gifts / packages required.';
     }
-
-    if (!formData.deliveryLocation.trim()) newErrors.deliveryLocation = 'Please enter delivery address/location.';
-    if (!formData.pinCode.trim()) newErrors.pinCode = 'Please enter delivery PIN code.';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -316,7 +312,7 @@ export default function BulkGiftingPage() {
       giftType: 'Gift Box',
       preferredFragrance: 'Need Recommendation',
       specificProduct: '',
-      personalization: ['Custom Greeting Card', 'Custom Satin Ribbon'],
+      personalization: ['Custom Greeting Card', 'Custom Gift Tag'],
       deliveryLocation: '',
       pinCode: '',
       deliveryType: 'Single Location',
@@ -1167,387 +1163,47 @@ export default function BulkGiftingPage() {
                     </div>
                   </div>
 
-                  {/* ---------------- 02 EVENT DETAILS ---------------- */}
+                  {/* ---------------- 02 EVENT & DELIVERY DETAILS ---------------- */}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(212, 175, 55, 0.2)', paddingBottom: '0.5rem' }}>
                       <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>02</span>
                       <h4 className="label-caps" style={{ color: '#1a1a1a', fontSize: '0.75rem', letterSpacing: '0.15em', margin: 0 }}>
-                        EVENT DETAILS
+                        EVENT & DELIVERY DETAILS
                       </h4>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
                       <div>
                         <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                          Event Date *
+                          Event Date <span style={{ color: '#8c7e75', textTransform: 'none', fontWeight: 400 }}>(Optional)</span>
                         </label>
                         <input 
                           type="date" 
                           value={formData.eventDate}
                           onChange={(e) => setFormData({ ...formData, eventDate: e.target.value })}
-                          style={{ width: '100%', padding: '0.85rem', border: errors.eventDate ? '1px solid #991b1b' : '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
+                          style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
                         />
-                        {errors.eventDate && <span style={{ color: '#991b1b', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>{errors.eventDate}</span>}
                       </div>
 
                       <div>
                         <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                          Preferred Delivery Date *
-                        </label>
-                        <input 
-                          type="date" 
-                          value={formData.deliveryDate}
-                          onChange={(e) => setFormData({ ...formData, deliveryDate: e.target.value })}
-                          style={{ width: '100%', padding: '0.85rem', border: errors.deliveryDate ? '1px solid #991b1b' : '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                        />
-                        {errors.deliveryDate && <span style={{ color: '#991b1b', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>{errors.deliveryDate}</span>}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ---------------- 03 OCCASION SPECIFICS (CONDITIONAL) ---------------- */}
-                  {selectedOccasion === 'wedding' && (
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(212, 175, 55, 0.2)', paddingBottom: '0.5rem' }}>
-                        <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>03</span>
-                        <h4 className="label-caps" style={{ color: '#1a1a1a', fontSize: '0.75rem', letterSpacing: '0.15em', margin: 0 }}>
-                          WEDDING OCCASION DETAILS
-                        </h4>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Wedding Occasion
-                          </label>
-                          <select 
-                            value={formData.weddingOccasion}
-                            onChange={(e) => setFormData({ ...formData, weddingOccasion: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          >
-                            <option value="Wedding">Wedding Main Ceremony</option>
-                            <option value="Engagement">Engagement</option>
-                            <option value="Reception">Reception</option>
-                            <option value="Mehendi">Mehendi</option>
-                            <option value="Haldi">Haldi</option>
-                            <option value="Sangeet">Sangeet</option>
-                            <option value="Bridesmaids & Groomsmen">Bridesmaids / Groomsmen Gifts</option>
-                            <option value="Other">Other Celebration</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Expected Number of Guests
-                          </label>
-                          <input 
-                            type="number" 
-                            placeholder="e.g. 250"
-                            value={formData.expectedGuests}
-                            onChange={(e) => setFormData({ ...formData, expectedGuests: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Gift Packaging Preference
-                          </label>
-                          <select 
-                            value={formData.weddingPackaging}
-                            onChange={(e) => setFormData({ ...formData, weddingPackaging: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          >
-                            <option value="Standard Luxury Packaging">Standard Luxury Packaging</option>
-                            <option value="Premium Packaging">Premium Satin-Lined Packaging</option>
-                            <option value="Custom Packaging">Custom Branded Wedding Monogram Box</option>
-                            <option value="Not Sure">Not Sure — Need Recommendation</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedOccasion === 'corporate' && (
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(212, 175, 55, 0.2)', paddingBottom: '0.5rem' }}>
-                        <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>03</span>
-                        <h4 className="label-caps" style={{ color: '#1a1a1a', fontSize: '0.75rem', letterSpacing: '0.15em', margin: 0 }}>
-                          CORPORATE & ORGANISATION DETAILS
-                        </h4>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Company / Organisation Name *
-                          </label>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. Aurelian & Co. Ltd."
-                            value={formData.companyName}
-                            onChange={(e) => setFormData({ ...formData, companyName: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: errors.companyName ? '1px solid #991b1b' : '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          />
-                          {errors.companyName && <span style={{ color: '#991b1b', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>{errors.companyName}</span>}
-                        </div>
-
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Designation / Department
-                          </label>
-                          <input 
-                            type="text" 
-                            placeholder="e.g. HR / Procurement Head"
-                            value={formData.designation}
-                            onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Purpose of Gifting
-                          </label>
-                          <select 
-                            value={formData.purposeOfGifting}
-                            onChange={(e) => setFormData({ ...formData, purposeOfGifting: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          >
-                            <option value="Client Gifts">Client Appreciation Gifts</option>
-                            <option value="Employee Gifts">Employee Recognition Gifts</option>
-                            <option value="Diwali / Festive Gifts">Diwali / Festive Gifts</option>
-                            <option value="Event / Conference">Event / Leadership Conference</option>
-                            <option value="Employee Joining">New Hire Onboarding Kit</option>
-                            <option value="Employee Milestone">Milestone / Work Anniversary</option>
-                            <option value="Business Anniversary">Company Foundation Day</option>
-                            <option value="Other">Other Corporate Occasion</option>
-                          </select>
-                        </div>
-                      </div>
-
-                      {/* GST / Billing Toggle */}
-                      <div style={{ marginTop: '1.25rem', background: '#faf6f0', padding: '1.25rem', border: '1px solid rgba(212, 175, 55, 0.2)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: formData.gstRequired ? '1rem' : '0' }}>
-                          <input 
-                            type="checkbox" 
-                            id="gstToggle"
-                            checked={formData.gstRequired}
-                            onChange={(e) => setFormData({ ...formData, gstRequired: e.target.checked })}
-                            style={{ width: '18px', height: '18px', accentColor: '#c19a5b' }}
-                          />
-                          <label htmlFor="gstToggle" className="label-caps" style={{ fontSize: '0.7rem', color: '#1a1a1a', cursor: 'pointer' }}>
-                            GST Invoice & Corporate Billing Required
-                          </label>
-                        </div>
-
-                        {formData.gstRequired && (
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginTop: '0.75rem' }}>
-                            <div>
-                              <label className="label-caps" style={{ fontSize: '0.62rem', display: 'block', marginBottom: '0.35rem', color: '#4a3f35' }}>
-                                GST Number *
-                              </label>
-                              <input 
-                                type="text" 
-                                placeholder="e.g. 07AAAAA0000A1Z5"
-                                value={formData.gstNumber}
-                                onChange={(e) => setFormData({ ...formData, gstNumber: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', border: errors.gstNumber ? '1px solid #991b1b' : '1px solid #d4c8be', background: '#fff', fontSize: '0.85rem' }}
-                              />
-                              {errors.gstNumber && <span style={{ color: '#991b1b', fontSize: '0.75rem' }}>{errors.gstNumber}</span>}
-                            </div>
-                            <div>
-                              <label className="label-caps" style={{ fontSize: '0.62rem', display: 'block', marginBottom: '0.35rem', color: '#4a3f35' }}>
-                                Registered Company Billing Name
-                              </label>
-                              <input 
-                                type="text" 
-                                placeholder="Legal Entity Name"
-                                value={formData.billingCompanyName}
-                                onChange={(e) => setFormData({ ...formData, billingCompanyName: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.85rem' }}
-                              />
-                            </div>
-                            <div style={{ gridColumn: '1 / -1' }}>
-                              <label className="label-caps" style={{ fontSize: '0.62rem', display: 'block', marginBottom: '0.35rem', color: '#4a3f35' }}>
-                                Billing Address
-                              </label>
-                              <input 
-                                type="text" 
-                                placeholder="Registered Office Address for Invoice"
-                                value={formData.billingAddress}
-                                onChange={(e) => setFormData({ ...formData, billingAddress: e.target.value })}
-                                style={{ width: '100%', padding: '0.75rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.85rem' }}
-                              />
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {selectedOccasion === 'return' && (
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(212, 175, 55, 0.2)', paddingBottom: '0.5rem' }}>
-                        <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>03</span>
-                        <h4 className="label-caps" style={{ color: '#1a1a1a', fontSize: '0.75rem', letterSpacing: '0.15em', margin: 0 }}>
-                          RETURN GIFTING DETAILS
-                        </h4>
-                      </div>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Occasion / Function
-                          </label>
-                          <select 
-                            value={formData.returnOccasion}
-                            onChange={(e) => setFormData({ ...formData, returnOccasion: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          >
-                            <option value="Wedding Favors">Wedding Return Favors</option>
-                            <option value="Engagement">Engagement Favors</option>
-                            <option value="Birthday Celebration">Birthday Celebration</option>
-                            <option value="Baby Shower">Baby Shower / Gender Reveal</option>
-                            <option value="Housewarming">Housewarming Ceremony</option>
-                            <option value="Religious Ceremony">Religious / Puja Gathering</option>
-                            <option value="Anniversary">Anniversary Celebration</option>
-                            <option value="Festival">Festive Gathering</option>
-                            <option value="Other">Other Special Occasion</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Target Budget Per Gift
-                          </label>
-                          <select 
-                            value={formData.returnBudget}
-                            onChange={(e) => setFormData({ ...formData, returnBudget: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          >
-                            <option value="Under ₹300">Under ₹300 per favor</option>
-                            <option value="₹300 – ₹500">₹300 – ₹500 per favor</option>
-                            <option value="₹500 – ₹1,000">₹500 – ₹1,000 per favor</option>
-                            <option value="₹1,000+">₹1,000+ luxury favor</option>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Favors Packaging
-                          </label>
-                          <select 
-                            value={formData.returnPackaging}
-                            onChange={(e) => setFormData({ ...formData, returnPackaging: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          >
-                            <option value="Standard Boxes">Standard Elegant Favors Box</option>
-                            <option value="Premium Velvet Bags">Velvet / Satin Pouches</option>
-                            <option value="Custom Branded Boxes">Custom Monogram Hard Box</option>
-                          </select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* ---------------- 04 GIFTING REQUIREMENTS ---------------- */}
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(212, 175, 55, 0.2)', paddingBottom: '0.5rem' }}>
-                      <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>04</span>
-                      <h4 className="label-caps" style={{ color: '#1a1a1a', fontSize: '0.75rem', letterSpacing: '0.15em', margin: 0 }}>
-                        GIFTING REQUIREMENTS
-                      </h4>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-                      <div>
-                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                          Number of Gifts / Packages *
-                        </label>
-                        <input 
-                          type="number" 
-                          min="1"
-                          placeholder="e.g. 50"
-                          value={formData.quantity}
-                          onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                          style={{ width: '100%', padding: '0.85rem', border: errors.quantity ? '1px solid #991b1b' : '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                        />
-                        {errors.quantity && <span style={{ color: '#991b1b', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>{errors.quantity}</span>}
-                      </div>
-
-                      <div>
-                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                          Approx. Budget Per Gift
+                          Event / Delivery Location <span style={{ color: '#8c7e75', textTransform: 'none', fontWeight: 400 }}>(Optional)</span>
                         </label>
                         <input 
                           type="text" 
-                          placeholder="e.g. ₹1,500"
-                          value={formData.budgetPerGift}
-                          onChange={(e) => setFormData({ ...formData, budgetPerGift: e.target.value })}
+                          placeholder="e.g. Venue, City, or Delivery Destination"
+                          value={formData.deliveryLocation}
+                          onChange={(e) => setFormData({ ...formData, deliveryLocation: e.target.value })}
                           style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
                         />
                       </div>
-
-                      <div>
-                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                          Preferred Gift Type
-                        </label>
-                        <select 
-                          value={formData.giftType}
-                          onChange={(e) => setFormData({ ...formData, giftType: e.target.value })}
-                          style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                        >
-                          <option value="Perfume Oil">Individual Perfume Oil (Attar Bottle)</option>
-                          <option value="Perfume Oil Set">Perfume Oil Discovery Set (3-5 vials)</option>
-                          <option value="Gift Box">Curated Gift Box (Bottle + Vials)</option>
-                          <option value="Premium Gift Hamper">Executive Luxury Hamper</option>
-                          <option value="Custom Gift">Bespoke Custom Blend Gift</option>
-                          <option value="Not Sure">Not Sure — Need Recommendation</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                          Fragrance Selection
-                        </label>
-                        <select 
-                          value={formData.preferredFragrance}
-                          onChange={(e) => setFormData({ ...formData, preferredFragrance: e.target.value })}
-                          style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                        >
-                          <option value="Need Recommendation">Need Recommendation / Curation by Master Perfumer</option>
-                          <option value="Let Me Choose">Let Me Choose Later</option>
-                          <option value="Specific Product">Choose Specific Catalogue Product</option>
-                        </select>
-                      </div>
-
-                      {formData.preferredFragrance === 'Specific Product' && (
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                            Select Product from Catalogue
-                          </label>
-                          <select 
-                            value={formData.specificProduct}
-                            onChange={(e) => setFormData({ ...formData, specificProduct: e.target.value })}
-                            style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                          >
-                            <option value="">-- Select a Fragrance --</option>
-                            {productsList.map(p => (
-                              <option key={p.id} value={p.name}>
-                                {p.name} ({p.category || 'Perfume Oil'}) {p.price ? `- ${p.price}` : ''}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                      )}
                     </div>
                   </div>
 
-                  {/* ---------------- 05 PERSONALISATION OPTIONS ---------------- */}
+                  {/* ---------------- 03 PERSONALISATION OPTIONS ---------------- */}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(212, 175, 55, 0.2)', paddingBottom: '0.5rem' }}>
-                      <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>05</span>
+                      <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>03</span>
                       <h4 className="label-caps" style={{ color: '#1a1a1a', fontSize: '0.75rem', letterSpacing: '0.15em', margin: 0 }}>
                         PERSONALISATION & BRANDING
                       </h4>
@@ -1559,13 +1215,9 @@ export default function BulkGiftingPage() {
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem' }}>
                       {[
-                        'Name / Monogram',
                         'Custom Message',
-                        'Event Date Embossing',
                         'Custom Greeting Card',
                         'Custom Gift Tag',
-                        'Custom Satin Ribbon',
-                        'Custom Luxury Box',
                         'Company Logo / Seal'
                       ].map((item) => {
                         const isSelected = (formData.personalization || []).includes(item);
@@ -1600,64 +1252,10 @@ export default function BulkGiftingPage() {
                     </div>
                   </div>
 
-                  {/* ---------------- 06 DELIVERY DETAILS ---------------- */}
+                  {/* ---------------- 04 ADDITIONAL REQUIREMENTS ---------------- */}
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(212, 175, 55, 0.2)', paddingBottom: '0.5rem' }}>
-                      <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>06</span>
-                      <h4 className="label-caps" style={{ color: '#1a1a1a', fontSize: '0.75rem', letterSpacing: '0.15em', margin: 0 }}>
-                        DELIVERY LOGISTICS
-                      </h4>
-                    </div>
-
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem' }}>
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                          Primary Delivery Location Address *
-                        </label>
-                        <input 
-                          type="text" 
-                          placeholder="Venue / Office Address"
-                          value={formData.deliveryLocation}
-                          onChange={(e) => setFormData({ ...formData, deliveryLocation: e.target.value })}
-                          style={{ width: '100%', padding: '0.85rem', border: errors.deliveryLocation ? '1px solid #991b1b' : '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                        />
-                        {errors.deliveryLocation && <span style={{ color: '#991b1b', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>{errors.deliveryLocation}</span>}
-                      </div>
-
-                      <div>
-                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                          PIN Code *
-                        </label>
-                        <input 
-                          type="text" 
-                          placeholder="e.g. 110001"
-                          value={formData.pinCode}
-                          onChange={(e) => setFormData({ ...formData, pinCode: e.target.value })}
-                          style={{ width: '100%', padding: '0.85rem', border: errors.pinCode ? '1px solid #991b1b' : '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                        />
-                        {errors.pinCode && <span style={{ color: '#991b1b', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>{errors.pinCode}</span>}
-                      </div>
-
-                      <div>
-                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#4a3f35' }}>
-                          Delivery Type
-                        </label>
-                        <select 
-                          value={formData.deliveryType}
-                          onChange={(e) => setFormData({ ...formData, deliveryType: e.target.value })}
-                          style={{ width: '100%', padding: '0.85rem', border: '1px solid #d4c8be', background: '#fff', fontSize: '0.9rem' }}
-                        >
-                          <option value="Single Location">Single Bulk Delivery (Venue/Office)</option>
-                          <option value="Multiple Locations">Direct to Individual Recipients (Pan India)</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* ---------------- 07 ADDITIONAL REQUIREMENTS ---------------- */}
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem', borderBottom: '1px solid rgba(212, 175, 55, 0.2)', paddingBottom: '0.5rem' }}>
-                      <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>07</span>
+                      <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>04</span>
                       <h4 className="label-caps" style={{ color: '#1a1a1a', fontSize: '0.75rem', letterSpacing: '0.15em', margin: 0 }}>
                         ADDITIONAL VISION & REQUIREMENTS
                       </h4>
