@@ -14,6 +14,7 @@ export default function BulkGiftingPage() {
   const [productsList, setProductsList] = useState([]);
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const [errors, setErrors] = useState({});
 
   // Dynamic Gifting Images from Firestore settings with fallbacks
@@ -87,13 +88,12 @@ export default function BulkGiftingPage() {
     }
   }, [user]);
 
-  // Subscribe to real-time gifting images settings from Firestore
+  // Fetch dynamic gifting category images from Firestore settings
   useEffect(() => {
-    const unsubscribe = onSnapshot(doc(db, 'settings', 'gifting-images'), (snap) => {
-      if (snap.exists()) {
-        const data = snap.data();
+    const unsub = onSnapshot(doc(db, 'settings', 'giftingImages'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
         setGiftingImages(prev => ({
-          ...prev,
           hero: data.hero || prev.hero,
           wedding: data.wedding || prev.wedding,
           corporate: data.corporate || prev.corporate,
@@ -101,22 +101,22 @@ export default function BulkGiftingPage() {
         }));
       }
     });
-    return () => unsubscribe();
+
+    return () => unsub();
   }, []);
 
-  // Fetch products for catalogue dropdown
+  // Fetch products catalogue for specific fragrance dropdown
   useEffect(() => {
-    const fetchCatalog = async () => {
+    async function loadProducts() {
       try {
-        const snap = await getDocs(collection(db, 'products'));
-        const prods = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-        setProductsList(prods);
-      } catch {
-        // Fallback gracefully
-        setProductsList([]);
+        const querySnapshot = await getDocs(collection(db, 'products'));
+        const list = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setProductsList(list);
+      } catch (err) {
+        console.error('Error fetching products for gifting dropdown: ', err);
       }
-    };
-    fetchCatalog();
+    }
+    loadProducts();
   }, []);
 
   // Lock body scroll when modal is open
@@ -134,12 +134,14 @@ export default function BulkGiftingPage() {
   const openEnquiryModal = (occasion = 'wedding') => {
     setSelectedOccasion(occasion);
     setErrors({});
-    setSubmitted(false);
+    setSubmitError('');
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
     setIsModalOpen(false);
+    setErrors({});
+    setSubmitError('');
   };
 
   const handlePersonalizationToggle = (option) => {
@@ -156,7 +158,7 @@ export default function BulkGiftingPage() {
 
     if (!formData.fullName.trim()) newErrors.fullName = 'Please enter your full name.';
     if (!formData.phone.trim()) {
-      newErrors.phone = 'Please enter your phone number.';
+      newErrors.phone = 'Please enter your mobile number.';
     } else if (formData.phone.trim().length < 8) {
       newErrors.phone = 'Please enter a valid mobile number.';
     }
@@ -167,26 +169,14 @@ export default function BulkGiftingPage() {
     }
     if (!formData.city.trim()) newErrors.city = 'Please enter your city/location.';
 
-    // Event Date and Event / Delivery Location are optional (not mandatory)
-
-    if (selectedOccasion === 'corporate') {
-      if (!formData.companyName.trim()) newErrors.companyName = 'Please enter your company or organisation name.';
-      if (formData.gstRequired && !formData.gstNumber.trim()) {
-        newErrors.gstNumber = 'Please enter your GST number.';
-      }
-    }
-
-    const calculatedQty = parseInt(formData.quantity) || parseInt(formData.numberOfRecipients) || parseInt(formData.expectedGuests) || parseInt(formData.returnGuests) || 0;
-    if (!calculatedQty || calculatedQty <= 0) {
-      newErrors.quantity = 'Please specify the number of gifts / packages required.';
-    }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setSubmitError('');
+
     if (!validateForm()) {
       const modalBody = document.getElementById('enquiry-modal-body');
       if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' });
@@ -196,87 +186,62 @@ export default function BulkGiftingPage() {
     setLoading(true);
 
     try {
-      const qty = parseInt(formData.quantity) || parseInt(formData.numberOfRecipients) || parseInt(formData.expectedGuests) || parseInt(formData.returnGuests) || 1;
-      
       const occasionName = 
-        selectedOccasion === 'wedding' ? (formData.weddingOccasion || 'Wedding') :
-        selectedOccasion === 'corporate' ? (formData.purposeOfGifting || 'Corporate Event') :
-        selectedOccasion === 'return' ? (formData.returnOccasion || 'Return Gifting') :
-        'Bespoke Bulk Gifting';
+        selectedOccasion === 'wedding' ? 'Wedding Gifting' :
+        selectedOccasion === 'corporate' ? 'Corporate Gifting' :
+        selectedOccasion === 'return' ? 'Return Gifting' : 'Bulk Gifting';
 
-      const selectedProductName = formData.preferredFragrance === 'Specific Product'
-        ? (formData.specificProduct || 'Specific Catalogue Selection')
-        : (formData.preferredFragrance || formData.giftType || 'Perfume Gift Set');
-
-      const budgetVal = 
-        selectedOccasion === 'return' ? formData.returnBudget :
-        formData.budgetPerGift || 'Custom Budget';
-
-      const packagingVal = 
-        selectedOccasion === 'wedding' ? formData.weddingPackaging :
-        selectedOccasion === 'return' ? formData.returnPackaging :
-        'Standard Luxury Packaging';
-
-      // Save to existing bulkEnquiries collection with backwards-compatibility fields and customer auth link
-      const enquiryDoc = {
-        // Customer Auth association
-        userId: user?.uid || null,
-        userEmail: user?.email || formData.email.trim(),
-
-        // Backwards compatibility core fields
+      const payload = {
         fullName: formData.fullName.trim(),
         phone: formData.phone.trim(),
         email: formData.email.trim(),
-        productName: selectedProductName,
-        quantity: qty,
-        message: formData.message || `Occasion: ${occasionName} | Gifting Type: ${selectedOccasion} | Budget: ${budgetVal}`,
-        status: 'Pending',
-        createdAt: serverTimestamp(),
-
-        // Extended Rich Fields
-        giftingType: selectedOccasion, // 'wedding', 'corporate', 'return', 'bespoke'
-        occasion: occasionName,
-        budgetPerGift: budgetVal,
-        giftType: formData.giftType,
-        preferredFragrance: formData.preferredFragrance,
-        specificProduct: formData.specificProduct || '',
-        
-        // Corporate details (if applicable)
-        companyName: formData.companyName || '',
-        designation: formData.designation || '',
-        purposeOfGifting: formData.purposeOfGifting || '',
-        numberOfRecipients: parseInt(formData.numberOfRecipients) || qty,
-        gstRequired: !!formData.gstRequired,
-        gstNumber: formData.gstNumber || '',
-        billingCompanyName: formData.billingCompanyName || '',
-        billingAddress: formData.billingAddress || '',
-
-        // Wedding/Return specific
-        expectedGuests: parseInt(formData.expectedGuests) || 0,
-        returnGuests: parseInt(formData.returnGuests) || 0,
-        packagingPreference: packagingVal,
-
-        // Dates & Delivery
-        eventDate: formData.eventDate,
-        deliveryDate: formData.deliveryDate,
         city: formData.city.trim(),
-        deliveryLocation: formData.deliveryLocation.trim(),
-        pinCode: formData.pinCode.trim(),
-        deliveryType: formData.deliveryType,
-
-        // Personalization
-        personalization: formData.personalization || [],
-        additionalRequirements: formData.message || '',
-
-        // Admin Response placeholder
-        adminReply: ''
+        occasion: occasionName,
+        giftingType: selectedOccasion,
+        eventDate: formData.eventDate ? formData.eventDate.trim() : '',
+        deliveryLocation: formData.deliveryLocation ? formData.deliveryLocation.trim() : '',
+        personalization: Array.isArray(formData.personalization) ? formData.personalization : [],
+        message: formData.message ? formData.message.trim() : '',
+        companyName: formData.companyName ? formData.companyName.trim() : '',
+        userId: user?.uid || null
       };
 
-      await addDoc(collection(db, 'bulkEnquiries'), enquiryDoc);
+      // 1. Send email via server-side API
+      const response = await fetch('/api/bulk-enquiry', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const resData = await response.json();
+
+      if (!response.ok || !resData.success) {
+        throw new Error(resData.error || 'Unable to submit your enquiry right now. Please try again or contact us directly.');
+      }
+
+      // 2. Also save to Firestore bulkEnquiries collection for admin & customer history
+      try {
+        await addDoc(collection(db, 'bulkEnquiries'), {
+          ...payload,
+          additionalRequirements: payload.message,
+          userEmail: user?.email || payload.email,
+          status: 'Pending',
+          createdAt: serverTimestamp(),
+          adminReply: ''
+        });
+      } catch (dbErr) {
+        console.warn('Firestore backup sync notice:', dbErr);
+      }
+
       setSubmitted(true);
+      setSubmitError('');
     } catch (error) {
-      console.error('Error submitting bulk enquiry: ', error);
-      alert('Unable to submit your enquiry at this moment. Please check your connection or contact us via WhatsApp.');
+      console.error('Error submitting bulk enquiry:', error);
+      setSubmitError(error.message || 'Unable to submit your enquiry right now. Please try again or contact us directly.');
+      const modalBody = document.getElementById('enquiry-modal-body');
+      if (modalBody) modalBody.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setLoading(false);
     }
@@ -998,43 +963,47 @@ export default function BulkGiftingPage() {
             {/* Modal Occasion Switcher Tabs */}
             {!submitted && (
               <div style={{ 
-                display: 'flex', 
-                borderBottom: '1px solid rgba(212, 175, 55, 0.2)', 
-                background: '#faf6f0',
-                overflowX: 'auto'
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                borderBottom: '1px solid #e7ded4', 
+                background: '#f6f1e9'
               }}>
                 {[
                   { id: 'wedding', label: 'Wedding Gifting' },
                   { id: 'corporate', label: 'Corporate Gifting' },
                   { id: 'return', label: 'Return Gifting' }
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => {
-                      setSelectedOccasion(tab.id);
-                      setErrors({});
-                    }}
-                    style={{
-                      flex: 1,
-                      padding: '0.85rem 1rem',
-                      fontSize: '0.72rem',
-                      fontFamily: 'var(--font-sans)',
-                      fontWeight: selectedOccasion === tab.id ? 700 : 500,
-                      letterSpacing: '0.12em',
-                      textTransform: 'uppercase',
-                      border: 'none',
-                      borderBottom: selectedOccasion === tab.id ? '2.5px solid #c19a5b' : '2.5px solid transparent',
-                      background: selectedOccasion === tab.id ? '#fdfaf7' : 'transparent',
-                      color: selectedOccasion === tab.id ? '#1a1a1a' : '#7c6d63',
-                      cursor: 'pointer',
-                      whiteSpace: 'nowrap',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
+                ].map((tab, idx) => {
+                  const isActive = selectedOccasion === tab.id;
+                  return (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedOccasion(tab.id);
+                        setErrors({});
+                      }}
+                      style={{
+                        padding: '0.95rem 0.75rem',
+                        fontSize: '0.72rem',
+                        fontFamily: 'var(--font-sans)',
+                        fontWeight: isActive ? 600 : 500,
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        border: 'none',
+                        borderRight: idx < 2 ? '1px solid #e7ded4' : 'none',
+                        borderBottom: isActive ? '2px solid #1c1e1c' : '2px solid transparent',
+                        background: isActive ? '#fdfaf7' : 'transparent',
+                        color: isActive ? '#1c1e1c' : '#7c6d63',
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        transition: 'all 0.2s ease',
+                        marginBottom: '-1px'
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  );
+                })}
               </div>
             )}
 
@@ -1094,6 +1063,25 @@ export default function BulkGiftingPage() {
               ) : (
                 /* MULTI-SECTION FORM */
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+
+                  {/* Submission Error Banner */}
+                  {submitError && (
+                    <div style={{ 
+                      padding: '1rem 1.25rem', 
+                      background: '#fef2f2', 
+                      border: '1px solid #f87171', 
+                      color: '#991b1b', 
+                      fontSize: '0.85rem',
+                      lineHeight: 1.5,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      borderRadius: '2px'
+                    }}>
+                      <span className="material-icons" style={{ fontSize: '20px', color: '#991b1b' }}>error_outline</span>
+                      <span>{submitError}</span>
+                    </div>
+                  )}
 
                   {/* ---------------- 01 CUSTOMER DETAILS ---------------- */}
                   <div>

@@ -436,43 +436,47 @@ export default function BulkGiftingHistoryPage() {
               )}
 
               {/* Grid 1: Customer & Event Logistics */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', background: '#fff', border: '1px solid #ede8e1', padding: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', background: '#fff', border: '1px solid #ede8e1', padding: '1.5rem' }}>
                 <div>
                   <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
-                    Recipient & Contact
+                    Contact Details
                   </div>
-                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Name:</strong> {selectedEnquiry.fullName}</p>
-                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Email:</strong> {selectedEnquiry.email}</p>
-                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Phone:</strong> {selectedEnquiry.phone}</p>
+                  {selectedEnquiry.fullName && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Name:</strong> {selectedEnquiry.fullName}</p>}
+                  {selectedEnquiry.email && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Email:</strong> {selectedEnquiry.email}</p>}
+                  {selectedEnquiry.phone && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Phone:</strong> {selectedEnquiry.phone}</p>}
                   {selectedEnquiry.city && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>City:</strong> {selectedEnquiry.city}</p>}
                 </div>
 
-                <div>
-                  <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
-                    Gifting Requirements
+                {(selectedEnquiry.eventDate || selectedEnquiry.deliveryLocation || selectedEnquiry.deliveryDate || selectedEnquiry.pinCode) && (
+                  <div>
+                    <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
+                      Event & Location
+                    </div>
+                    {selectedEnquiry.eventDate && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Event Date:</strong> {selectedEnquiry.eventDate}</p>}
+                    {selectedEnquiry.deliveryLocation && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Location:</strong> {selectedEnquiry.deliveryLocation}</p>}
+                    {selectedEnquiry.deliveryDate && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Delivery:</strong> {selectedEnquiry.deliveryDate}</p>}
+                    {selectedEnquiry.pinCode && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>PIN:</strong> {selectedEnquiry.pinCode}</p>}
                   </div>
-                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Type:</strong> {selectedEnquiry.giftType || 'Curated Gift Set'}</p>
-                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Quantity:</strong> {selectedEnquiry.quantity || '—'} Units</p>
-                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Budget:</strong> {selectedEnquiry.budgetPerGift || 'Custom Quote'}</p>
-                  <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>Fragrance:</strong> {selectedEnquiry.productName || selectedEnquiry.preferredFragrance || 'Need Recommendation'}</p>
-                </div>
+                )}
 
-                <div>
-                  <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
-                    Delivery Timeline
+                {((selectedEnquiry.quantity && selectedEnquiry.quantity > 1) || (selectedEnquiry.budgetPerGift && selectedEnquiry.budgetPerGift !== 'Custom' && selectedEnquiry.budgetPerGift !== 'Custom Budget') || selectedEnquiry.specificProduct) && (
+                  <div>
+                    <div className="label-caps" style={{ fontSize: '0.6rem', color: 'var(--primary)', marginBottom: '0.4rem' }}>
+                      Gifting Requirements
+                    </div>
+                    {selectedEnquiry.giftType && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Type:</strong> {selectedEnquiry.giftType}</p>}
+                    {selectedEnquiry.quantity && selectedEnquiry.quantity > 1 && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Quantity:</strong> {selectedEnquiry.quantity} Units</p>}
+                    {selectedEnquiry.budgetPerGift && selectedEnquiry.budgetPerGift !== 'Custom' && selectedEnquiry.budgetPerGift !== 'Custom Budget' && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Budget:</strong> {selectedEnquiry.budgetPerGift}</p>}
+                    {selectedEnquiry.specificProduct && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>Fragrance:</strong> {selectedEnquiry.specificProduct}</p>}
                   </div>
-                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Event Date:</strong> {selectedEnquiry.eventDate || 'Flexible'}</p>
-                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Delivery:</strong> {selectedEnquiry.deliveryDate || 'Standard'}</p>
-                  <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Location:</strong> {selectedEnquiry.deliveryLocation || 'Single Location'}</p>
-                  {selectedEnquiry.pinCode && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>PIN:</strong> {selectedEnquiry.pinCode}</p>}
-                </div>
+                )}
               </div>
 
               {/* Corporate Specifics (if corporate) */}
               {selectedEnquiry.companyName && (
                 <div style={{ background: '#fff', border: '1px solid #ede8e1', padding: '1.5rem' }}>
                   <div className="label-caps" style={{ fontSize: '0.6rem', color: '#1e40af', marginBottom: '0.75rem' }}>
-                    Corporate Organisation Details
+                    Corporate Details
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
                     <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>Company:</strong> {selectedEnquiry.companyName}</p>
@@ -484,18 +488,13 @@ export default function BulkGiftingHistoryPage() {
               )}
 
               {/* Personalisation Options */}
-              {((selectedEnquiry.personalization && selectedEnquiry.personalization.length > 0) || selectedEnquiry.packagingPreference) && (
+              {Array.isArray(selectedEnquiry.personalization) && selectedEnquiry.personalization.length > 0 && (
                 <div style={{ background: '#fff', border: '1px solid #ede8e1', padding: '1.25rem 1.5rem' }}>
                   <div className="label-caps" style={{ fontSize: '0.6rem', color: '#7c6d63', marginBottom: '0.75rem' }}>
-                    Selected Personalisation & Packaging
+                    Selected Personalisation
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
-                    {selectedEnquiry.packagingPreference && (
-                      <span style={{ fontSize: '0.78rem', background: '#f5efe6', border: '1px solid #d4c8be', padding: '0.25rem 0.75rem', color: '#2a2622' }}>
-                        📦 {selectedEnquiry.packagingPreference}
-                      </span>
-                    )}
-                    {Array.isArray(selectedEnquiry.personalization) && selectedEnquiry.personalization.map((p, i) => (
+                    {selectedEnquiry.personalization.map((p, i) => (
                       <span key={i} style={{ fontSize: '0.78rem', background: '#f5efe6', border: '1px solid #d4c8be', padding: '0.25rem 0.75rem', color: '#2a2622' }}>
                         ✨ {p}
                       </span>
@@ -505,14 +504,16 @@ export default function BulkGiftingHistoryPage() {
               )}
 
               {/* Customer Notes */}
-              <div>
-                <div className="label-caps" style={{ fontSize: '0.62rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
-                  Your Message & Requirements
+              {((selectedEnquiry.additionalRequirements && selectedEnquiry.additionalRequirements.trim() !== '') || (selectedEnquiry.message && selectedEnquiry.message.trim() !== '' && !selectedEnquiry.message.startsWith('Occasion:'))) && (
+                <div>
+                  <div className="label-caps" style={{ fontSize: '0.62rem', color: 'var(--primary)', marginBottom: '0.5rem' }}>
+                    Your Message & Requirements
+                  </div>
+                  <div style={{ background: '#fff', border: '1px solid #ede8e1', padding: '1rem 1.25rem', fontSize: '0.9rem', color: '#333', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                    {selectedEnquiry.additionalRequirements?.trim() || selectedEnquiry.message?.trim()}
+                  </div>
                 </div>
-                <div style={{ background: '#fff', border: '1px solid #ede8e1', padding: '1rem 1.25rem', fontSize: '0.9rem', color: '#333', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
-                  {selectedEnquiry.additionalRequirements || selectedEnquiry.message || 'No additional message.'}
-                </div>
-              </div>
+              )}
 
             </div>
 

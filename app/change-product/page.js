@@ -172,6 +172,17 @@ export default function ChangeProductPage() {
   const [contactEnquiries, setContactEnquiries] = useState([]);
   const [contactSearch, setContactSearch] = useState('');
   const [contactFilter, setContactFilter] = useState('All');
+
+  // Website Visitor Statistics state (GA4)
+  const [visitorStats, setVisitorStats] = useState({
+    loading: true,
+    configured: false,
+    today: 0,
+    last7Days: 0,
+    last30Days: 0,
+    message: '',
+    error: null
+  });
   
   // States for Add/Edit
   const [formData, setFormData] = useState({
@@ -519,6 +530,46 @@ export default function ChangeProductPage() {
       unsubscribeGiftingImages();
       unsubscribeTicker();
     };
+  }, [adminUser]);
+
+  // Fetch GA4 Website Visitor Statistics
+  const fetchVisitorStats = async () => {
+    if (!adminUser) return;
+    setVisitorStats(prev => ({ ...prev, loading: true, error: null }));
+    try {
+      const token = await adminUser.getIdToken();
+      const res = await fetch('/api/admin/visitors', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to load visitor statistics');
+      }
+      setVisitorStats({
+        loading: false,
+        configured: !!data.configured,
+        today: data.today ?? 0,
+        last7Days: data.last7Days ?? 0,
+        last30Days: data.last30Days ?? 0,
+        message: data.message || '',
+        error: null,
+      });
+    } catch (err) {
+      console.warn('Error fetching visitor statistics:', err);
+      setVisitorStats(prev => ({
+        ...prev,
+        loading: false,
+        error: err.message || 'Unable to connect to analytics service',
+      }));
+    }
+  };
+
+  useEffect(() => {
+    if (adminUser) {
+      fetchVisitorStats();
+    }
   }, [adminUser]);
 
   // Handler for uploading Gifting Card Images
@@ -1384,7 +1435,7 @@ export default function ChangeProductPage() {
       <div className="container" style={{ maxWidth: '1000px', padding: '0 var(--spacing-gutter)' }}>
 
         {/* Admin session bar */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '1rem', marginBottom: '1.25rem' }}>
           <span style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)' }} className="label-caps">
             {adminUser?.email}
           </span>
@@ -1395,6 +1446,120 @@ export default function ChangeProductPage() {
           >
             Sign Out
           </button>
+        </div>
+
+        {/* Website Visitors Statistics Card */}
+        <div style={{
+          background: '#fff',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          padding: '1.5rem',
+          marginBottom: '2rem',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span className="material-icons" style={{ fontSize: '1.1rem', color: 'var(--secondary)' }}>analytics</span>
+              <h3 className="label-caps" style={{ fontSize: '0.75rem', letterSpacing: '0.15em', color: '#1a1a1a', margin: 0 }}>
+                Website Visitors
+              </h3>
+            </div>
+            <button
+              onClick={fetchVisitorStats}
+              disabled={visitorStats.loading}
+              title="Refresh statistics"
+              className="label-caps"
+              style={{
+                background: 'none',
+                border: '1px solid var(--border)',
+                borderRadius: '4px',
+                padding: '0.3rem 0.75rem',
+                fontSize: '0.6rem',
+                letterSpacing: '0.1em',
+                color: 'var(--muted-foreground)',
+                cursor: visitorStats.loading ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem'
+              }}
+            >
+              <span className="material-icons" style={{ fontSize: '0.85rem' }}>refresh</span>
+              {visitorStats.loading ? 'Updating...' : 'Refresh'}
+            </button>
+          </div>
+
+          {visitorStats.loading ? (
+            <div style={{ padding: '0.5rem 0' }}>
+              <div style={{ fontSize: '2rem', fontWeight: 500, color: 'var(--muted-foreground)', fontFamily: 'var(--font-serif)', lineHeight: 1 }}>
+                ...
+              </div>
+              <div className="label-caps" style={{ fontSize: '0.65rem', color: 'var(--muted-foreground)', letterSpacing: '0.1em', marginTop: '0.35rem' }}>
+                Fetching GA4 statistics...
+              </div>
+            </div>
+          ) : visitorStats.configured ? (
+            <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'flex-end', justifyContent: 'space-between', gap: '1.5rem' }}>
+              {/* Primary: Last 30 Days */}
+              <div>
+                <div style={{ fontSize: '2.5rem', fontWeight: 500, color: '#1a1a1a', fontFamily: 'var(--font-serif)', lineHeight: 1 }}>
+                  {visitorStats.last30Days.toLocaleString('en-IN')}
+                </div>
+                <div className="label-caps" style={{ fontSize: '0.65rem', letterSpacing: '0.15em', color: '#8c7e72', marginTop: '0.4rem' }}>
+                  Last 30 Days
+                </div>
+              </div>
+
+              {/* Secondary Breakdown */}
+              <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ padding: '0.65rem 1.25rem', background: '#faf9f7', borderRadius: '4px', border: '1px solid #f0eae1', minWidth: '100px' }}>
+                  <div className="label-caps" style={{ fontSize: '0.6rem', color: '#8c7e72', letterSpacing: '0.12em' }}>
+                    Today
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1a1a1a', marginTop: '0.2rem' }}>
+                    {visitorStats.today.toLocaleString('en-IN')}
+                  </div>
+                </div>
+
+                <div style={{ padding: '0.65rem 1.25rem', background: '#faf9f7', borderRadius: '4px', border: '1px solid #f0eae1', minWidth: '100px' }}>
+                  <div className="label-caps" style={{ fontSize: '0.6rem', color: '#8c7e72', letterSpacing: '0.12em' }}>
+                    7 Days
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1a1a1a', marginTop: '0.2rem' }}>
+                    {visitorStats.last7Days.toLocaleString('en-IN')}
+                  </div>
+                </div>
+
+                <div style={{ padding: '0.65rem 1.25rem', background: '#faf9f7', borderRadius: '4px', border: '1px solid #f0eae1', minWidth: '100px' }}>
+                  <div className="label-caps" style={{ fontSize: '0.6rem', color: '#8c7e72', letterSpacing: '0.12em' }}>
+                    30 Days
+                  </div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: 600, color: '#1a1a1a', marginTop: '0.2rem' }}>
+                    {visitorStats.last30Days.toLocaleString('en-IN')}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : visitorStats.error ? (
+            <div style={{ padding: '0.75rem 1rem', background: '#fff5f5', border: '1px solid #fed7d7', borderRadius: '4px', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <span className="material-icons" style={{ fontSize: '1rem', color: '#c53030' }}>error_outline</span>
+              <span style={{ fontSize: '0.8rem', color: '#9b2c2c' }}>
+                {visitorStats.error}
+              </span>
+            </div>
+          ) : (
+            /* Not Configured State */
+            <div style={{ padding: '1rem 1.25rem', background: '#faf9f7', border: '1px dashed #d6ccc2', borderRadius: '4px', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <span className="material-icons" style={{ fontSize: '1rem', color: 'var(--secondary)' }}>info</span>
+                <span className="label-caps" style={{ fontSize: '0.7rem', letterSpacing: '0.1em', color: '#4a3f35', fontWeight: 600 }}>
+                  Analytics setup required
+                </span>
+              </div>
+              <p style={{ margin: 0, fontSize: '0.78rem', color: '#6b5e52', lineHeight: 1.5 }}>
+                {visitorStats.message || 'Grant Viewer access to your Google Service Account in Google Analytics (Admin > Property Access Management) to view live active users.'}
+              </p>
+            </div>
+          )}
         </div>
 
         {/* Tab Selection */}
@@ -2138,45 +2303,34 @@ export default function ChangeProductPage() {
                         </div>
                       </div>
                       
-                      {/* Grid Sections */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem', background: '#faf9f7', padding: '1.5rem', border: '1px solid #ede8e1' }}>
+                      {/* Grid Sections - Only show filled information */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem', marginBottom: '1.5rem', background: '#faf9f7', padding: '1.5rem', border: '1px solid #ede8e1' }}>
                         
-                        {/* 1. Customer Details */}
+                        {/* 1. Customer Details (Always filled) */}
                         <div>
                           <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: 'var(--primary)' }}>
                             Customer Details
                           </label>
-                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Name:</strong> {enq.fullName}</p>
-                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Phone:</strong> {enq.phone}</p>
-                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Email:</strong> {enq.email}</p>
+                          {enq.fullName && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Name:</strong> {enq.fullName}</p>}
+                          {enq.phone && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Phone:</strong> {enq.phone}</p>}
+                          {enq.email && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Email:</strong> {enq.email}</p>}
                           {enq.city && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>City:</strong> {enq.city}</p>}
                         </div>
 
-                        {/* 2. Gifting & Requirements */}
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: 'var(--primary)' }}>
-                            Gifting Requirements
-                          </label>
-                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Occasion:</strong> {enq.occasion || enq.weddingOccasion || enq.returnOccasion || 'Bulk'}</p>
-                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Quantity:</strong> {enq.quantity || enq.numberOfRecipients || enq.expectedGuests || '—'}</p>
-                          <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Budget:</strong> {enq.budgetPerGift || enq.returnBudget || 'Custom'}</p>
-                          {enq.giftType && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Gift Type:</strong> {enq.giftType}</p>}
-                          <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>Fragrance:</strong> {enq.productName || enq.preferredFragrance || 'Need Recommendation'}</p>
-                        </div>
+                        {/* 2. Event & Location (Only if filled) */}
+                        {(enq.eventDate || enq.deliveryLocation || enq.deliveryDate || enq.pinCode) && (
+                          <div>
+                            <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                              Event & Location
+                            </label>
+                            {enq.eventDate && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Event Date:</strong> {enq.eventDate}</p>}
+                            {enq.deliveryLocation && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Location:</strong> {enq.deliveryLocation}</p>}
+                            {enq.deliveryDate && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Delivery Date:</strong> {enq.deliveryDate}</p>}
+                            {enq.pinCode && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>PIN:</strong> {enq.pinCode}</p>}
+                          </div>
+                        )}
 
-                        {/* 3. Event & Delivery */}
-                        <div>
-                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: 'var(--primary)' }}>
-                            Event & Delivery
-                          </label>
-                          {enq.eventDate && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Event Date:</strong> {enq.eventDate}</p>}
-                          {enq.deliveryDate && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Delivery Date:</strong> {enq.deliveryDate}</p>}
-                          {enq.deliveryLocation && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Location:</strong> {enq.deliveryLocation}</p>}
-                          {enq.pinCode && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>PIN:</strong> {enq.pinCode}</p>}
-                          {enq.deliveryType && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>Type:</strong> {enq.deliveryType}</p>}
-                        </div>
-
-                        {/* 4. Corporate Specific Details (if present) */}
+                        {/* 3. Corporate Specifics (Only if corporate details filled) */}
                         {enq.companyName && (
                           <div>
                             <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#1e40af' }}>
@@ -2185,28 +2339,36 @@ export default function ChangeProductPage() {
                             <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Company:</strong> {enq.companyName}</p>
                             {enq.designation && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Designation:</strong> {enq.designation}</p>}
                             {enq.purposeOfGifting && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Purpose:</strong> {enq.purposeOfGifting}</p>}
-                            {enq.gstRequired && (
+                            {enq.gstNumber && (
                               <div style={{ marginTop: '0.4rem', padding: '0.4rem', background: '#fff', border: '1px dashed #cbd5e1' }}>
-                                <p style={{ fontSize: '0.78rem', margin: 0 }}><strong>GST:</strong> {enq.gstNumber || 'Yes'}</p>
+                                <p style={{ fontSize: '0.78rem', margin: 0 }}><strong>GST:</strong> {enq.gstNumber}</p>
                                 {enq.billingCompanyName && <p style={{ fontSize: '0.78rem', margin: 0 }}><strong>Billing To:</strong> {enq.billingCompanyName}</p>}
                               </div>
                             )}
                           </div>
                         )}
 
+                        {/* 4. Legacy Gifting Requirements (Only if specific items were selected) */}
+                        {((enq.quantity && enq.quantity > 1) || (enq.budgetPerGift && enq.budgetPerGift !== 'Custom' && enq.budgetPerGift !== 'Custom Budget') || (enq.specificProduct && enq.specificProduct.trim() !== '')) && (
+                          <div>
+                            <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                              Gifting Requirements
+                            </label>
+                            {enq.quantity && enq.quantity > 1 && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Quantity:</strong> {enq.quantity}</p>}
+                            {enq.budgetPerGift && enq.budgetPerGift !== 'Custom' && enq.budgetPerGift !== 'Custom Budget' && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Budget:</strong> {enq.budgetPerGift}</p>}
+                            {enq.giftType && <p style={{ fontSize: '0.85rem', margin: '0 0 0.25rem' }}><strong>Gift Type:</strong> {enq.giftType}</p>}
+                            {enq.specificProduct && <p style={{ fontSize: '0.85rem', margin: 0 }}><strong>Fragrance:</strong> {enq.specificProduct}</p>}
+                          </div>
+                        )}
+
                       </div>
 
-                      {/* Personalisation Options & Packaging Badges */}
-                      {((enq.personalization && enq.personalization.length > 0) || enq.packagingPreference) && (
+                      {/* Personalisation Options (Only if selected) */}
+                      {Array.isArray(enq.personalization) && enq.personalization.length > 0 && (
                         <div style={{ marginBottom: '1.25rem', padding: '0.85rem 1.25rem', background: '#fdfaf7', border: '1px solid #ede8e1' }}>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
                             <span className="label-caps" style={{ fontSize: '0.62rem', color: '#7c6d63', marginRight: '0.5rem' }}>Personalisation:</span>
-                            {enq.packagingPreference && (
-                              <span style={{ fontSize: '0.75rem', background: '#f5efe6', border: '1px solid #d4c8be', padding: '0.2rem 0.6rem', color: '#2a2622' }}>
-                                📦 {enq.packagingPreference}
-                              </span>
-                            )}
-                            {Array.isArray(enq.personalization) && enq.personalization.map((p, idx) => (
+                            {enq.personalization.map((p, idx) => (
                               <span key={idx} style={{ fontSize: '0.75rem', background: '#f5efe6', border: '1px solid #d4c8be', padding: '0.2rem 0.6rem', color: '#2a2622' }}>
                                 ✨ {p}
                               </span>
@@ -2215,15 +2377,17 @@ export default function ChangeProductPage() {
                         </div>
                       )}
                       
-                      {/* Customer Message */}
-                      <div style={{ marginBottom: '1.5rem' }}>
-                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: 'var(--primary)' }}>
-                          Customer Vision & Additional Notes
-                        </label>
-                        <p style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', background: '#fff', padding: '0.75rem', border: '1px solid #ede8e1', margin: 0 }}>
-                          {enq.additionalRequirements || enq.message || 'No additional notes provided.'}
-                        </p>
-                      </div>
+                      {/* Customer Notes / Vision (Only if customer wrote notes) */}
+                      {((enq.additionalRequirements && enq.additionalRequirements.trim() !== '') || (enq.message && enq.message.trim() !== '' && !enq.message.startsWith('Occasion:'))) && (
+                        <div style={{ marginBottom: '1.5rem' }}>
+                          <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: 'var(--primary)' }}>
+                            Customer Vision & Additional Notes
+                          </label>
+                          <p style={{ fontSize: '0.9rem', lineHeight: 1.6, whiteSpace: 'pre-wrap', background: '#fff', padding: '0.75rem', border: '1px solid #ede8e1', margin: 0 }}>
+                            {enq.additionalRequirements?.trim() || enq.message?.trim()}
+                          </p>
+                        </div>
+                      )}
 
                       {/* ADMIN REPLY TO CUSTOMER SECTION */}
                       <div style={{ background: '#faf6f0', padding: '1.25rem', border: '1px solid rgba(212, 175, 55, 0.35)' }}>
