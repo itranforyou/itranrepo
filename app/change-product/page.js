@@ -1472,7 +1472,7 @@ export default function ChangeProductPage() {
   }
 
   return (
-    <div style={{ paddingTop: '120px', minHeight: '100vh', background: '#faf9f7', paddingBottom: '100px' }}>
+    <div style={{ paddingTop: '170px', minHeight: '100vh', background: '#faf9f7', paddingBottom: '100px' }}>
       <div className="container" style={{ maxWidth: '1000px', padding: '0 var(--spacing-gutter)' }}>
 
         {/* Admin session bar */}

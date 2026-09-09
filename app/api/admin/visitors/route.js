@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { getAdminServices } from '@/lib/firebaseAdmin';
+import { getAdminServices, formatPrivateKey } from '@/lib/firebaseAdmin';
 import crypto from 'crypto';
 
 /**
@@ -78,16 +78,59 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized: missing token' }, { status: 401 });
     }
 
+    // 2. Safely verify environment variable presence (booleans only, never expose values)
+    const projectId = (
+      process.env.FIREBASE_ADMIN_PROJECT_ID ||
+      process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ||
+      process.env.FIREBASE_PROJECT_ID
+    )?.trim();
+
+    const envPresence = {
+      projectIdPresent: Boolean(projectId),
+      clientEmailPresent: Boolean(process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim()),
+      privateKeyPresent: Boolean(process.env.FIREBASE_ADMIN_PRIVATE_KEY?.trim()),
+      ga4PropertyIdPresent: Boolean((process.env.GA4_PROPERTY_ID || '538126375')?.trim()),
+    };
+
+    console.log('[GA4 Visitors API] Runtime environment presence:', envPresence);
+
+    if (!envPresence.projectIdPresent || !envPresence.clientEmailPresent || !envPresence.privateKeyPresent) {
+      console.warn('[GA4 Visitors API] Missing Firebase Admin environment variables:', envPresence);
+      return NextResponse.json({
+        configured: false,
+        reason: 'missing_environment_variable',
+        message: 'Firebase Admin credentials missing or unconfigured in production environment.',
+      }, { status: 200 });
+    }
+
     let adminAuth, adminDb;
     try {
       const services = await getAdminServices();
       adminAuth = services.adminAuth;
       adminDb = services.adminDb;
     } catch (adminInitErr) {
-      console.error('[GA4 Visitors API] Firebase Admin initialization error:', adminInitErr);
+      console.error('[GA4 Visitors API] Firebase Admin initialization error:', adminInitErr.code || adminInitErr.message);
+
+      if (adminInitErr.code === 'INVALID_PRIVATE_KEY') {
+        return NextResponse.json({
+          configured: false,
+          reason: 'private_key_parse_error',
+          message: 'Firebase Admin private key format is invalid. Check private key in Vercel environment variables.',
+        }, { status: 200 });
+      }
+
+      if (adminInitErr.code === 'MISSING_ENV_VARS') {
+        return NextResponse.json({
+          configured: false,
+          reason: 'missing_environment_variable',
+          message: 'Firebase Admin credentials missing or unconfigured in production environment.',
+        }, { status: 200 });
+      }
+
       return NextResponse.json({
         configured: false,
-        message: 'Firebase Admin credentials missing or unconfigured in production environment.',
+        reason: 'firebase_admin_initialization_failed',
+        message: 'Firebase Admin initialization failed in production environment.',
       }, { status: 200 });
     }
 
@@ -105,26 +148,28 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Forbidden: admin access required' }, { status: 403 });
     }
 
-    // 2. Check GA4 and Service Account configuration
+    // 3. Check GA4 and Service Account configuration
     const propertyId = process.env.GA4_PROPERTY_ID || '538126375';
-    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-    const privateKey = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL?.trim();
+    const privateKey = formatPrivateKey(process.env.FIREBASE_ADMIN_PRIVATE_KEY);
 
     if (!propertyId || !clientEmail || !privateKey) {
       return NextResponse.json({
         configured: false,
+        reason: 'missing_environment_variable',
         message: 'Google Analytics 4 Property ID or Service Account credentials not configured.',
       }, { status: 200 });
     }
 
-    // 3. Acquire Google OAuth2 Access Token via native crypto
+    // 4. Acquire Google OAuth2 Access Token via native crypto
     let accessToken;
     try {
       accessToken = await getGoogleAnalyticsToken(clientEmail, privateKey);
     } catch (authErr) {
-      console.error('[GA4 Visitors API] Service account auth error:', authErr);
+      console.error('[GA4 Visitors API] Service account auth error:', authErr.message || authErr);
       return NextResponse.json({
         configured: false,
+        reason: 'google_oauth_failed',
         message: 'Failed to authenticate Google Cloud service account with Google Analytics.',
       }, { status: 200 });
     }
@@ -132,6 +177,7 @@ export async function GET(request) {
     if (!accessToken) {
       return NextResponse.json({
         configured: false,
+        reason: 'google_oauth_failed',
         message: 'Could not obtain Google Analytics access token.',
       }, { status: 200 });
     }
