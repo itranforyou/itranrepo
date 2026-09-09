@@ -12,6 +12,16 @@ import { doc, onSnapshot } from 'firebase/firestore';
 export default function Home() {
   const { products } = useAppContext();
   const [storyData, setStoryData] = useState(null);
+  const [homepageData, setHomepageData] = useState(null);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(doc(db, 'settings', 'homepage'), (snap) => {
+      if (snap.exists()) {
+        setHomepageData(snap.data());
+      }
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(doc(db, 'settings', 'our-story'), (snap) => {
@@ -103,18 +113,20 @@ export default function Home() {
 
         <div style={{ zIndex: 10, maxWidth: '800px', padding: '0 2rem', position: 'relative' }}>
           <Reveal>
-            <h1 style={{ fontSize: 'clamp(3rem, 8vw, 5.5rem)', marginBottom: '1.5rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>
-              Crafted in Quiet<br />Devotion
+            <h1 style={{ fontSize: 'clamp(3rem, 8vw, 5.5rem)', marginBottom: '1.5rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)', whiteSpace: 'pre-line' }}>
+              {homepageData?.heroHeading || "Crafted in Quiet\nDevotion"}
             </h1>
           </Reveal>
           <Reveal delay={0.2}>
             <p style={{ fontSize: '1.125rem', color: 'rgba(255,255,255,0.85)', marginBottom: '3rem', textShadow: '0 2px 6px rgba(0,0,0,0.5)' }}>
-              Itran was born from a desire to escape the noise. Every drop of our fragrance is composed slowly, honoring ancient distillation methods and sourcing only the rarest, most emotive botanicals.
+              {homepageData?.heroDescription || "Itran was born from a desire to escape the noise. Every drop of our fragrance is composed slowly, honoring ancient distillation methods and sourcing only the rarest, most emotive botanicals."}
             </p>
           </Reveal>
           <Reveal delay={0.4}>
             <div>
-              <a href="#collection" className="btn-primary label-caps" style={{ backgroundColor: '#ffffff', color: '#1a1a1a' }}>Explore Collection</a>
+              <a href={homepageData?.heroCtaLink || "#collection"} className="btn-primary label-caps" style={{ backgroundColor: '#ffffff', color: '#1a1a1a' }}>
+                {homepageData?.heroCtaText || "Explore Collection"}
+              </a>
             </div>
           </Reveal>
         </div>
@@ -157,12 +169,14 @@ export default function Home() {
         <section style={{ padding: 'var(--spacing-section) 0', backgroundColor: 'var(--background)', borderTop: '1px solid var(--border)' }}>
           <div className="container" style={{ maxWidth: '900px', margin: '0 auto', textAlign: 'center', padding: '0 2rem' }}>
             <Reveal>
-              <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1.25rem', letterSpacing: '0.3em', fontSize: '0.75rem' }}>Indian Heritage</div>
+              <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1.25rem', letterSpacing: '0.3em', fontSize: '0.75rem' }}>
+                {homepageData?.heritageTag || "Indian Heritage"}
+              </div>
               <h2 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.5rem)', fontFamily: 'var(--font-serif)', marginBottom: '2rem', lineHeight: 1.3 }}>
-                Craftsmanship from the Perfume Capital of India
+                {homepageData?.heritageTitle || "Craftsmanship from the Perfume Capital of India"}
               </h2>
               <p style={{ color: 'var(--muted-foreground)', lineHeight: 2, fontSize: '1.1rem', maxWidth: '800px', margin: '0 auto' }}>
-                Nestled on the historic banks of the Ganges, the ancient city of Kannauj has stood as the perfume capital of India for thousands of years. Here, traditional attar-making craftsmanship is preserved like sacred wisdom—where copper <em>degs</em> whisper to clay receivers, and delicate blossoms are slowly coaxed into precious drops of pure, oil-based elixir. Every handcrafted fragrance from Itran is a living tribute to this timeless legacy, capturing the soul of the earth in its most silent and expressive form.
+                {homepageData?.heritageText || "Nestled on the historic banks of the Ganges, the ancient city of Kannauj has stood as the perfume capital of India for thousands of years. Here, traditional attar-making craftsmanship is preserved like sacred wisdom—where copper degs whisper to clay receivers, and delicate blossoms are slowly coaxed into precious drops of pure, oil-based elixir. Every handcrafted fragrance from Itran is a living tribute to this timeless legacy, capturing the soul of the earth in its most silent and expressive form."}
               </p>
             </Reveal>
           </div>

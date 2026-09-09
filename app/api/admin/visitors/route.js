@@ -1,6 +1,48 @@
 import { NextResponse } from 'next/server';
 import { getAdminServices } from '@/lib/firebaseAdmin';
-import { JWT } from 'google-auth-library';
+import crypto from 'crypto';
+
+/**
+ * Generate a Google OAuth2 access token for Google Analytics Data API
+ * using standard Node.js crypto module (zero external dependencies).
+ */
+async function getGoogleAnalyticsToken(clientEmail, privateKey) {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: 'RS256', typ: 'JWT' };
+  const claimSet = {
+    iss: clientEmail,
+    scope: 'https://www.googleapis.com/auth/analytics.readonly',
+    aud: 'https://oauth2.googleapis.com/token',
+    exp: now + 3600,
+    iat: now,
+  };
+
+  const base64url = (obj) => Buffer.from(JSON.stringify(obj)).toString('base64url');
+  const signInput = `${base64url(header)}.${base64url(claimSet)}`;
+
+  const sign = crypto.createSign('RSA-SHA256');
+  sign.update(signInput);
+  sign.end();
+  const signature = sign.sign(privateKey, 'base64url');
+  const jwt = `${signInput}.${signature}`;
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion: jwt,
+    }),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error_description || errorData.error || 'Failed to exchange JWT for Google access token');
+  }
+
+  const data = await res.json();
+  return data.access_token;
+}
 
 async function queryActiveUsers(accessToken, propertyId, startDate, endDate) {
   const url = `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`;
@@ -36,7 +78,19 @@ export async function GET(request) {
       return NextResponse.json({ error: 'Unauthorized: missing token' }, { status: 401 });
     }
 
-    const { adminAuth, adminDb } = await getAdminServices();
+    let adminAuth, adminDb;
+    try {
+      const services = await getAdminServices();
+      adminAuth = services.adminAuth;
+      adminDb = services.adminDb;
+    } catch (adminInitErr) {
+      console.error('[GA4 Visitors API] Firebase Admin initialization error:', adminInitErr);
+      return NextResponse.json({
+        configured: false,
+        message: 'Firebase Admin credentials missing or unconfigured in production environment.',
+      }, { status: 200 });
+    }
+
     let decoded;
     try {
       decoded = await adminAuth.verifyIdToken(token);
@@ -60,32 +114,26 @@ export async function GET(request) {
       return NextResponse.json({
         configured: false,
         message: 'Google Analytics 4 Property ID or Service Account credentials not configured.',
-      });
+      }, { status: 200 });
     }
 
-    // 3. Acquire Google OAuth2 Access Token
+    // 3. Acquire Google OAuth2 Access Token via native crypto
     let accessToken;
     try {
-      const authClient = new JWT({
-        email: clientEmail,
-        key: privateKey,
-        scopes: ['https://www.googleapis.com/auth/analytics.readonly'],
-      });
-      const tokenRes = await authClient.getAccessToken();
-      accessToken = tokenRes?.token;
+      accessToken = await getGoogleAnalyticsToken(clientEmail, privateKey);
     } catch (authErr) {
       console.error('[GA4 Visitors API] Service account auth error:', authErr);
       return NextResponse.json({
         configured: false,
-        message: 'Failed to authenticate Google Cloud service account.',
-      });
+        message: 'Failed to authenticate Google Cloud service account with Google Analytics.',
+      }, { status: 200 });
     }
 
     if (!accessToken) {
       return NextResponse.json({
         configured: false,
         message: 'Could not obtain Google Analytics access token.',
-      });
+      }, { status: 200 });
     }
 
     // 4. Query GA4 Data API for Today, Last 7 Days, and Last 30 Days
@@ -103,9 +151,9 @@ export async function GET(request) {
         last30Days,
       });
     } catch (apiErr) {
-      console.warn('[GA4 Visitors API] Data API response:', apiErr);
+      console.warn('[GA4 Visitors API] Data API response error:', apiErr);
 
-      // Gracefully detect permission or enablement requirement
+      // Gracefully detect permission requirement
       if (apiErr?.error?.status === 'PERMISSION_DENIED' || apiErr?.error?.code === 403) {
         return NextResponse.json({
           configured: false,
@@ -113,19 +161,19 @@ export async function GET(request) {
           serviceAccount: clientEmail,
           propertyId,
           message: `Service account (${clientEmail}) needs Viewer access in GA4 Property ${propertyId} (Admin > Property Access Management).`,
-        });
+        }, { status: 200 });
       }
 
       return NextResponse.json({
         configured: false,
-        message: apiErr?.error?.message || 'Unable to retrieve GA4 metrics.',
-      });
+        message: apiErr?.error?.message || 'Unable to retrieve GA4 metrics at this time.',
+      }, { status: 200 });
     }
   } catch (err) {
     console.error('[GA4 Visitors API] Unexpected server error:', err);
-    return NextResponse.json(
-      { configured: false, error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      configured: false,
+      message: 'Analytics service temporarily unavailable.',
+    }, { status: 200 });
   }
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { addProduct, getProducts, updateProduct, deleteProduct, isVideoUrl } from '@/lib/products';
 import Reveal from '@/components/Reveal';
 import { db, auth, storage } from '@/lib/firebase';
@@ -19,6 +20,18 @@ export default function ChangeProductPage() {
   const [loginLoading, setLoginLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState('add'); // 'add', 'manage', 'packaging', 'enquiries', or 'our-story'
+
+  // Homepage Settings state (Hero Headlines, Heritage Craftsmanship)
+  const [homepageSettings, setHomepageSettings] = useState({
+    heroHeading: 'Crafted in Quiet\nDevotion',
+    heroDescription: 'Itran was born from a desire to escape the noise. Every drop of our fragrance is composed slowly, honoring ancient distillation methods and sourcing only the rarest, most emotive botanicals.',
+    heroCtaText: 'Explore Collection',
+    heroCtaLink: '#collection',
+    heritageTag: 'Indian Heritage',
+    heritageTitle: 'Craftsmanship from the Perfume Capital of India',
+    heritageText: 'Nestled on the historic banks of the Ganges, the ancient city of Kannauj has stood as the perfume capital of India for thousands of years. Here, traditional attar-making craftsmanship is preserved like sacred wisdom—where copper degs whisper to clay receivers, and delicate blossoms are slowly coaxed into precious drops of pure, oil-based elixir. Every handcrafted fragrance from Itran is a living tribute to this timeless legacy, capturing the soul of the earth in its most silent and expressive form.'
+  });
+  const [savingHomepage, setSavingHomepage] = useState(false);
 
   // Our Story states
   const [storyContent, setStoryContent] = useState({
@@ -517,6 +530,17 @@ export default function ChangeProductPage() {
       }
     });
 
+    // Real-time listener for Homepage Settings (Hero & Heritage)
+    const unsubscribeHomepage = onSnapshot(doc(db, 'settings', 'homepage'), (snapshot) => {
+      if (snapshot.exists()) {
+        const data = snapshot.data();
+        setHomepageSettings(prev => ({
+          ...prev,
+          ...data
+        }));
+      }
+    });
+
     return () => {
       unsubscribe();
       unsubscribeContact();
@@ -529,8 +553,23 @@ export default function ChangeProductPage() {
       unsubscribeJournalSettings();
       unsubscribeGiftingImages();
       unsubscribeTicker();
+      unsubscribeHomepage();
     };
   }, [adminUser]);
+
+  // Handler for saving Homepage settings (Hero & Heritage)
+  const handleSaveHomepageSettings = async (e) => {
+    if (e) e.preventDefault();
+    setSavingHomepage(true);
+    try {
+      await setDoc(doc(db, 'settings', 'homepage'), homepageSettings, { merge: true });
+      alert('Homepage settings saved successfully!');
+    } catch (err) {
+      alert('Failed to save homepage settings: ' + err.message);
+    } finally {
+      setSavingHomepage(false);
+    }
+  };
 
   // Fetch GA4 Website Visitor Statistics
   const fetchVisitorStats = async () => {
@@ -543,8 +582,8 @@ export default function ChangeProductPage() {
           Authorization: `Bearer ${token}`,
         },
       });
-      const data = await res.json();
-      if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok && !data.message) {
         throw new Error(data.error || 'Failed to load visitor statistics');
       }
       setVisitorStats({
@@ -561,7 +600,9 @@ export default function ChangeProductPage() {
       setVisitorStats(prev => ({
         ...prev,
         loading: false,
-        error: err.message || 'Unable to connect to analytics service',
+        configured: false,
+        message: 'Analytics service temporarily unavailable.',
+        error: null,
       }));
     }
   };
@@ -1573,6 +1614,22 @@ export default function ChangeProductPage() {
           borderRadius: '8px' 
         }}>
           <button 
+            onClick={() => setActiveTab('homepage')}
+            style={{ 
+              flex: '1 1 150px', 
+              padding: '0.75rem 1rem', 
+              background: activeTab === 'homepage' ? '#fff' : 'transparent', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer', 
+              transition: 'all 0.3s',
+              fontSize: '0.65rem'
+            }}
+            className="label-caps"
+          >
+            HOMEPAGE
+          </button>
+          <button 
             onClick={() => { setActiveTab('add'); resetForm(); }}
             style={{ 
               flex: '1 1 150px', 
@@ -1752,7 +1809,299 @@ export default function ChangeProductPage() {
 
         </div>
 
-        {activeTab === 'add' ? (
+        {activeTab === 'homepage' ? (
+          <Reveal>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+
+              {/* Homepage Management Hero Header */}
+              <div style={{ background: '#fff', padding: '2rem var(--spacing-gutter)', border: '1px solid var(--border)', borderRadius: '6px', boxShadow: '0 2px 10px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: '1px solid var(--border)', paddingBottom: '1.25rem', marginBottom: '1.25rem' }}>
+                  <div>
+                    <span className="label-caps" style={{ color: 'var(--primary)', fontSize: '0.7rem', letterSpacing: '0.2em' }}>HOMEPAGE STOREFRONT</span>
+                    <h1 style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', margin: '0.25rem 0 0 0', color: '#1a1a1a' }}>Homepage Manager</h1>
+                  </div>
+                  <Link href="/" target="_blank" className="btn-outline label-caps" style={{ fontSize: '0.65rem', padding: '0.6rem 1.25rem', textDecoration: 'none', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span>View Live Website</span>
+                    <span className="material-icons" style={{ fontSize: '0.85rem' }}>open_in_new</span>
+                  </Link>
+                </div>
+                <p style={{ color: 'var(--muted-foreground)', fontSize: '0.85rem', lineHeight: 1.6, margin: 0 }}>
+                  This dashboard consolidates all editable sections of the ITRĀN homepage. Update headlines, hero video, announcement ticker, heritage craftsmanship, and navigate directly to manage realms, best sellers, and philosophy cards.
+                </p>
+
+                {/* Quick Section Anchor Links */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #f0eae1' }}>
+                  {[
+                    { label: '01 Top Ticker', href: '#hp-ticker' },
+                    { label: '02 Hero & Video', href: '#hp-hero' },
+                    { label: '03 Curated Realms', href: '#hp-realms' },
+                    { label: '04 Best Sellers', href: '#hp-bestsellers' },
+                    { label: '05 Heritage Story', href: '#hp-heritage' },
+                    { label: '06 Our Story', href: '#hp-story' },
+                  ].map((s, i) => (
+                    <a key={i} href={s.href} className="label-caps" style={{ fontSize: '0.6rem', padding: '0.35rem 0.75rem', background: '#faf9f7', border: '1px solid #e7ded4', borderRadius: '4px', textDecoration: 'none', color: '#4a3f35' }}>
+                      {s.label}
+                    </a>
+                  ))}
+                </div>
+              </div>
+
+              {/* 1. TOP ANNOUNCEMENT TICKER */}
+              <div id="hp-ticker" style={{ background: '#fff', padding: '1.75rem var(--spacing-gutter)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>01</span>
+                    <h3 className="label-caps" style={{ fontSize: '0.8rem', letterSpacing: '0.15em', margin: 0, color: '#1a1a1a' }}>Top Announcement Ticker</h3>
+                  </div>
+                  <button onClick={() => setActiveTab('ticker')} className="label-caps" style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.65rem' }}>
+                    Open Dedicated Tab →
+                  </button>
+                </div>
+                <form onSubmit={handleSaveTickerSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#7c6d63' }}>Ticker Announcement Text</label>
+                    <input
+                      type="text"
+                      value={tickerConfig.text}
+                      onChange={(e) => setTickerConfig({ ...tickerConfig, text: e.target.value })}
+                      placeholder="e.g. WE OFFER FREE SHIPPING ON ALL ORDERS PAN INDIA !!"
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#faf9f7', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.85rem' }}>
+                      <input
+                        type="checkbox"
+                        checked={tickerConfig.enabled}
+                        onChange={(e) => setTickerConfig({ ...tickerConfig, enabled: e.target.checked })}
+                      />
+                      <span className="label-caps" style={{ fontSize: '0.65rem' }}>Show Ticker on Live Website</span>
+                    </label>
+                    <button type="submit" disabled={savingTicker} className="btn-primary label-caps" style={{ padding: '0.65rem 1.5rem', fontSize: '0.7rem' }}>
+                      {savingTicker ? 'Saving...' : 'Save Ticker'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* 2. HERO SECTION & VIDEO */}
+              <div id="hp-hero" style={{ background: '#fff', padding: '1.75rem var(--spacing-gutter)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>02</span>
+                    <h3 className="label-caps" style={{ fontSize: '0.8rem', letterSpacing: '0.15em', margin: 0, color: '#1a1a1a' }}>Hero Section & Background Video</h3>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                  {/* Hero Video Section */}
+                  <div style={{ padding: '1.25rem', background: '#faf9f7', border: '1px solid #e7ded4', borderRadius: '4px' }}>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#7c6d63' }}>Homepage Background Video</label>
+                    <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                      <input
+                        type="text"
+                        value={heroImages.homeVideo || ''}
+                        onChange={(e) => setHeroImages({ ...heroImages, homeVideo: e.target.value })}
+                        placeholder="e.g. /videos/homePage.mp4 or Cloud Storage URL"
+                        style={{ flex: '1 1 300px', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontSize: '0.85rem' }}
+                      />
+                      <label className="btn-outline label-caps" style={{ padding: '0.75rem 1.25rem', fontSize: '0.65rem', cursor: 'pointer', display: 'inline-block' }}>
+                        {uploadingHeroHomeVideo ? 'Uploading...' : 'Upload Video File'}
+                        <input
+                          type="file"
+                          accept="video/*"
+                          style={{ display: 'none' }}
+                          disabled={uploadingHeroHomeVideo}
+                          onChange={(e) => handleHeroImageUpload('homeVideo', e.target.files[0])}
+                        />
+                      </label>
+                    </div>
+                    <p style={{ fontSize: '0.75rem', color: '#7c6d63', marginTop: '0.5rem', marginBottom: 0 }}>
+                      Current video: <code style={{ fontSize: '0.72rem', background: '#eadecd', padding: '0.15rem 0.4rem', borderRadius: '3px' }}>{heroImages.homeVideo || '/videos/homePage.mp4'}</code>
+                    </p>
+                  </div>
+
+                  {/* Hero Headline & CTA Form */}
+                  <form onSubmit={handleSaveHomepageSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#7c6d63' }}>Hero Main Headline (Use enter/newline for line break)</label>
+                      <textarea
+                        rows={2}
+                        value={homepageSettings.heroHeading || ''}
+                        onChange={(e) => setHomepageSettings({ ...homepageSettings, heroHeading: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontSize: '0.9rem', fontFamily: 'var(--font-serif)' }}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#7c6d63' }}>Hero Subheading / Description</label>
+                      <textarea
+                        rows={3}
+                        value={homepageSettings.heroDescription || ''}
+                        onChange={(e) => setHomepageSettings({ ...homepageSettings, heroDescription: e.target.value })}
+                        style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontSize: '0.85rem' }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem' }}>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#7c6d63' }}>CTA Button Text</label>
+                        <input
+                          type="text"
+                          value={homepageSettings.heroCtaText || ''}
+                          onChange={(e) => setHomepageSettings({ ...homepageSettings, heroCtaText: e.target.value })}
+                          style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontSize: '0.85rem' }}
+                        />
+                      </div>
+                      <div>
+                        <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#7c6d63' }}>CTA Target Link</label>
+                        <input
+                          type="text"
+                          value={homepageSettings.heroCtaLink || ''}
+                          onChange={(e) => setHomepageSettings({ ...homepageSettings, heroCtaLink: e.target.value })}
+                          style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontSize: '0.85rem' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '0.5rem' }}>
+                      <button type="submit" disabled={savingHomepage} className="btn-primary label-caps" style={{ padding: '0.75rem 2rem', fontSize: '0.7rem' }}>
+                        {savingHomepage ? 'Saving Hero...' : 'Save Hero Section'}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              {/* 3. CURATED REALMS ON HOMEPAGE */}
+              <div id="hp-realms" style={{ background: '#fff', padding: '1.75rem var(--spacing-gutter)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>03</span>
+                    <h3 className="label-caps" style={{ fontSize: '0.8rem', letterSpacing: '0.15em', margin: 0, color: '#1a1a1a' }}>Curated Realms Carousel</h3>
+                  </div>
+                  <button onClick={() => setActiveTab('realms')} className="label-caps" style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.65rem' }}>
+                    Manage All Realms ({realms.length}) →
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', marginBottom: '1.25rem' }}>
+                  These realms automatically scroll across the homepage carousel in real time.
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                  {realms.map((r, i) => (
+                    <div key={r.id || i} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', background: '#faf9f7', border: '1px solid #e7ded4', borderRadius: '4px' }}>
+                      {r.image && <img src={r.image} alt={r.name} style={{ width: '28px', height: '28px', borderRadius: '50%', objectFit: 'cover' }} />}
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1a1a1a' }}>{r.name}</span>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => setActiveTab('realms')} className="btn-outline label-caps" style={{ padding: '0.65rem 1.5rem', fontSize: '0.65rem' }}>
+                  Add / Edit Realms
+                </button>
+              </div>
+
+              {/* 4. BEST SELLERS */}
+              <div id="hp-bestsellers" style={{ background: '#fff', padding: '1.75rem var(--spacing-gutter)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>04</span>
+                    <h3 className="label-caps" style={{ fontSize: '0.8rem', letterSpacing: '0.15em', margin: 0, color: '#1a1a1a' }}>Best Sellers (Most Loved Showcase)</h3>
+                  </div>
+                  <button onClick={() => setActiveTab('manage')} className="label-caps" style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.65rem' }}>
+                    Manage in Inventory →
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', marginBottom: '1.25rem' }}>
+                  Products marked as <strong>Best Seller</strong> in the Inventory tab automatically appear on the homepage (first 4).
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                  {inventory.filter(p => p.isBestSeller).slice(0, 4).map((p) => (
+                    <div key={p.id} style={{ padding: '0.75rem', border: '1px solid #e7ded4', borderRadius: '4px', background: '#faf9f7', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                      <img src={p.image || p.imageUrl || '/images/placeholder.jpg'} alt={p.name} style={{ width: '45px', height: '45px', objectFit: 'cover', borderRadius: '4px' }} />
+                      <div>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1a1a1a' }}>{p.name}</div>
+                        <div style={{ fontSize: '0.7rem', color: '#8c7e72' }}>₹{p.price}</div>
+                      </div>
+                    </div>
+                  ))}
+                  {inventory.filter(p => p.isBestSeller).length === 0 && (
+                    <div style={{ padding: '1rem', color: '#7c6d63', fontSize: '0.8rem', background: '#faf9f7', gridColumn: '1 / -1' }}>
+                      No products are currently marked as Best Seller. Edit products in Inventory to toggle "Best Seller".
+                    </div>
+                  )}
+                </div>
+                <button onClick={() => setActiveTab('manage')} className="btn-outline label-caps" style={{ padding: '0.65rem 1.5rem', fontSize: '0.65rem' }}>
+                  Manage Best Seller Products
+                </button>
+              </div>
+
+              {/* 5. INDIAN HERITAGE STORYTELLING */}
+              <div id="hp-heritage" style={{ background: '#fff', padding: '1.75rem var(--spacing-gutter)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>05</span>
+                    <h3 className="label-caps" style={{ fontSize: '0.8rem', letterSpacing: '0.15em', margin: 0, color: '#1a1a1a' }}>Indian Heritage Craftsmanship (Kannauj Legacy)</h3>
+                  </div>
+                </div>
+                <form onSubmit={handleSaveHomepageSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#7c6d63' }}>Section Label Tag</label>
+                    <input
+                      type="text"
+                      value={homepageSettings.heritageTag || ''}
+                      onChange={(e) => setHomepageSettings({ ...homepageSettings, heritageTag: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontSize: '0.85rem' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#7c6d63' }}>Heritage Heading</label>
+                    <input
+                      type="text"
+                      value={homepageSettings.heritageTitle || ''}
+                      onChange={(e) => setHomepageSettings({ ...homepageSettings, heritageTitle: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontSize: '0.9rem', fontFamily: 'var(--font-serif)' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#7c6d63' }}>Heritage Narrative Paragraph</label>
+                    <textarea
+                      rows={4}
+                      value={homepageSettings.heritageText || ''}
+                      onChange={(e) => setHomepageSettings({ ...homepageSettings, heritageText: e.target.value })}
+                      style={{ width: '100%', padding: '0.75rem', border: '1px solid var(--border)', background: '#fff', fontSize: '0.85rem', lineHeight: 1.6 }}
+                    />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <button type="submit" disabled={savingHomepage} className="btn-primary label-caps" style={{ padding: '0.75rem 2rem', fontSize: '0.7rem' }}>
+                      {savingHomepage ? 'Saving...' : 'Save Heritage Section'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* 6. OUR STORY SECTION */}
+              <div id="hp-story" style={{ background: '#fff', padding: '1.75rem var(--spacing-gutter)', border: '1px solid var(--border)', borderRadius: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                    <span className="label-caps" style={{ color: '#c19a5b', fontSize: '0.75rem' }}>06</span>
+                    <h3 className="label-caps" style={{ fontSize: '0.8rem', letterSpacing: '0.15em', margin: 0, color: '#1a1a1a' }}>Our Story Section (Homepage Bottom)</h3>
+                  </div>
+                  <button onClick={() => setActiveTab('our-story')} className="label-caps" style={{ background: 'none', border: 'none', color: 'var(--primary)', cursor: 'pointer', fontSize: '0.65rem' }}>
+                    Open Dedicated Tab →
+                  </button>
+                </div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)', marginBottom: '1.25rem' }}>
+                  Headline: <strong>{storyContent.mainHeading || 'The Story Behind Itran'}</strong><br />
+                  Philosophy Cards active: <strong>{storyContent.cards ? storyContent.cards.filter(c => c.active !== false).length : 0} cards</strong>
+                </p>
+                <button onClick={() => setActiveTab('our-story')} className="btn-outline label-caps" style={{ padding: '0.65rem 1.5rem', fontSize: '0.65rem' }}>
+                  Edit Our Story & Philosophy Cards
+                </button>
+              </div>
+
+            </div>
+          </Reveal>
+        ) : activeTab === 'add' ? (
           <Reveal>
             <div style={{ background: '#fff', padding: 'var(--spacing-gutter)', border: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
