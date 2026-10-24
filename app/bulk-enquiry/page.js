@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Reveal from '@/components/Reveal';
 import { useAppContext } from '@/context/AppContext';
 import { db } from '@/lib/firebase';
-import { collection, addDoc, serverTimestamp, getDocs, doc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, getDocs, doc, onSnapshot, getDoc } from 'firebase/firestore';
 
 export default function BulkGiftingPage() {
   const { user } = useAppContext();
@@ -90,7 +90,7 @@ export default function BulkGiftingPage() {
 
   // Fetch dynamic gifting category images from Firestore settings
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'settings', 'giftingImages'), (snapshot) => {
+    const unsub = onSnapshot(doc(db, 'settings', 'gifting-images'), (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
         setGiftingImages(prev => ({
@@ -99,6 +99,19 @@ export default function BulkGiftingPage() {
           corporate: data.corporate || prev.corporate,
           returnGifting: data.returnGifting || prev.returnGifting
         }));
+      } else {
+        // Fallback for legacy camelCase document if present
+        getDoc(doc(db, 'settings', 'giftingImages')).then((legacySnap) => {
+          if (legacySnap.exists()) {
+            const data = legacySnap.data();
+            setGiftingImages(prev => ({
+              hero: data.hero || prev.hero,
+              wedding: data.wedding || prev.wedding,
+              corporate: data.corporate || prev.corporate,
+              returnGifting: data.returnGifting || prev.returnGifting
+            }));
+          }
+        }).catch(() => {});
       }
     });
 

@@ -562,7 +562,21 @@ export default function ChangeProductPage() {
     if (e) e.preventDefault();
     setSavingHomepage(true);
     try {
-      await setDoc(doc(db, 'settings', 'homepage'), homepageSettings, { merge: true });
+      const updates = [
+        setDoc(doc(db, 'settings', 'homepage'), homepageSettings, { merge: true }),
+      ];
+
+      if (heroImages && heroImages.homeVideo !== undefined) {
+        updates.push(
+          setDoc(
+            doc(db, 'settings', 'hero-images'),
+            { homeVideo: heroImages.homeVideo || '' },
+            { merge: true }
+          )
+        );
+      }
+
+      await Promise.all(updates);
       alert('Homepage settings saved successfully!');
     } catch (err) {
       alert('Failed to save homepage settings: ' + err.message);
@@ -614,7 +628,7 @@ export default function ChangeProductPage() {
   }, [adminUser]);
 
   // Handler for uploading Gifting Card Images
-  const handleGiftingImageUpload = async (key, file) => {
+  const handleGiftingImageUpload = async (key, file, inputElement) => {
     if (!file) return;
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
     const fileExt = file.name.split('.').pop().toLowerCase();
@@ -636,13 +650,17 @@ export default function ChangeProductPage() {
       alert('Failed to upload image: ' + err.message);
     } finally {
       setUploadingGiftingImage(prev => ({ ...prev, [key]: false }));
+      if (inputElement) inputElement.value = '';
     }
   };
 
   const handleSaveGiftingImages = async () => {
     setSavingGiftingImages(true);
     try {
-      await setDoc(doc(db, 'settings', 'gifting-images'), giftingImages, { merge: true });
+      await Promise.all([
+        setDoc(doc(db, 'settings', 'gifting-images'), giftingImages, { merge: true }),
+        setDoc(doc(db, 'settings', 'giftingImages'), giftingImages, { merge: true })
+      ]);
       alert('Bulk Gifting images saved successfully!');
     } catch (err) {
       alert('Failed to save gifting images: ' + err.message);
@@ -1180,7 +1198,7 @@ export default function ChangeProductPage() {
     e.preventDefault();
     setHeroSaving(true);
     try {
-      await setDoc(doc(db, 'settings', 'hero-images'), heroImages);
+      await setDoc(doc(db, 'settings', 'hero-images'), heroImages, { merge: true });
       alert('Hero Images updated successfully!');
     } catch (err) {
       alert('Failed to save hero images: ' + err.message);
@@ -1213,6 +1231,7 @@ export default function ChangeProductPage() {
         alert('Failed to upload video: ' + err.message);
       } finally {
         setUploadingHeroHomeVideo(false);
+        if (e?.target) e.target.value = '';
       }
       return;
     }
@@ -1893,7 +1912,7 @@ export default function ChangeProductPage() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                <form onSubmit={handleSaveHomepageSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   {/* Hero Video Section */}
                   <div style={{ padding: '1.25rem', background: '#faf9f7', border: '1px solid #e7ded4', borderRadius: '4px' }}>
                     <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.5rem', color: '#7c6d63' }}>Homepage Background Video</label>
@@ -1909,10 +1928,10 @@ export default function ChangeProductPage() {
                         {uploadingHeroHomeVideo ? 'Uploading...' : 'Upload Video File'}
                         <input
                           type="file"
-                          accept="video/*"
+                          accept="video/mp4,video/webm,video/ogg,video/quicktime"
                           style={{ display: 'none' }}
                           disabled={uploadingHeroHomeVideo}
-                          onChange={(e) => handleHeroImageUpload('homeVideo', e.target.files[0])}
+                          onChange={(e) => handleHeroSectionImageUpload(e, 'homeVideo')}
                         />
                       </label>
                     </div>
@@ -1922,7 +1941,7 @@ export default function ChangeProductPage() {
                   </div>
 
                   {/* Hero Headline & CTA Form */}
-                  <form onSubmit={handleSaveHomepageSettings} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     <div>
                       <label className="label-caps" style={{ fontSize: '0.65rem', display: 'block', marginBottom: '0.4rem', color: '#7c6d63' }}>Hero Main Headline (Use enter/newline for line break)</label>
                       <textarea
@@ -1969,8 +1988,8 @@ export default function ChangeProductPage() {
                         {savingHomepage ? 'Saving Hero...' : 'Save Hero Section'}
                       </button>
                     </div>
-                  </form>
-                </div>
+                  </div>
+                </form>
               </div>
 
               {/* 3. CURATED REALMS ON HOMEPAGE */}
@@ -2408,7 +2427,7 @@ export default function ChangeProductPage() {
                   <input 
                     type="text" 
                     value={giftingImages.wedding || ''} 
-                    onChange={(e) => setGiftingImages({ ...giftingImages, wedding: e.target.value })} 
+                    onChange={(e) => setGiftingImages(prev => ({ ...prev, wedding: e.target.value }))} 
                     placeholder="Image URL" 
                     style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', marginBottom: '0.5rem' }} 
                   />
@@ -2417,7 +2436,7 @@ export default function ChangeProductPage() {
                     accept="image/*" 
                     id="wedding-img-upload" 
                     style={{ display: 'none' }} 
-                    onChange={(e) => handleGiftingImageUpload('wedding', e.target.files[0])} 
+                    onChange={(e) => handleGiftingImageUpload('wedding', e.target.files[0], e.target)} 
                   />
                   <label 
                     htmlFor="wedding-img-upload" 
@@ -2439,7 +2458,7 @@ export default function ChangeProductPage() {
                   <input 
                     type="text" 
                     value={giftingImages.corporate || ''} 
-                    onChange={(e) => setGiftingImages({ ...giftingImages, corporate: e.target.value })} 
+                    onChange={(e) => setGiftingImages(prev => ({ ...prev, corporate: e.target.value }))} 
                     placeholder="Image URL" 
                     style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', marginBottom: '0.5rem' }} 
                   />
@@ -2448,7 +2467,7 @@ export default function ChangeProductPage() {
                     accept="image/*" 
                     id="corporate-img-upload" 
                     style={{ display: 'none' }} 
-                    onChange={(e) => handleGiftingImageUpload('corporate', e.target.files[0])} 
+                    onChange={(e) => handleGiftingImageUpload('corporate', e.target.files[0], e.target)} 
                   />
                   <label 
                     htmlFor="corporate-img-upload" 
@@ -2470,7 +2489,7 @@ export default function ChangeProductPage() {
                   <input 
                     type="text" 
                     value={giftingImages.returnGifting || ''} 
-                    onChange={(e) => setGiftingImages({ ...giftingImages, returnGifting: e.target.value })} 
+                    onChange={(e) => setGiftingImages(prev => ({ ...prev, returnGifting: e.target.value }))} 
                     placeholder="Image URL" 
                     style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', marginBottom: '0.5rem' }} 
                   />
@@ -2479,7 +2498,7 @@ export default function ChangeProductPage() {
                     accept="image/*" 
                     id="return-img-upload" 
                     style={{ display: 'none' }} 
-                    onChange={(e) => handleGiftingImageUpload('returnGifting', e.target.files[0])} 
+                    onChange={(e) => handleGiftingImageUpload('returnGifting', e.target.files[0], e.target)} 
                   />
                   <label 
                     htmlFor="return-img-upload" 
@@ -2501,7 +2520,7 @@ export default function ChangeProductPage() {
                   <input 
                     type="text" 
                     value={giftingImages.hero || ''} 
-                    onChange={(e) => setGiftingImages({ ...giftingImages, hero: e.target.value })} 
+                    onChange={(e) => setGiftingImages(prev => ({ ...prev, hero: e.target.value }))} 
                     placeholder="Image URL" 
                     style={{ width: '100%', padding: '0.5rem', fontSize: '0.75rem', border: '1px solid var(--border)', marginBottom: '0.5rem' }} 
                   />
@@ -2510,7 +2529,7 @@ export default function ChangeProductPage() {
                     accept="image/*" 
                     id="hero-gifting-img-upload" 
                     style={{ display: 'none' }} 
-                    onChange={(e) => handleGiftingImageUpload('hero', e.target.files[0])} 
+                    onChange={(e) => handleGiftingImageUpload('hero', e.target.files[0], e.target)} 
                   />
                   <label 
                     htmlFor="hero-gifting-img-upload" 
