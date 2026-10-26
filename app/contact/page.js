@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
+import BackButton from '@/components/BackButton';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp, doc, onSnapshot } from 'firebase/firestore';
 
@@ -73,13 +74,7 @@ export default function Contact() {
   const whatsappLink = `https://wa.me/${whatsappNumber}?text=${whatsappMessage}`;
 
   return (
-    <div style={{ paddingTop: '80px', position: 'relative' }}>
-      <div className="floating-back">
-        <Link href="/" className="back-btn" aria-label="Go back">
-          <span className="material-icons">arrow_back</span>
-        </Link>
-      </div>
-
+    <div style={{ paddingTop: 'calc(var(--ticker-height) + 100px)', position: 'relative' }}>
       {/* Floating WhatsApp Button */}
       <a 
         href={whatsappLink} 
@@ -111,8 +106,9 @@ export default function Contact() {
         </svg>
       </a>
 
-      <section style={{ padding: '8rem 0 4rem' }}>
+      <section style={{ padding: '2.5rem 0 4rem' }}>
         <div className="container" style={{ textAlign: 'center', maxWidth: '800px' }}>
+          <BackButton href="/" style={{ justifyContent: 'flex-start' }} />
           <Reveal>
             <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1.5rem', letterSpacing: '0.3em' }}>Get in Touch</div>
             <h1 style={{ fontSize: 'clamp(3rem, 8vw, 5rem)', marginBottom: '2.5rem' }}>Speak in Whispers</h1>

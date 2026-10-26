@@ -6,6 +6,7 @@ import { useAppContext } from '@/context/AppContext';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, query, where, onSnapshot, orderBy, serverTimestamp } from 'firebase/firestore';
 import Reveal from '@/components/Reveal';
+import BackButton from '@/components/BackButton';
 import Link from 'next/link';
 import { isVideoUrl } from '@/lib/products';
 
@@ -112,15 +113,9 @@ export default function ProductPage({ params }) {
   }
 
   return (
-    <div style={{ paddingTop: '100px', background: 'var(--background)', position: 'relative' }}>
-      {/* Floating Back Button */}
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
-      <div className="container" style={{ maxWidth: '1200px', padding: '4rem 2rem' }}>
-        
+    <div style={{ paddingTop: 'calc(var(--ticker-height) + 100px)', background: 'var(--background)', position: 'relative' }}>
+      <div className="container" style={{ maxWidth: '1200px', padding: '2rem var(--spacing-gutter) 6rem' }}>
+        <BackButton />
         <div className="product-layout-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '4rem', marginBottom: '6rem' }}>
           
           {/* Gallery Section */}

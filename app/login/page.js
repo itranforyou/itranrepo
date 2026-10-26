@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
+import BackButton from '@/components/BackButton';
 import { useAppContext } from '@/context/AppContext';
 
 export default function Login() {
@@ -153,14 +154,9 @@ export default function Login() {
   };
 
   return (
-    <div style={{ paddingTop: '80px', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--background)', position: 'relative' }}>
-      {/* Floating Back Button */}
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
+    <div style={{ paddingTop: 'calc(var(--ticker-height) + 100px + 2rem)', minHeight: '90vh', paddingBottom: '4rem', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--background)', position: 'relative' }}>
       <div className="container" style={{ maxWidth: '450px' }}>
+        <BackButton />
         <Reveal>
           <div style={{ background: '#fff', padding: '3.5rem', border: '1px solid var(--border)', textAlign: 'center' }}>
             <h1 style={{ fontSize: '2.5rem', marginBottom: '1rem' }}>

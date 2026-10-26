@@ -4,6 +4,7 @@ import { useAppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
+import BackButton from '@/components/BackButton';
 import Link from 'next/link';
 
 export default function WishlistPage() {
@@ -19,15 +20,10 @@ export default function WishlistPage() {
   }
 
   return (
-    <div style={{ paddingTop: '100px', minHeight: '90vh', background: 'var(--background)', position: 'relative' }}>
-      {/* Floating Back Button */}
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
-      <section style={{ padding: '6rem 0' }}>
+    <div style={{ paddingTop: 'calc(var(--ticker-height) + 100px)', minHeight: '90vh', background: 'var(--background)', position: 'relative' }}>
+      <section style={{ padding: '2.5rem 0 6rem' }}>
         <div className="container" style={{ maxWidth: '1200px' }}>
+          <BackButton />
           <Reveal style={{ textAlign: 'center', marginBottom: '5rem' }}>
             <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1.5rem', letterSpacing: '0.3em' }}>Curated Selections</div>
             <h1 style={{ fontSize: 'clamp(3rem, 8vw, 4.5rem)', fontFamily: 'var(--font-serif)', marginBottom: '2rem' }}>My Wishlist</h1>

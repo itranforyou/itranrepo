@@ -5,6 +5,7 @@ import { notFound, useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
 import { useAppContext } from '@/context/AppContext';
+import BackButton from '@/components/BackButton';
 import { db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
@@ -44,18 +45,13 @@ export default function RealmPage({ params }) {
 
   return (
     <div style={{ paddingTop: '0' }}>
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
-
       <section className="shop-hero">
         <img 
           src={realm.img || 'https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000'}
           alt={realm.name}
         />
         <div className="container">
+          <BackButton variant="hero" />
           <Reveal>
             <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1rem', letterSpacing: '0.2em' }}>Curated Realm</div>
             <h1 style={{ fontSize: 'clamp(3rem, 8vw, 5.5rem)', marginBottom: '1.5rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>{realm.name}</h1>

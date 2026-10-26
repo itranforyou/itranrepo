@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
 import { useAppContext } from '@/context/AppContext';
+import BackButton from '@/components/BackButton';
 import { isVideoUrl } from '@/lib/products';
 
 // Helper to dynamically load the Razorpay script
@@ -277,22 +278,15 @@ export default function Cart() {
   // Razorpay integration requires no QR code URL calculation on client side
 
   return (
-    <div style={{ paddingTop: '120px', paddingBottom: '8rem', position: 'relative' }}>
-      {/* Floating Back Button */}
-      <div className="floating-back">
-        <button 
+    <div style={{ paddingTop: 'calc(var(--ticker-height) + 100px + 1.5rem)', paddingBottom: '8rem', position: 'relative' }}>
+      <div className="container">
+        <BackButton 
           onClick={() => {
             if (checkoutStep === 'payment') setCheckoutStep('details');
             else if (checkoutStep === 'details') setCheckoutStep('cart');
             else router.back();
           }} 
-          className="back-btn" 
-          aria-label="Go Back"
-        >
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
-      <div className="container">
+        />
         <Reveal>
           <h1 style={{ fontSize: '3rem', marginBottom: '4rem' }}>
             {checkoutStep === 'cart' && 'Your Shopping Bag'}

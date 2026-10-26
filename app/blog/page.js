@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
 import { useRouter } from 'next/navigation';
+import BackButton from '@/components/BackButton';
 import { db } from '@/lib/firebase';
 import { collection, onSnapshot, doc } from 'firebase/firestore';
 
@@ -71,13 +72,6 @@ export default function Blog() {
 
   return (
     <div style={{ paddingTop: '0' }}>
-      {/* Floating Back Button */}
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
-
       {/* HERO SECTION */}
       <section className="shop-hero">
         <img 
@@ -85,6 +79,7 @@ export default function Blog() {
           alt="The Journal"
         />
         <div className="container">
+          <BackButton variant="hero" />
           <Reveal>
             <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1.5rem', letterSpacing: '0.3em' }}>{journalSettings?.heroLabel || "The Journal"}</div>
             <h1 style={{ fontSize: 'clamp(3.5rem, 8vw, 5.5rem)', marginBottom: '2rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>{journalSettings?.heroHeading || "Stories in Silence"}</h1>

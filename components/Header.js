@@ -22,6 +22,7 @@ export default function Header() {
   const router = useRouter();
   const profileRef = useRef(null);
   const searchRef = useRef(null);
+  const searchInputRef = useRef(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const shopCollections = [
@@ -69,6 +70,39 @@ export default function Header() {
     }
   }, [isShopOpen]);
 
+  // Auto-focus search input when search opens
+  useEffect(() => {
+    if (isSearchOpen) {
+      const timer = setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 60);
+      return () => clearTimeout(timer);
+    }
+  }, [isSearchOpen]);
+
+  // Lock background scroll when search is open
+  useEffect(() => {
+    if (isSearchOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isSearchOpen]);
+
+  // Close search on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && isSearchOpen) {
+        setIsSearchOpen(false);
+        setSearchQuery('');
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchOpen]);
+
   // Handle Outside Click for Profile & Menu State for Back Button
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -85,7 +119,7 @@ export default function Header() {
     }
 
     // Add class to body to hide floating elements (like back buttons)
-    if (isMenuOpen || isProfileOpen) {
+    if (isMenuOpen || isProfileOpen || isSearchOpen) {
       document.body.classList.add('menu-active');
     } else {
       document.body.classList.remove('menu-active');
@@ -125,13 +159,14 @@ export default function Header() {
       <AnnouncementTicker />
       <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
       <div className="mobile-left-group">
-        <div className="menu-toggle" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+        <div className="menu-toggle" onClick={() => { setIsMenuOpen(!isMenuOpen); setIsSearchOpen(false); }}>
           <div className={`hamburger ${isMenuOpen ? 'open' : ''}`}></div>
         </div>
         {/* Search Icon (Beside Hamburger on Mobile) */}
         <button
-          onClick={() => setIsSearchOpen(true)}
+          onClick={() => { setIsSearchOpen(true); setIsMenuOpen(false); }}
           style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', height: '32px', width: '32px' }}
+          aria-label="Open search"
         >
           <span className="material-icons" style={{ fontSize: '1.5rem', color: iconColor }}>search</span>
         </button>
@@ -149,8 +184,9 @@ export default function Header() {
         {/* Search Icon (Beside Logo on Desktop) */}
         <button
           className="search-desktop"
-          onClick={() => setIsSearchOpen(true)}
+          onClick={() => { setIsSearchOpen(true); setIsMenuOpen(false); }}
           style={{ background: 'none', border: 'none', cursor: 'pointer', alignItems: 'center', justifyContent: 'center', padding: '0.5rem', height: '32px', width: '32px' }}
+          aria-label="Open search"
         >
           <span className="material-icons" style={{ fontSize: '1.5rem', color: iconColor }}>search</span>
         </button>
@@ -329,127 +365,6 @@ export default function Header() {
       </nav>
 
       <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-        
-        {/* Full Width Search Overlay */}
-        {isSearchOpen && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            background: '#ffffff',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.05)',
-            zIndex: 2000,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '1rem var(--spacing-gutter)',
-            animation: 'slideDown 0.3s ease',
-            borderBottom: '1px solid var(--border)'
-          }} ref={searchRef}>
-            <div style={{ width: '100%', maxWidth: '900px', display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <form onSubmit={handleSearch} style={{ flex: 1, position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <input 
-                  type="text" 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search for fragrances, categories or notes..."
-                  autoFocus
-                  style={{ 
-                    flex: 1, 
-                    border: 'none', 
-                    borderBottom: '1px solid var(--border)', 
-                    padding: '0.5rem 3rem 0.5rem 0.5rem', 
-                    outline: 'none', 
-                    fontSize: 'clamp(1.1rem, 3vw, 1.5rem)', 
-                    fontFamily: 'var(--font-serif)',
-                    background: 'transparent',
-                    color: 'var(--foreground)'
-                  }}
-                />
-                <button type="submit" style={{ position: 'absolute', right: '0.5rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                  <span className="material-icons" style={{ fontSize: '1.8rem', color: 'var(--primary)' }}>search</span>
-                </button>
-                {searchQuery && (
-                  <button type="button" onClick={() => setSearchQuery('')} style={{ position: 'absolute', right: '3rem', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                    <span className="material-icons" style={{ fontSize: '1.2rem', color: 'var(--muted-foreground)' }}>close</span>
-                  </button>
-                )}
-              </form>
-              <button type="button" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.5rem', display: 'flex', alignItems: 'center' }}>
-                <span className="material-icons" style={{ fontSize: '1.8rem', color: 'var(--foreground)' }}>close</span>
-              </button>
-            </div>
-
-            {/* Predictive Results */}
-            {searchQuery.trim() && (
-              <div style={{ width: '100%', maxWidth: '900px', marginTop: '2.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '3rem', alignItems: 'start' }}>
-                
-                {/* Suggestions Column */}
-                <div>
-                  <h4 className="label-caps" style={{ fontSize: '0.7rem', letterSpacing: '0.15em', color: 'var(--muted-foreground)', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Suggestions</h4>
-                  {filteredProducts.length > 0 ? (
-                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                      {filteredProducts.map(p => (
-                        <li key={p.id}>
-                          <Link href={`/product/${p.id}`} onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ textDecoration: 'none', color: 'var(--foreground)', fontSize: '0.95rem', display: 'block' }}>
-                            {p.name}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>No suggestions found.</p>
-                  )}
-                  
-                  {/* Static Pages Links */}
-                  <h4 className="label-caps" style={{ fontSize: '0.7rem', letterSpacing: '0.15em', color: 'var(--muted-foreground)', marginTop: '2.5rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Pages</h4>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                    <li><Link href="/our-story" onClick={() => setIsSearchOpen(false)} style={{ textDecoration: 'none', color: 'var(--foreground)', fontSize: '0.95rem' }}>Our Heritage</Link></li>
-                    <li><Link href="/bulk-enquiry" onClick={() => setIsSearchOpen(false)} style={{ textDecoration: 'none', color: 'var(--foreground)', fontSize: '0.95rem' }}>Bulk Gifting</Link></li>
-                  </ul>
-                </div>
-
-                {/* Products Column */}
-                <div>
-                  <h4 className="label-caps" style={{ fontSize: '0.7rem', letterSpacing: '0.15em', color: 'var(--muted-foreground)', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>Products</h4>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.5rem' }}>
-                    {filteredProducts.length > 0 ? (
-                      filteredProducts.map(p => (
-                        <Link key={p.id} href={`/product/${p.id}`} onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                          <div style={{ width: '60px', height: '60px', background: '#f5f5f5', flexShrink: 0, overflow: 'hidden', position: 'relative' }}>
-                            {isVideoUrl(p.images?.[0]) ? (
-                              <video src={p.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline autoPlay loop />
-                            ) : (
-                              <img src={p.images?.[0] || 'https://via.placeholder.com/60'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            )}
-                          </div>
-                          <div>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.2rem' }}>{p.name}</div>
-                            <div style={{ fontSize: '0.75rem', color: 'var(--primary)' }}>₹{p.price}</div>
-                          </div>
-                        </Link>
-                      ))
-                    ) : (
-                      <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>No products matching "{searchQuery}"</p>
-                    )}
-                  </div>
-                  
-                  {filteredProducts.length > 0 && (
-                    <button 
-                      onClick={handleSearch}
-                      style={{ marginTop: '2rem', display: 'inline-flex', alignItems: 'center', background: 'none', border: 'none', color: 'var(--primary)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem' }}
-                      className="label-caps"
-                    >
-                      Search for "{searchQuery}" <span className="material-icons" style={{ fontSize: '1.1rem', marginLeft: '0.5rem' }}>arrow_forward</span>
-                    </button>
-                  )}
-                </div>
-
-              </div>
-            )}
-          </div>
-        )}
 
         <Link href="/cart" className="cart-icon" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', height: '32px', width: '32px', textDecoration: 'none' }}>
           <span className="material-icons" style={{ fontSize: '1.6rem', color: iconColor }}>shopping_bag</span>
@@ -576,6 +491,210 @@ export default function Header() {
         </div>
       </div>
     </header>
+
+    {/* Full Width Luxury Search Overlay */}
+    {isSearchOpen && (
+      <div className="search-overlay-wrapper">
+        {/* Semi-transparent Backdrop for background page handling */}
+        <div
+          className="search-backdrop"
+          onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+          aria-hidden="true"
+        />
+
+        {/* Search Panel Docked Cleanly Below Announcement Bar */}
+        <div ref={searchRef} className="search-panel">
+          <div className="search-bar-inner">
+            <form onSubmit={handleSearch} className="search-input-form">
+              <span
+                className="material-icons"
+                style={{
+                  position: 'absolute',
+                  left: '0.6rem',
+                  fontSize: '1.5rem',
+                  color: 'var(--primary)',
+                  pointerEvents: 'none',
+                }}
+              >
+                search
+              </span>
+              <input
+                ref={searchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search for fragrances, categories or notes..."
+                autoFocus
+                className="search-input-field"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => { setSearchQuery(''); searchInputRef.current?.focus(); }}
+                  aria-label="Clear search"
+                  style={{
+                    position: 'absolute',
+                    right: '0.75rem',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '0.25rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'var(--muted-foreground)',
+                  }}
+                >
+                  <span className="material-icons" style={{ fontSize: '1.25rem' }}>close</span>
+                </button>
+              )}
+            </form>
+
+            <button
+              type="button"
+              onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+              aria-label="Close search"
+              className="search-close-btn"
+            >
+              <span className="search-close-label">Close</span>
+              <span className="material-icons" style={{ fontSize: '1.25rem', lineHeight: 1 }}>close</span>
+            </button>
+          </div>
+
+          {/* Popular Search Suggestions (when query is empty) */}
+          {!searchQuery.trim() && (
+            <div className="search-results-container" style={{ paddingTop: '0.25rem', paddingBottom: '1.75rem' }}>
+              <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.65rem' }}>
+                <span className="label-caps" style={{ fontSize: '0.68rem', color: 'var(--muted-foreground)', letterSpacing: '0.12em', marginRight: '0.35rem' }}>
+                  Popular:
+                </span>
+                {['Velvet Vow', 'Roseatte', 'Jannat Sabaya', 'Noir Poise', 'Perfume Oil', 'Diffusers'].map((term) => (
+                  <button
+                    key={term}
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery(term);
+                      searchInputRef.current?.focus();
+                    }}
+                    className="search-tag-chip"
+                  >
+                    {term}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Predictive Results & Suggestions (when typing) */}
+          {searchQuery.trim() && (
+            <div className="search-results-container">
+              <div className="search-results-grid">
+                {/* Suggestions Column */}
+                <div>
+                  <h4 className="label-caps" style={{ fontSize: '0.7rem', letterSpacing: '0.15em', color: 'var(--muted-foreground)', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+                    Suggestions
+                  </h4>
+                  {filteredProducts.length > 0 ? (
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                      {filteredProducts.map(p => (
+                        <li key={p.id}>
+                          <Link
+                            href={`/product/${p.id}`}
+                            onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+                            style={{
+                              textDecoration: 'none',
+                              color: 'var(--foreground)',
+                              fontSize: '0.92rem',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.5rem',
+                              transition: 'color 0.2s',
+                            }}
+                          >
+                            <span className="material-icons" style={{ fontSize: '1rem', color: 'var(--primary)', opacity: 0.8 }}>arrow_forward</span>
+                            <span>{p.name}</span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>No direct suggestions found.</p>
+                  )}
+
+                  {/* Static Pages Links */}
+                  <h4 className="label-caps" style={{ fontSize: '0.7rem', letterSpacing: '0.15em', color: 'var(--muted-foreground)', marginTop: '2.25rem', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+                    Pages
+                  </h4>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    <li>
+                      <Link href="/our-story" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ textDecoration: 'none', color: 'var(--foreground)', fontSize: '0.92rem' }}>
+                        Our Heritage
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/bulk-enquiry" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ textDecoration: 'none', color: 'var(--foreground)', fontSize: '0.92rem' }}>
+                        Bulk Gifting
+                      </Link>
+                    </li>
+                    <li>
+                      <Link href="/all-products" onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }} style={{ textDecoration: 'none', color: 'var(--foreground)', fontSize: '0.92rem' }}>
+                        Shop All
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+
+                {/* Products Column */}
+                <div>
+                  <h4 className="label-caps" style={{ fontSize: '0.7rem', letterSpacing: '0.15em', color: 'var(--muted-foreground)', marginBottom: '1.25rem', borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+                    Products
+                  </h4>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '1.25rem' }}>
+                    {filteredProducts.length > 0 ? (
+                      filteredProducts.map(p => (
+                        <Link
+                          key={p.id}
+                          href={`/product/${p.id}`}
+                          onClick={() => { setIsSearchOpen(false); setSearchQuery(''); }}
+                          className="search-product-card"
+                        >
+                          <div style={{ width: '56px', height: '56px', background: '#f5f5f5', borderRadius: '4px', flexShrink: 0, overflow: 'hidden', position: 'relative' }}>
+                            {isVideoUrl(p.images?.[0]) ? (
+                              <video src={p.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted playsInline autoPlay loop />
+                            ) : (
+                              <img src={p.images?.[0] || 'https://via.placeholder.com/60'} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                            )}
+                          </div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 500, marginBottom: '0.2rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {p.name}
+                            </div>
+                            <div style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 600 }}>₹{p.price}</div>
+                          </div>
+                        </Link>
+                      ))
+                    ) : (
+                      <p style={{ fontSize: '0.85rem', color: 'var(--muted-foreground)' }}>No products matching "{searchQuery}"</p>
+                    )}
+                  </div>
+
+                  {filteredProducts.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleSearch}
+                      style={{ marginTop: '2rem', display: 'inline-flex', alignItems: 'center', background: 'none', border: 'none', color: 'var(--primary)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem' }}
+                      className="label-caps"
+                    >
+                      Search for "{searchQuery}" <span className="material-icons" style={{ fontSize: '1.1rem', marginLeft: '0.5rem' }}>arrow_forward</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    )}
     </>
   );
 }

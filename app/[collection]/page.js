@@ -6,6 +6,7 @@ import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
 import { useAppContext } from '@/context/AppContext';
 import FilterSort from '@/components/FilterSort';
+import BackButton from '@/components/BackButton';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 
@@ -214,18 +215,13 @@ export default function CollectionPage({ params }) {
 
   return (
     <div style={{ paddingTop: '0' }}>
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
-
       <section className="shop-hero">
         <img 
           src={getCollectionHeroImage()}
           alt={config.title}
         />
         <div className="container">
+          <BackButton variant="hero" />
           <Reveal>
             <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1rem', letterSpacing: '0.2em' }}>{config.label}</div>
             <h1 style={{ fontSize: 'clamp(3rem, 8vw, 5.5rem)', marginBottom: '1.5rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>{config.title}</h1>

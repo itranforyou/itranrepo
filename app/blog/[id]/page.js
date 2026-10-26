@@ -4,6 +4,7 @@ import { use, useState, useEffect } from 'react';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
 import { useRouter, notFound } from 'next/navigation';
+import BackButton from '@/components/BackButton';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 
@@ -88,15 +89,10 @@ export default function BlogPostDetail({ params }) {
 
   return (
     <div style={{ paddingTop: '0' }}>
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
-
       <section className="shop-hero">
         <img src={post.image || null} alt={post.title} />
         <div className="container">
+          <BackButton variant="hero" />
           <Reveal>
             <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1.5rem', letterSpacing: '0.2em' }}>{post.date}</div>
             <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 4.5rem)', color: '#fff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>{post.title}</h1>

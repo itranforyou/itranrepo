@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
+import BackButton from '@/components/BackButton';
 import Link from 'next/link';
 import { db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
@@ -104,17 +105,10 @@ export default function BulkGiftingHistoryPage() {
   }
 
   return (
-    <div style={{ paddingTop: '100px', minHeight: '90vh', background: 'var(--background)', position: 'relative' }}>
-      
-      {/* Floating Back Button */}
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
-
-      <section style={{ padding: '4rem 0 7rem' }}>
+    <div style={{ paddingTop: 'calc(var(--ticker-height) + 100px)', minHeight: '90vh', background: 'var(--background)', position: 'relative' }}>
+      <section style={{ padding: '2rem 0 7rem' }}>
         <div className="container" style={{ maxWidth: '1080px' }}>
+          <BackButton />
           
           {/* Header Section */}
           <Reveal style={{ marginBottom: '3.5rem' }}>

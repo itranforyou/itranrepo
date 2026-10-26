@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Reveal from '@/components/Reveal';
+import BackButton from '@/components/BackButton';
 import { db } from '@/lib/firebase';
 import { doc, getDoc, collection, query, where, onSnapshot } from 'firebase/firestore';
 import { useAppContext } from '@/context/AppContext';
@@ -142,15 +143,10 @@ export default function TrackOrderPage() {
   const hasRecentOrders = isLoggedIn && userOrders.length > 0;
 
   return (
-    <div style={{ paddingTop: '120px', minHeight: '90vh', background: 'var(--background)', position: 'relative' }}>
-      {/* Floating Back Button */}
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
-      <section style={{ padding: '6rem 0' }}>
+    <div style={{ paddingTop: 'calc(var(--ticker-height) + 100px)', minHeight: '90vh', background: 'var(--background)', position: 'relative' }}>
+      <section style={{ padding: '2.5rem 0 6rem' }}>
         <div className="container" style={{ maxWidth: trackingData ? '600px' : (hasRecentOrders ? '1100px' : '600px') }}>
+          <BackButton />
           <Reveal style={{ textAlign: 'center', marginBottom: '4rem' }}>
             <div className="label-caps" style={{ color: 'var(--primary)', marginBottom: '1.5rem', letterSpacing: '0.3em' }}>Logistic Journey</div>
             <h1 style={{ fontSize: '3.5rem', fontFamily: 'var(--font-serif)', marginBottom: '2rem' }}>Track Order</h1>

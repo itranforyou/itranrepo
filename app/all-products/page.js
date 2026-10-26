@@ -6,6 +6,7 @@ import Reveal from '@/components/Reveal';
 import ProductCard from '@/components/ProductCard';
 import { useAppContext } from '@/context/AppContext';
 import FilterSort from '@/components/FilterSort';
+import BackButton from '@/components/BackButton';
 import { db } from '@/lib/firebase';
 import { doc, onSnapshot } from 'firebase/firestore';
 
@@ -41,18 +42,13 @@ export default function AllProducts() {
 
   return (
     <div style={{ paddingTop: '0', position: 'relative' }}>
-      {/* Floating Back Button */}
-      <div className="floating-back">
-        <button onClick={() => router.back()} className="back-btn" aria-label="Go Back">
-          <span className="material-icons">arrow_back</span>
-        </button>
-      </div>
       <section className="shop-hero">
         <img 
           src={heroImages?.allProducts || "https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=2000"}
           alt="Shop All Hero"
         />
         <div className="container">
+          <BackButton variant="hero" />
           <Reveal>
             <div className="label-caps" style={{ color: '#dbc2b0', marginBottom: '1.5rem', letterSpacing: '0.3em' }}>The Complete Anthology</div>
             <h1 style={{ fontSize: 'clamp(3rem, 8vw, 5rem)', fontFamily: 'var(--font-serif)', marginBottom: '2rem', color: '#ffffff', textShadow: '0 4px 12px rgba(0,0,0,0.5)' }}>Shop All</h1>

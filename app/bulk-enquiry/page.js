@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Reveal from '@/components/Reveal';
+import BackButton from '@/components/BackButton';
 import { useAppContext } from '@/context/AppContext';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp, getDocs, doc, onSnapshot, getDoc } from 'firebase/firestore';
@@ -299,20 +300,13 @@ export default function BulkGiftingPage() {
   };
 
   return (
-    <div style={{ paddingTop: '80px', backgroundColor: '#fdfaf7', minHeight: '100vh', position: 'relative' }}>
-      
-      {/* Floating Back Button */}
-      <div className="floating-back">
-        <Link href="/" className="back-btn" aria-label="Go back to Home">
-          <span className="material-icons">arrow_back</span>
-        </Link>
-      </div>
-
+    <div style={{ paddingTop: 'calc(var(--ticker-height) + 100px)', backgroundColor: '#fdfaf7', minHeight: '100vh', position: 'relative' }}>
       {/* ========================================================================= */}
       {/* 1. HERO SECTION                                                           */}
       {/* ========================================================================= */}
-      <section style={{ padding: '4.5rem 0 3.5rem', borderBottom: '1px solid rgba(212, 175, 55, 0.18)' }}>
+      <section style={{ padding: '2rem 0 3.5rem', borderBottom: '1px solid rgba(212, 175, 55, 0.18)' }}>
         <div className="container" style={{ maxWidth: '1280px' }}>
+          <BackButton href="/" />
           <div style={{ 
             display: 'grid', 
             gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
